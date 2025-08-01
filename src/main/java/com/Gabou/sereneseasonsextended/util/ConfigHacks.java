@@ -13,8 +13,8 @@ public class ConfigHacks {
         try {
             // 🔧 Fix here: setAccessible(true)
             Field commonField = ConfigHandler.class.getDeclaredField("COMMON");
-            commonField.setAccessible(true); // ✅ Allow access to private field
-            Object commonInstance = commonField.get(null); // static field
+            commonField.setAccessible(true);
+            Object commonInstance = commonField.get(null);
 
             Field dayField = commonInstance.getClass().getDeclaredField("daySpeed");
             dayField.setAccessible(true);
