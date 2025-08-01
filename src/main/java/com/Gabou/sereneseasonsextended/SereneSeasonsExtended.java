@@ -6,8 +6,10 @@
 package com.Gabou.sereneseasonsextended;
 
 import com.Gabou.sereneseasonsextended.features.SnowBlockReplacer;
+import com.Gabou.sereneseasonsextended.util.ConfigHacks;
 import com.Gabou.sereneseasonsextended.util.EnvironmentHelper;
 import net.lavabucket.hourglass.config.HourglassConfig;
+import betterdays.config.ConfigHandler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
@@ -68,8 +70,9 @@ public class SereneSeasonsExtended {
                     this.lastSubSeason = currentSubSeason;
                     double daySpeed = this.getDaySpeedForSeason(currentSubSeason);
                     double nightSpeed = this.getNightSpeedForSeason(currentSubSeason);
-                    HourglassConfig.SERVER_CONFIG.daySpeed.set(daySpeed);
-                    HourglassConfig.SERVER_CONFIG.nightSpeed.set(nightSpeed);
+//                    HourglassConfig.SERVER_CONFIG.daySpeed.set(daySpeed);
+//                    HourglassConfig.SERVER_CONFIG.nightSpeed.set(nightSpeed);
+                    ConfigHacks.setTimeSpeeds(daySpeed, nightSpeed);
                     LOGGER.info("Season: {} → DaySpeed: {}, NightSpeed: {}", currentSubSeason, daySpeed, nightSpeed);
                 }
 

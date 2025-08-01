@@ -112,6 +112,10 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
+    maven {
+        url "https://www.cursemaven.com"
+        content { includeGroup "curse.maven" }
+    }
     // Put repositories for dependencies here
     // ForgeGradle automatically adds the Forge maven and Maven Central for you
 
@@ -124,6 +128,8 @@ repositories {
 
 dependencies {
 
+    implementation fg.deobf("curse.maven:betterdays-895618:5877548")
+    implementation fg.deobf("curse.maven:project-atmosphere-1258344:6834242")
     implementation files('libs/SereneSeasons-forge-1.20.1-9.1.0.0.jar')
     implementation files('libs/hourglass-1.20-1.2.1.1.jar')
     implementation 'org.apache.logging.log4j:log4j-core:2.19.0'

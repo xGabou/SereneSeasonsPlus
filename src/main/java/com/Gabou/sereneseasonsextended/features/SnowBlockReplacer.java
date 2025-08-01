@@ -11,7 +11,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
-import net.Gabou.projectatmosphere.modules.temperature.util.TemperatureProfileManager;
+
+import net.Gabou.projectatmosphere.manager.ForecastGenerator;
+import net.Gabou.projectatmosphere.manager.ForecastOrchestrator;
 import net.Gabou.projectatmosphere.util.BiomeInstanceKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -89,7 +91,7 @@ public class SnowBlockReplacer {
                         break;
                     }
                 } else {
-                    float temperature = TemperatureProfileManager.getCurrentTemperature(new BiomeInstanceKey(((ResourceKey)level.getBiome(playerPos).unwrapKey().get()).location(), playerPos), level.getDayTime());
+                    float temperature = ForecastOrchestrator.getCurrentTemperature(new BiomeInstanceKey(level.getBiome(playerPos).unwrapKey().get().location(), playerPos), level.getDayTime());
                     if (!((double)temperature < (double)0.5F)) {
                         blocksToReplace = calculateBlocksToReplace1(temperature);
                         break;
@@ -117,7 +119,7 @@ public class SnowBlockReplacer {
 
     private static float getCachedBiomeTemperature(Level level, BlockPos pos, Season.SubSeason currentSubSeason) {
         Holder<Biome> biomeHolder = level.getBiome(pos);
-        String biomeName = (String)biomeHolder.unwrapKey().map(Object::toString).orElse("unknown");
+        String biomeName = biomeHolder.unwrapKey().map(Object::toString).orElse("unknown");
         if (!biomeTemperatures.containsKey(biomeName)) {
             float temperature = getBiomeTemperature(level, biomeHolder, pos);
             if (isWinterSubSeason(currentSubSeason) && temperature > 0.14F) {
@@ -149,7 +151,7 @@ public class SnowBlockReplacer {
     }
 
     public static float getBiomeTemperature(LevelReader level, Holder<Biome> biomeHolder, BlockPos pos) {
-        Biome biome = (Biome)biomeHolder.value();
+        Biome biome = biomeHolder.value();
         return biome.getBaseTemperature();
     }
 
