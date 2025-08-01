@@ -22,8 +22,10 @@ public class EnvironmentHelper {
     }
 
     public static boolean shouldRunMod() {
-        return isServerEnvironment || isSinglePlayer;
+        return FMLEnvironment.dist.isDedicatedServer()
+                || (FMLEnvironment.dist.isClient() && Minecraft.getInstance().hasSingleplayerServer());
     }
+
 
     private static boolean detectSinglePlayer() {
         try {

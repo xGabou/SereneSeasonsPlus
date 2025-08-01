@@ -1,25 +1,35 @@
 package com.Gabou.sereneseasonsextended.util;
 
 import java.lang.reflect.Field;
-import net.minecraftforge.fml.common.Mod;
 import betterdays.config.ConfigHandler;
+import com.illusivesoulworks.spectrelib.config.SpectreConfigSpec;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ConfigHacks {
+    private static final Logger LOGGER = LogManager.getLogger("ConfigHacks");
 
     public static void setTimeSpeeds(double day, double night) {
         try {
-            Field dayField = ConfigHandler.Common.class.getDeclaredField("daySpeed");
+            // 🔧 Fix here: setAccessible(true)
+            Field commonField = ConfigHandler.class.getDeclaredField("COMMON");
+            commonField.setAccessible(true); // ✅ Allow access to private field
+            Object commonInstance = commonField.get(null); // static field
+
+            Field dayField = commonInstance.getClass().getDeclaredField("daySpeed");
             dayField.setAccessible(true);
-            Object dayValue = dayField.get(null); // static field
-            dayValue.getClass().getMethod("set", Object.class).invoke(dayValue, day);
+            var dayValue = (SpectreConfigSpec.DoubleValue) dayField.get(commonInstance);
+            dayValue.set(day);
 
-            Field nightField = ConfigHandler.Common.class.getDeclaredField("nightSpeed");
+            Field nightField = commonInstance.getClass().getDeclaredField("nightSpeed");
             nightField.setAccessible(true);
-            Object nightValue = nightField.get(null); // static field
-            nightValue.getClass().getMethod("set", Object.class).invoke(nightValue, night);
+            var nightValue = (SpectreConfigSpec.DoubleValue) nightField.get(commonInstance);
+            nightValue.set(night);
 
+            LOGGER.info("✅ Updated daySpeed = {}, nightSpeed = {}", day, night);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("❌ Failed to set time speeds dynamically", e);
         }
     }
+
 }

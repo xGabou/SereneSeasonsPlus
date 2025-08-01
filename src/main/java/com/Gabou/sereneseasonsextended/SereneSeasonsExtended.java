@@ -8,7 +8,6 @@ package com.Gabou.sereneseasonsextended;
 import com.Gabou.sereneseasonsextended.features.SnowBlockReplacer;
 import com.Gabou.sereneseasonsextended.util.ConfigHacks;
 import com.Gabou.sereneseasonsextended.util.EnvironmentHelper;
-import net.lavabucket.hourglass.config.HourglassConfig;
 import betterdays.config.ConfigHandler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
@@ -24,7 +23,9 @@ import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 
-@Mod("sereneseasonsextended")
+import static com.Gabou.sereneseasonsextended.SereneSeasonsExtended.MODID;
+
+@Mod(MODID)
 public class SereneSeasonsExtended {
     public static final String MODID = "sereneseasonsextended";
     private static final Logger LOGGER = LogManager.getLogger(SereneSeasonsExtended.class);
@@ -35,10 +36,9 @@ public class SereneSeasonsExtended {
     public SereneSeasonsExtended() {
         isProjectAtmosphereLoaded = ModList.get().isLoaded("projectatmosphere");
         EnvironmentHelper.initialize();
-        if (EnvironmentHelper.shouldRunMod()) {
             MinecraftForge.EVENT_BUS.register(SnowBlockReplacer.class);
             MinecraftForge.EVENT_BUS.register(this);
-        }
+
 
     }
 

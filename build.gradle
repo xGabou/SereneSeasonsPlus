@@ -1,8 +1,8 @@
 plugins {
-    id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
+    id 'org.spongepowered.mixin' version '0.7.+'
 }
 
 version = mod_version
@@ -112,26 +112,42 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
+    maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
+    maven { url "https://maven.blamejared.com/" }
     maven {
         url "https://www.cursemaven.com"
         content { includeGroup "curse.maven" }
     }
-    // Put repositories for dependencies here
-    // ForgeGradle automatically adds the Forge maven and Maven Central for you
-
-    // If you have mod jar dependencies in ./libs, you can declare them as a repository like so.
-    // See https://docs.gradle.org/current/userguide/declaring_repositories.html#sub:flat_dir_resolver
-    // flatDir {
-    //     dir 'libs'
-    // }
+    maven {
+        name = 'GeckoLib'
+        url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content {
+            includeGroupByRegex('software\\.bernie.*')
+            includeGroup("com.eliotlash.mclib")
+        }
+    }
+    maven { url = "https://api.modrinth.com/maven" }
+    maven {
+        name "nonamecrackers2Maven"
+        url "https://maven.nonamecrackers2.dev/releases"
+    }
+    maven {
+        name = "C4's Maven"
+        url = "https://maven.theillusivec4.top/"
+    }
+    flatDir { dir 'libs' }
 }
-
 dependencies {
 
     implementation fg.deobf("curse.maven:betterdays-895618:5877548")
-    implementation fg.deobf("curse.maven:project-atmosphere-1258344:6834242")
-    implementation files('libs/SereneSeasons-forge-1.20.1-9.1.0.0.jar')
-    implementation files('libs/hourglass-1.20-1.2.1.1.jar')
+    compileOnly fg.deobf("curse.maven:project-atmosphere-1258344:6834242")
+    implementation fg.deobf("curse.maven:serene-seasons-291874:6398227")
+    implementation fg.deobf("curse.maven:glitchcore-955399:5787839")
+    implementation fg.deobf(group: 'com.illusivesoulworks.spectrelib', name: 'spectrelib-forge', version: "${spectrelib_range}")
+    jarJar fg.deobf(group: 'com.illusivesoulworks.spectrelib', name: 'spectrelib-forge', version: "${spectrelib_range}") {
+        jarJar.pin(it, "${spectrelib_version}")
+    }
+//    implementation files('libs/hourglass-1.20-1.2.1.1.jar')
     implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
     implementation 'org.apache.logging.log4j:log4j-api:2.19.0'
     // Specify the version of Minecraft to use.
