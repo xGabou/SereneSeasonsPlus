@@ -1,4 +1,2 @@
-# Serene_Seasons_Extended
-Зависимость времени дня и ночи от текущего сезона (длинные дни летом, длинные ночи зимой), таяние блоков снега (в зависимости от температуры биома), кроме зимнего сезона.
-
-
+# Serene Seasons Extended
+Day and night length now depends on the current season (longer days in summer, longer nights in winter), and snow blocks melt based on biome temperature — except during the winter season.
