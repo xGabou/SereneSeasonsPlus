@@ -137,16 +137,18 @@ repositories {
     }
     flatDir { dir 'libs' }
 }
+def spectrelib_version = '0.13.15'
+def spectrelib_full_version = '0.13.15+1.20.1'
 dependencies {
 
     implementation fg.deobf("curse.maven:betterdays-895618:5877548")
     compileOnly fg.deobf("curse.maven:project-atmosphere-1258344:6834242")
     implementation fg.deobf("curse.maven:serene-seasons-291874:6398227")
     implementation fg.deobf("curse.maven:glitchcore-955399:5787839")
-    implementation fg.deobf(group: 'com.illusivesoulworks.spectrelib', name: 'spectrelib-forge', version: "${spectrelib_range}")
-    jarJar fg.deobf(group: 'com.illusivesoulworks.spectrelib', name: 'spectrelib-forge', version: "${spectrelib_range}") {
-        jarJar.pin(it, "${spectrelib_version}")
-    }
+// build.gradle
+    implementation files('libs/spectrelib-forge-0.13.15-1.20.1.jar')
+
+
 //    implementation files('libs/hourglass-1.20-1.2.1.1.jar')
     implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
     implementation 'org.apache.logging.log4j:log4j-api:2.19.0'
@@ -179,11 +181,11 @@ dependencies {
 // See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
 tasks.named('processResources', ProcessResources).configure {
     var replaceProperties = [
-            minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
-            forge_version: forge_version, forge_version_range: forge_version_range,
+            minecraft_version   : minecraft_version, minecraft_version_range: minecraft_version_range,
+            forge_version       : forge_version, forge_version_range: forge_version_range,
             loader_version_range: loader_version_range,
-            mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
-            mod_authors: mod_authors, mod_description: mod_description,
+            mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
+            mod_authors         : mod_authors, mod_description: mod_description,
     ]
     inputs.properties replaceProperties
 
@@ -222,13 +224,13 @@ publishing {
             artifact jar
         }
     }
-    
+
     repositories {
-            maven {
+        maven {
             url "file://${project.projectDir}/mcmodsrepo"
         }
     }
-    
+
 }
 
 tasks.withType(JavaCompile).configureEach {
