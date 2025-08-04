@@ -137,8 +137,7 @@ repositories {
     }
     flatDir { dir 'libs' }
 }
-def spectrelib_version = '0.13.15'
-def spectrelib_full_version = '0.13.15+1.20.1'
+
 dependencies {
 
     implementation fg.deobf("curse.maven:betterdays-895618:5877548")
@@ -146,7 +145,7 @@ dependencies {
     implementation fg.deobf("curse.maven:serene-seasons-291874:6398227")
     implementation fg.deobf("curse.maven:glitchcore-955399:5787839")
 // build.gradle
-    implementation files('libs/spectrelib-forge-0.13.15-1.20.1.jar')
+    implementation fg.deobf("curse.maven:spectrelib-993948:5217603")
 
 
 //    implementation files('libs/hourglass-1.20-1.2.1.1.jar')
