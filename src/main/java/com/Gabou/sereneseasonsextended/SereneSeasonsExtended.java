@@ -6,6 +6,7 @@
 package com.Gabou.sereneseasonsextended;
 
 import com.Gabou.sereneseasonsextended.features.SnowBlockReplacer;
+import com.Gabou.sereneseasonsextended.features.SnowPiller;
 import com.Gabou.sereneseasonsextended.util.ConfigHacks;
 import com.Gabou.sereneseasonsextended.util.EnvironmentHelper;
 import betterdays.config.ConfigHandler;
@@ -37,6 +38,7 @@ public class SereneSeasonsExtended {
         isProjectAtmosphereLoaded = ModList.get().isLoaded("projectatmosphere");
         EnvironmentHelper.initialize();
             MinecraftForge.EVENT_BUS.register(SnowBlockReplacer.class);
+            MinecraftForge.EVENT_BUS.register(SnowPiller.class);
             MinecraftForge.EVENT_BUS.register(this);
 
 
