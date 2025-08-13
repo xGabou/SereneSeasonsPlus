@@ -5,20 +5,28 @@
 
 package com.Gabou.sereneseasonsextended;
 
+import com.Gabou.sereneseasonsextended.config.SereneExtendedConfig;
+import com.Gabou.sereneseasonsextended.config.SereneExtendedScreen;
 import com.Gabou.sereneseasonsextended.features.SnowBlockReplacer;
 import com.Gabou.sereneseasonsextended.features.SnowPiller;
 import com.Gabou.sereneseasonsextended.util.ConfigHacks;
 import com.Gabou.sereneseasonsextended.util.EnvironmentHelper;
 import betterdays.config.ConfigHandler;
+import com.Gabou.sereneseasonsextended.util.SereneService;
+import net.Gabou.projectatmosphere.config.AtmoCommonConfig;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.server.ServerStartingEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
@@ -34,19 +42,28 @@ public class SereneSeasonsExtended {
     private int ticker = 0;
     private Season.SubSeason lastSubSeason = null;
 
-    public SereneSeasonsExtended() {
+    public SereneSeasonsExtended(FMLJavaModLoadingContext context) {
         isProjectAtmosphereLoaded = ModList.get().isLoaded("projectatmosphere");
         EnvironmentHelper.initialize();
-            MinecraftForge.EVENT_BUS.register(SnowBlockReplacer.class);
-            MinecraftForge.EVENT_BUS.register(SnowPiller.class);
-            MinecraftForge.EVENT_BUS.register(this);
-
+        MinecraftForge.EVENT_BUS.register(SnowBlockReplacer.class);
+        MinecraftForge.EVENT_BUS.register(SnowPiller.class);
+        MinecraftForge.EVENT_BUS.register(this);
+        context.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
+        context.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
+                () -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) -> new SereneExtendedScreen(screen)));
 
     }
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("Serene Seasons Extended is loading!");
+        SereneService.init();
+    }
+
+
+    @SubscribeEvent
+    public void onServerStopping(ServerStoppingEvent event) {
+        SereneService.shutdown();
     }
 
     @SubscribeEvent
@@ -63,23 +80,42 @@ public class SereneSeasonsExtended {
 
     }
 
+    @SubscribeEvent
+    public void onConfigReload(TickEvent.ServerTickEvent event) {
+
+    }
+
     private void onTick(Level level) {
         if (++this.ticker >= 400) {
             this.ticker = 0;
             if (EnvironmentHelper.shouldRunMod()) {
                 Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
-                if (currentSubSeason != this.lastSubSeason) {
+                if (currentSubSeason != this.lastSubSeason ) {
                     this.lastSubSeason = currentSubSeason;
-                    double daySpeed = this.getDaySpeedForSeason(currentSubSeason);
-                    double nightSpeed = this.getNightSpeedForSeason(currentSubSeason);
-//                    HourglassConfig.SERVER_CONFIG.daySpeed.set(daySpeed);
-//                    HourglassConfig.SERVER_CONFIG.nightSpeed.set(nightSpeed);
-                    ConfigHacks.setTimeSpeeds(daySpeed, nightSpeed);
-                    LOGGER.info("Season: {} → DaySpeed: {}, NightSpeed: {}", currentSubSeason, daySpeed, nightSpeed);
+                    if (SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get()) {
+                        double daySpeed = this.getDaySpeedForSeason(currentSubSeason);
+                        double nightSpeed = this.getNightSpeedForSeason(currentSubSeason);
+                        ConfigHacks.setTimeSpeeds(daySpeed, nightSpeed);
+                        LogInfo(currentSubSeason, daySpeed, nightSpeed);
+                    }
+                    else if(SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get()) {
+                        double daySpeed = SereneExtendedConfig.CUSTOM_DAY_LENGTH.get();
+                        double nightSpeed = SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get();
+                        ConfigHacks.setTimeSpeeds(daySpeed, nightSpeed);
+                        LogInfo(currentSubSeason, daySpeed, nightSpeed);
+                    }
+                    else {
+                        LOGGER.info(currentSubSeason.toString()+" is active, but both seasonal and custom daylight cycle are disabled.");
+                    }
                 }
+
 
             }
         }
+    }
+
+    private static void LogInfo(Season.SubSeason currentSubSeason, double daySpeed, double nightSpeed) {
+        LOGGER.info("Season: {} → DaySpeed: {}, NightSpeed: {}", currentSubSeason, daySpeed, nightSpeed);
     }
 
     private double getDaySpeedForSeason(Season.SubSeason season) {
