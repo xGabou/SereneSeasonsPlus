@@ -1,12 +1,30 @@
 modLoader="javafml"
 loaderVersion="[47,)"
-license="MIT"  # Замените "MIT" на вашу лицензию
+license="MIT"
 
 [[mods]]
 modId="sereneseasonsextended"
-version="1.0.0"
+version="1.0.6"
 displayName="Serene Seasons Extended"
-description="Небольшие улучшения для Serene Seasons."
-authors="Elux414"
-credits="ChatGPT4"
+description="Addon to Serene Seasons."
+authors="Gabou"
+credits=""
 updateJSONURL=""
+
+[[dependencies."sereneseasonsextended"]]
+modId = "betterdays"
+mandatory = true
+versionRange = "*"
+side = "BOTH"
+
+[[dependencies."sereneseasonsextended"]]
+modId = "sereneseasons"
+mandatory = true
+versionRange = "*"
+side = "BOTH"
+
+[[dependencies."sereneseasonsextended"]]
+modId = "projectatmosphere"
+mandatory = false
+versionRange = "*"
+side = "BOTH"
