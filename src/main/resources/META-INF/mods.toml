@@ -1,29 +1,29 @@
 modLoader="javafml"
 loaderVersion="[47,)"
-license="MIT"
+license="All rights reserved."
 
 [[mods]]
-modId="sereneseasonsextended"
+modId="sereneseasonsplus"
 version="1.0.6"
-displayName="Serene Seasons Extended"
+displayName="Serene Seasons Plus"
 description="Addon to Serene Seasons."
 authors="Gabou"
 credits=""
 updateJSONURL=""
 
-[[dependencies."sereneseasonsextended"]]
+[[dependencies."sereneseasonsplus"]]
 modId = "betterdays"
 mandatory = true
 versionRange = "*"
 side = "BOTH"
 
-[[dependencies."sereneseasonsextended"]]
+[[dependencies."sereneseasonsplus"]]
 modId = "sereneseasons"
 mandatory = true
 versionRange = "*"
 side = "BOTH"
 
-[[dependencies."sereneseasonsextended"]]
+[[dependencies."sereneseasonsplus"]]
 modId = "projectatmosphere"
 mandatory = false
 versionRange = "*"

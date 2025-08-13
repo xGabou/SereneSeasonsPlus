@@ -1,10 +1,12 @@
-package com.Gabou.sereneseasonsextended.util;
+package com.Gabou.sereneseasonsplus.util;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
@@ -55,5 +57,36 @@ public class SnowUtils {
     }
     private static boolean isWinterSubSeason(Season.SubSeason subSeason) {
         return subSeason == Season.SubSeason.EARLY_WINTER || subSeason == Season.SubSeason.MID_WINTER || subSeason == Season.SubSeason.LATE_WINTER;
+    }
+
+    /**
+     * Decrement a layered block (e.g., SNOW) at the given pos. If it's at the minimum
+     * layer (1) or not a layered block, remove it (set to AIR).
+     * Uses update flags = 3 (neighbors + clients).
+     *
+     * @param level the world/level
+     * @param pos   target position
+     */
+    public static void breakOrDecrementLayer(Level level, BlockPos pos) {
+        breakOrDecrementLayer(level, pos, 3);
+    }
+
+    /**
+     * Same as {@link #breakOrDecrementLayer(Level, BlockPos)} but with custom flags.
+     */
+    public static void breakOrDecrementLayer(Level level, BlockPos pos, int flags) {
+        BlockState state = level.getBlockState(pos);
+
+        // Handle classic layered snow: property LAYERS (1..8)
+        if (state.hasProperty(BlockStateProperties.LAYERS)) {
+            int layers = state.getValue(BlockStateProperties.LAYERS);
+            if (layers > 1) {
+                level.setBlock(pos, state.setValue(BlockStateProperties.LAYERS, layers - 1), flags);
+                return;
+            }
+        }
+
+        // Not layered (or now at 1): remove it
+        level.setBlock(pos, Blocks.AIR.defaultBlockState(), flags);
     }
 }

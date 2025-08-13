@@ -3,17 +3,15 @@
 // (powered by FernFlower decompiler)
 //
 
-package com.Gabou.sereneseasonsextended;
+package com.Gabou.sereneseasonsplus;
 
-import com.Gabou.sereneseasonsextended.config.SereneExtendedConfig;
-import com.Gabou.sereneseasonsextended.config.SereneExtendedScreen;
-import com.Gabou.sereneseasonsextended.features.SnowBlockReplacer;
-import com.Gabou.sereneseasonsextended.features.SnowPiller;
-import com.Gabou.sereneseasonsextended.util.ConfigHacks;
-import com.Gabou.sereneseasonsextended.util.EnvironmentHelper;
-import betterdays.config.ConfigHandler;
-import com.Gabou.sereneseasonsextended.util.SereneService;
-import net.Gabou.projectatmosphere.config.AtmoCommonConfig;
+import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
+import com.Gabou.sereneseasonsplus.config.SereneExtendedScreen;
+import com.Gabou.sereneseasonsplus.features.SnowBlockReplacer;
+import com.Gabou.sereneseasonsplus.features.SnowPiller;
+import com.Gabou.sereneseasonsplus.util.ConfigHacks;
+import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
+import com.Gabou.sereneseasonsplus.util.SereneService;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.client.ConfigScreenHandler;
@@ -32,17 +30,17 @@ import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 
-import static com.Gabou.sereneseasonsextended.SereneSeasonsExtended.MODID;
+import static com.Gabou.sereneseasonsplus.SereneSeasonsPlus.MODID;
 
 @Mod(MODID)
-public class SereneSeasonsExtended {
-    public static final String MODID = "sereneseasonsextended";
-    private static final Logger LOGGER = LogManager.getLogger(SereneSeasonsExtended.class);
+public class SereneSeasonsPlus {
+    public static final String MODID = "sereneseasonsplus";
+    private static final Logger LOGGER = LogManager.getLogger(SereneSeasonsPlus.class);
     public static boolean isProjectAtmosphereLoaded = false;
     private int ticker = 0;
     private Season.SubSeason lastSubSeason = null;
 
-    public SereneSeasonsExtended(FMLJavaModLoadingContext context) {
+    public SereneSeasonsPlus(FMLJavaModLoadingContext context) {
         isProjectAtmosphereLoaded = ModList.get().isLoaded("projectatmosphere");
         EnvironmentHelper.initialize();
         MinecraftForge.EVENT_BUS.register(SnowBlockReplacer.class);

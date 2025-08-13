@@ -1,9 +1,8 @@
-package com.Gabou.sereneseasonsextended.util;
+package com.Gabou.sereneseasonsplus.util;
 
-import com.Gabou.sereneseasonsextended.SereneSeasonsExtended;
-import com.Gabou.sereneseasonsextended.config.SereneExtendedConfig;
-import com.Gabou.sereneseasonsextended.config.SereneExtendedScreen;
-import net.Gabou.projectatmosphere.ProjectAtmosphere;
+import com.Gabou.sereneseasonsplus.SereneSeasonsPlus;
+import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
+import net.Gabou.projectatmosphere.util.AsyncAtmosphereService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,6 +15,7 @@ public class SereneService {
     private static boolean initialized = false;
     private static ExecutorService ASYNC_EXECUTOR;
     private static boolean useAsync = SereneExtendedConfig.USE_ASYNC.get();
+
     private SereneService() {
         // Prevent instantiation
     }
@@ -31,18 +31,24 @@ public class SereneService {
             return t;
         });
     }
+
     public static void runAsync(Runnable task) {
-        if(useAsync) {
-            if (ASYNC_EXECUTOR != null && !ASYNC_EXECUTOR.isShutdown()) {
-                ASYNC_EXECUTOR.submit(task);
-            }
+        if (!useAsync)
+            task.run();
+
+        if (SereneSeasonsPlus.isProjectAtmosphereLoaded) {
+            AsyncAtmosphereService.runWeather(task);
         }
-        else {
+        if (ASYNC_EXECUTOR != null && !ASYNC_EXECUTOR.isShutdown()) {
+            ASYNC_EXECUTOR.submit(task);
+        }
+        else  {
             task.run();
         }
     }
+
     public static void shutdown() {
-        if( ASYNC_EXECUTOR != null) ASYNC_EXECUTOR.shutdown();
+        if (ASYNC_EXECUTOR != null) ASYNC_EXECUTOR.shutdown();
         initialized = false;
     }
 

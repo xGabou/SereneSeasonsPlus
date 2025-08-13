@@ -3,7 +3,7 @@
 // (powered by FernFlower decompiler)
 //
 
-package com.Gabou.sereneseasonsextended.util;
+package com.Gabou.sereneseasonsplus.util;
 
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.loading.FMLEnvironment;

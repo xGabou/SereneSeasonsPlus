@@ -3,30 +3,25 @@
 // (powered by FernFlower decompiler)
 //
 
-package com.Gabou.sereneseasonsextended.features;
+package com.Gabou.sereneseasonsplus.features;
 
-import com.Gabou.sereneseasonsextended.SereneSeasonsExtended;
-import com.Gabou.sereneseasonsextended.config.SereneExtendedConfig;
-import com.Gabou.sereneseasonsextended.util.EnvironmentHelper;
+import com.Gabou.sereneseasonsplus.SereneSeasonsPlus;
+import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
+import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 
-import com.Gabou.sereneseasonsextended.util.SereneService;
-import com.Gabou.sereneseasonsextended.util.SnowUtils;
-import net.Gabou.projectatmosphere.manager.ForecastGenerator;
+import com.Gabou.sereneseasonsplus.util.SereneService;
+import com.Gabou.sereneseasonsplus.util.SnowUtils;
 import net.Gabou.projectatmosphere.manager.ForecastOrchestrator;
 import net.Gabou.projectatmosphere.util.BiomeInstanceKey;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -37,7 +32,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
-import sereneseasons.api.season.Season.SubSeason;
 
 @EventBusSubscriber
 public class SnowBlockReplacer {
@@ -105,7 +99,7 @@ public class SnowBlockReplacer {
                 playerPos = (BlockPos) entry.getValue();
                 int simulationDistance = getSimulationDistance(player);
                 radius = simulationDistance * 16;
-                if (!SereneSeasonsExtended.isProjectAtmosphereLoaded) {
+                if (!SereneSeasonsPlus.isProjectAtmosphereLoaded) {
                     Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
                     float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
                     if (!(temperature < 0.15F)) {
@@ -127,7 +121,7 @@ public class SnowBlockReplacer {
                     break;
                 }
 
-                level.setBlock(targetPos, Blocks.AIR.defaultBlockState(), 3);
+                SnowUtils.breakOrDecrementLayer(level,targetPos);
             }
         }
     }

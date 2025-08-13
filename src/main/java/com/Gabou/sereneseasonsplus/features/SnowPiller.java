@@ -1,8 +1,8 @@
-package com.Gabou.sereneseasonsextended.features;
+package com.Gabou.sereneseasonsplus.features;
 
-import com.Gabou.sereneseasonsextended.config.SereneExtendedConfig;
-import com.Gabou.sereneseasonsextended.util.EnvironmentHelper;
-import com.Gabou.sereneseasonsextended.util.SereneService;
+import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
+import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
+import com.Gabou.sereneseasonsplus.util.SereneService;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockPos.MutableBlockPos;

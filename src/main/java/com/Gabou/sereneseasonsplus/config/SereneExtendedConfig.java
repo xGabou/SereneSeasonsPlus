@@ -1,4 +1,4 @@
-package com.Gabou.sereneseasonsextended.config;
+package com.Gabou.sereneseasonsplus.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 
@@ -40,10 +40,10 @@ public class SereneExtendedConfig {
                 .define("customCycleLength", false);
         CUSTOM_DAY_LENGTH = builder
                 .comment("Custom day length in ticks. Only used if seasonal daylight cycle is disabled.")
-                .defineInRange("customDayLength", 1, 0.05, Double.MAX_VALUE);
+                .defineInRange("customDayLength", 1, 0.05, 100);
         CUSTOM_NIGHT_LENGTH = builder
                 .comment("Custom night length in ticks. Only used if seasonal daylight cycle is disabled.")
-                .defineInRange("customNightLength", 1, 0.05, Double.MAX_VALUE);
+                .defineInRange("customNightLength", 1, 0.05, 100);
         builder.pop();
         COMMON_SPEC = builder.build();
     }

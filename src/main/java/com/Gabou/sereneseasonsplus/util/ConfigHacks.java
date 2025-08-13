@@ -1,4 +1,4 @@
-package com.Gabou.sereneseasonsextended.util;
+package com.Gabou.sereneseasonsplus.util;
 
 import java.lang.reflect.Field;
 import betterdays.config.ConfigHandler;
