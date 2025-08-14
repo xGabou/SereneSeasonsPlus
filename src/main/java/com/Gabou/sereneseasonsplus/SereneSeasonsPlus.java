@@ -11,6 +11,8 @@ import com.Gabou.sereneseasonsplus.features.SnowPiller;
 import com.Gabou.sereneseasonsplus.util.ConfigHacks;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.SereneService;
+import net.Gabou.projectatmosphere.registry.ClientOnlyRegistrar;
+import net.minecraft.locale.Language;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
@@ -23,11 +25,14 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
+
+import java.util.Map;
 
 import static com.Gabou.sereneseasonsplus.SereneSeasonsPlus.MODID;
 
@@ -47,14 +52,24 @@ public class SereneSeasonsPlus {
         MinecraftForge.EVENT_BUS.register(this);
         context.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
 
-        DistExecutor.safeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
-                () -> com.Gabou.sereneseasonsplus.SereneSeasonsPlusClient::init);
+        context.getModEventBus().addListener((FMLClientSetupEvent event) -> {
+            LOGGER.info("Setting up Serene Season Plus (Common)");
+            clientSetup(event,context);
+        });
     }
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("Serene Seasons Extended is loading!");
         SereneService.init();
+    }
+
+    private void clientSetup(final FMLClientSetupEvent event, FMLJavaModLoadingContext context) {
+        LOGGER.info("Setting up Serene Season Plus (Client)");
+        event.enqueueWork(() -> {
+            SereneSeasonsPlusClient.init(context);
+        });
+
     }
 
 

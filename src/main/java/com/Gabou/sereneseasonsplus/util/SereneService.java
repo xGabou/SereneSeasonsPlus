@@ -36,15 +36,18 @@ public class SereneService {
         if (!useAsync)
             task.run();
 
-        if (SereneSeasonsPlus.isProjectAtmosphereLoaded) {
+        else if (SereneSeasonsPlus.isProjectAtmosphereLoaded) {
             AsyncAtmosphereService.runWeather(task);
         }
-        if (ASYNC_EXECUTOR != null && !ASYNC_EXECUTOR.isShutdown()) {
-            ASYNC_EXECUTOR.submit(task);
+        else {
+            if(ASYNC_EXECUTOR != null && !ASYNC_EXECUTOR.isShutdown()) {
+                ASYNC_EXECUTOR.submit(task);
+            }
+            else  {
+                task.run();
+            }
         }
-        else  {
-            task.run();
-        }
+
     }
 
     public static void shutdown() {
