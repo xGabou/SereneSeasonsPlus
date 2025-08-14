@@ -6,7 +6,6 @@
 package com.Gabou.sereneseasonsplus;
 
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
-import com.Gabou.sereneseasonsplus.config.SereneExtendedScreen;
 import com.Gabou.sereneseasonsplus.features.SnowBlockReplacer;
 import com.Gabou.sereneseasonsplus.features.SnowPiller;
 import com.Gabou.sereneseasonsplus.util.ConfigHacks;
@@ -14,7 +13,6 @@ import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.SereneService;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -24,6 +22,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,9 +46,9 @@ public class SereneSeasonsPlus {
         MinecraftForge.EVENT_BUS.register(SnowPiller.class);
         MinecraftForge.EVENT_BUS.register(this);
         context.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
-        context.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
-                () -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) -> new SereneExtendedScreen(screen)));
 
+        DistExecutor.safeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
+                () -> com.Gabou.sereneseasonsplus.SereneSeasonsPlusClient::init);
     }
 
     @SubscribeEvent
