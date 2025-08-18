@@ -187,7 +187,7 @@ public class SereneExtendedScreen extends Screen {
     }
 
     /** Finds this mod's COMMON config and saves it. */
-    private static void saveCommonConfigForMod(String modId) {
+    public static void saveCommonConfigForMod(String modId) {
         var set = ConfigTracker.INSTANCE.configSets().get(ModConfig.Type.COMMON);
         if (set == null) return;
         for (ModConfig cfg : set) {
