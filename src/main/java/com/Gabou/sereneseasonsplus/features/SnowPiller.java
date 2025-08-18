@@ -106,9 +106,18 @@ public final class SnowPiller {
      * @param radius search radius
      */
     public static void tickSnow(ServerLevel level, ServerPlayer player, BlockPos center, int radius) {
-        BlockPos target = findTarget(level, player, center, radius);
-        if (target == null) return;
-        placeSnowAt(level, target);
+        int attempts = 1;
+        if (SereneExtendedConfig.SNOWSTORM_ENABLED.get()) {
+            attempts += Math.max(0, SereneExtendedConfig.SNOWSTORM_INTENSITY.get() / 20);
+        }
+
+        for (int i = 0; i < attempts; i++) {
+            BlockPos target = findTarget(level, player, center, radius);
+            if (target == null) {
+                continue;
+            }
+            placeSnowAt(level, target);
+        }
 
     }
 
