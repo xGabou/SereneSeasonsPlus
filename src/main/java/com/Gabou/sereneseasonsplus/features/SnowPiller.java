@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus.features;
 
+import com.Gabou.sereneseasonsplus.SereneSeasonsPlus;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.SereneService;
@@ -12,6 +13,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -28,21 +30,21 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * SnowPiller
- *
+ * <p>
  * Finds and places snow around a center position efficiently:
- *  - Early-bails if the center biome isn't cold enough right now.
- *  - Uses per-player throttling: if a scan fails and the player hasn't moved
- *    more than MOVEMENT_RESET_RADIUS blocks, skip attempts for THROTTLE_TICKS.
- *  - Minimizes allocations inside the sampling loop.
- *
+ * - Early-bails if the center biome isn't cold enough right now.
+ * - Uses per-player throttling: if a scan fails and the player hasn't moved
+ * more than MOVEMENT_RESET_RADIUS blocks, skip attempts for THROTTLE_TICKS.
+ * - Minimizes allocations inside the sampling loop.
+ * <p>
  * Usage:
- *   // Call from your tick or scheduler:
- *   SnowPiller.tick(level, player, player.blockPosition(), 16);
- *
+ * // Call from your tick or scheduler:
+ * SnowPiller.tick(level, player, player.blockPosition(), 16);
+ * <p>
  * Public API:
- *   - tick(...) -> tries to find and place snow once; returns true if placed.
- *   - findTarget(...) -> returns a valid position (or null) without placing.
- *   - placeSnowAt(...) -> places snow with survival checks; returns success.
+ * - tick(...) -> tries to find and place snow once; returns true if placed.
+ * - findTarget(...) -> returns a valid position (or null) without placing.
+ * - placeSnowAt(...) -> places snow with survival checks; returns success.
  */
 public final class SnowPiller {
 
@@ -51,18 +53,25 @@ public final class SnowPiller {
 
     private static int tickThresholdSnowPiller;
 
-    /** Radius in blocks the player must move to reset throttle. */
+    /**
+     * Radius in blocks the player must move to reset throttle.
+     */
     private static final int MOVEMENT_RESET_RADIUS = 10;
-    /** 10 seconds at 20 tps. */
+    /**
+     * 10 seconds at 20 tps.
+     */
     private static final int THROTTLE_TICKS = 200;
-    /** Sampling attempts per call. Tune as desired. */
+    /**
+     * Sampling attempts per call. Tune as desired.
+     */
     private static final int MAX_ATTEMPTS = 12;
 
     private static int tickCounter = 0;
 
     private static final Map<UUID, ThrottleState> THROTTLE = new ConcurrentHashMap<>();
 
-    private SnowPiller() {}
+    private SnowPiller() {
+    }
 
 
     @SubscribeEvent
@@ -89,14 +98,17 @@ public final class SnowPiller {
                 if (tickCounter % tickThresholdSnowPiller == 0) {
                     SereneService.runAsync(() -> {
                         for (ServerPlayer player : serverLevel.players()) {
+
                             tickSnow(serverLevel, player, player.blockPosition(), 16);
                         }
                     });
                 }
+
             }
         }
 
     }
+
     /**
      * High-level helper: find a spot near center and place a snow layer.
      *
@@ -106,18 +118,32 @@ public final class SnowPiller {
      * @param radius search radius
      */
     public static void tickSnow(ServerLevel level, ServerPlayer player, BlockPos center, int radius) {
-        int attempts = 1;
-        if (SereneExtendedConfig.SNOWSTORM_ENABLED.get()) {
-            attempts += Math.max(0, SereneExtendedConfig.SNOWSTORM_INTENSITY.get() / 20);
-        }
 
+        int attempts;
+        if (SereneSeasonsPlus.isProjectAtmosphereLoaded) {
+            if (!SereneExtendedConfig.SNOWSTORM_ENABLED.get()) return;
+
+            // intensity/20 can’t go negative, so Math.max is redundant if config is sane; keep for safety
+            attempts = Math.max(0, SereneExtendedConfig.SNOWSTORM_INTENSITY.get() / 20);
+
+        } else {
+            if (!level.isRaining()) return;
+
+            // cache biome + cold check (don’t recompute)
+            final boolean coldEnough = level.getBiome(center).value().coldEnoughToSnow(center);
+            if (!coldEnough) return;
+
+            final var rnd = level.random;
+            attempts = rnd.nextInt(2) + (level.isThundering() ? rnd.nextInt(2) : 0);
+        }
+        if (attempts <= 0) return;
         for (int i = 0; i < attempts; i++) {
             BlockPos target = findTarget(level, player, center, radius);
-            if (target == null) {
-                continue;
+            if (target != null) {
+                placeSnowAt(level, target);
             }
-            placeSnowAt(level, target);
         }
+
 
     }
 
@@ -202,9 +228,9 @@ public final class SnowPiller {
         level.setBlockAndUpdate(pos, snow);
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // Throttle state
-    // ──────────────────────────────────────────────────────────────────────────
+// ──────────────────────────────────────────────────────────────────────────
+// Throttle state
+// ──────────────────────────────────────────────────────────────────────────
 
     private static final class ThrottleState {
         private long nextAllowedTick = 0L;
@@ -238,9 +264,9 @@ public final class SnowPiller {
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // (Optional) utility if you want a one-liner from just a LevelReader
-    // ──────────────────────────────────────────────────────────────────────────
+// ──────────────────────────────────────────────────────────────────────────
+// (Optional) utility if you want a one-liner from just a LevelReader
+// ──────────────────────────────────────────────────────────────────────────
 
     /**
      * Quick helper to check if a snow layer could survive at pos in a generic LevelReader.

@@ -21,6 +21,7 @@ import net.Gabou.projectatmosphere.util.BiomeInstanceKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.event.TickEvent;
@@ -98,7 +99,7 @@ public class SnowBlockReplacer {
                 ServerPlayer player = (ServerPlayer) entry.getKey();
                 playerPos = (BlockPos) entry.getValue();
                 int simulationDistance = getSimulationDistance(player);
-                radius = simulationDistance * 16;
+                radius = Mth.clamp(simulationDistance * 16,16,64);
                 if (!SereneSeasonsPlus.isProjectAtmosphereLoaded) {
                     Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
                     float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
