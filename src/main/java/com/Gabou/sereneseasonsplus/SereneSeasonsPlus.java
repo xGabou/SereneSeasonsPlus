@@ -6,11 +6,13 @@
 package com.Gabou.sereneseasonsplus;
 
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
+import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
 import com.Gabou.sereneseasonsplus.features.SnowBlockReplacer;
 import com.Gabou.sereneseasonsplus.features.SnowPiller;
 import com.Gabou.sereneseasonsplus.util.ConfigHacks;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.SereneService;
+import net.Gabou.projectatmosphere.event.SeasonTracker;
 import net.Gabou.projectatmosphere.registry.ClientOnlyRegistrar;
 import net.minecraft.locale.Language;
 import net.minecraft.server.MinecraftServer;
@@ -51,6 +53,10 @@ public class SereneSeasonsPlus {
         MinecraftForge.EVENT_BUS.register(SnowPiller.class);
         MinecraftForge.EVENT_BUS.register(this);
         context.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
+        if(!isProjectAtmosphereLoaded) {
+            MinecraftForge.EVENT_BUS.register(SeasonChangeEvent.class);
+        }
+
 
         context.getModEventBus().addListener((FMLClientSetupEvent event) -> {
             LOGGER.info("Setting up Serene Season Plus (Common)");

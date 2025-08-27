@@ -41,6 +41,7 @@ public class SnowBlockReplacer {
     private static final Map<ServerPlayer, BlockPos> playerPositions = new HashMap();
 
     private static int tickThresholdSnowReplacer;
+    private static int tickThresholdSnowReplacerForHotSeasons = 30;
     private static int tickCounter = 0;
 
 
@@ -67,7 +68,7 @@ public class SnowBlockReplacer {
             MinecraftServer server = event.getServer();
             Level level = server.getLevel(Level.OVERWORLD);
             if (level != null && !level.isClientSide()) {
-                if (tickCounter % tickThresholdSnowReplacer == 0) {
+                if (tickCounter % tickThresholdSnowReplacer == 0 || (tickCounter % tickThresholdSnowReplacerForHotSeasons == 0) && EnvironmentHelper.isHotSeason()) {
                     updatePlayerPositions(server.getPlayerList().getPlayers());
                     SereneService.runAsync(() -> replaceSnowBlocks(level));
                 }
