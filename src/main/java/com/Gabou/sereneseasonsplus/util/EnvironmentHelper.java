@@ -7,7 +7,7 @@ package com.Gabou.sereneseasonsplus.util;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.neoforged.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;

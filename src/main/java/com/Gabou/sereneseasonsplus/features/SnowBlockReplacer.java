@@ -16,19 +16,16 @@ import java.util.Random;
 
 import com.Gabou.sereneseasonsplus.util.SereneService;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
-import net.Gabou.projectatmosphere.manager.ForecastOrchestrator;
-import net.Gabou.projectatmosphere.util.BiomeInstanceKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.TickEvent.Phase;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod.EventBusSubscriber;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
@@ -55,15 +52,15 @@ public class SnowBlockReplacer {
 
 
     @SubscribeEvent
-    public static void onConfigReload(TickEvent.ServerTickEvent event) {
+    public static void onConfigReload(ServerTickEvent.Post event) {
         tickThresholdSnowReplacer = SereneExtendedConfig.TICK_SNOW_REPLACER.get();
         SereneService.reloadConfig();
 
     }
 
     @SubscribeEvent
-    public static void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase == Phase.END && EnvironmentHelper.shouldRunMod()) {
+    public static void onServerTick(ServerTickEvent.Post event) {
+        if (EnvironmentHelper.shouldRunMod()) {
             ++tickCounter;
             MinecraftServer server = event.getServer();
             Level level = server.getLevel(Level.OVERWORLD);
@@ -101,19 +98,11 @@ public class SnowBlockReplacer {
                 playerPos = (BlockPos) entry.getValue();
                 int simulationDistance = getSimulationDistance(player);
                 radius = Mth.clamp(simulationDistance * 16,16,64);
-                if (!SereneSeasonsPlus.isProjectAtmosphereLoaded) {
-                    Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
-                    float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
-                    if (!(temperature < 0.15F)) {
-                        blocksToReplace = calculateBlocksToReplace(temperature);
-                        break;
-                    }
-                } else {
-                    float temperature = ForecastOrchestrator.getCurrentTemperature(new BiomeInstanceKey(level.getBiome(playerPos).unwrapKey().get().location(), playerPos), level.getDayTime());
-                    if (!((double) temperature < (double) 0.5F)) {
-                        blocksToReplace = calculateBlocksToReplace1(temperature);
-                        break;
-                    }
+                Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
+                float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
+                if (!(temperature < 0.15F)) {
+                    blocksToReplace = calculateBlocksToReplace(temperature);
+                    break;
                 }
             }
 
@@ -127,11 +116,6 @@ public class SnowBlockReplacer {
             }
         }
     }
-
-    private static int calculateBlocksToReplace1(float temperature) {
-        return (int) Math.ceil((double) (temperature / 5.0F));
-    }
-
 
     private static int calculateBlocksToReplace(float temperature) {
         if (temperature < 0.2F) {

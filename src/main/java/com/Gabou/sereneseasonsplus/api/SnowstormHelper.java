@@ -2,16 +2,16 @@ package com.Gabou.sereneseasonsplus.api;
 
 import com.Gabou.sereneseasonsplus.SereneSeasonsPlus;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
-import net.minecraftforge.fml.config.ConfigTracker;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.loading.FMLPaths;
+import net.neoforged.fml.config.ConfigTracker;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
  * Utility to toggle the snowstorm state in the Serene Seasons Plus config.
  *
- * <p>The Project Atmosphere mod can call these helpers to enable or disable a
+ * <p>External mods can call these helpers to enable or disable a
  * snowstorm, which affects how the snow pilling logic behaves.</p>
  */
 public class SnowstormHelper {

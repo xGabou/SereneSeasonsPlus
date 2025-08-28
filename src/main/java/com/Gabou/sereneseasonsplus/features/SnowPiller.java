@@ -1,6 +1,5 @@
 package com.Gabou.sereneseasonsplus.features;
 
-import com.Gabou.sereneseasonsplus.SereneSeasonsPlus;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.SereneService;
@@ -18,9 +17,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -82,15 +81,15 @@ public final class SnowPiller {
     }
 
     @SubscribeEvent
-    public static void onConfigReload(TickEvent.ServerTickEvent event) {
+    public static void onConfigReload(ServerTickEvent.Post event) {
         tickThresholdSnowPiller = SereneExtendedConfig.TICK_SNOW_PILLER.get();
         SereneService.reloadConfig();
 
     }
 
     @SubscribeEvent
-    public static void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && EnvironmentHelper.shouldRunMod()) {
+    public static void onServerTick(ServerTickEvent.Post event) {
+        if (EnvironmentHelper.shouldRunMod()) {
             MinecraftServer server = event.getServer();
             Level level = server.getLevel(Level.OVERWORLD);
             if (level instanceof ServerLevel serverLevel) {
@@ -120,22 +119,14 @@ public final class SnowPiller {
     public static void tickSnow(ServerLevel level, ServerPlayer player, BlockPos center, int radius) {
 
         int attempts;
-        if (SereneSeasonsPlus.isProjectAtmosphereLoaded) {
-            if (!SereneExtendedConfig.SNOWSTORM_ENABLED.get()) return;
+        if (!level.isRaining()) return;
 
-            // intensity/20 can’t go negative, so Math.max is redundant if config is sane; keep for safety
-            attempts = Math.max(0, SereneExtendedConfig.SNOWSTORM_INTENSITY.get() / 20);
+        // cache biome + cold check (don’t recompute)
+        final boolean coldEnough = level.getBiome(center).value().coldEnoughToSnow(center);
+        if (!coldEnough) return;
 
-        } else {
-            if (!level.isRaining()) return;
-
-            // cache biome + cold check (don’t recompute)
-            final boolean coldEnough = level.getBiome(center).value().coldEnoughToSnow(center);
-            if (!coldEnough) return;
-
-            final var rnd = level.random;
-            attempts = rnd.nextInt(2) + (level.isThundering() ? rnd.nextInt(2) : 0);
-        }
+        final var rnd = level.random;
+        attempts = rnd.nextInt(2) + (level.isThundering() ? rnd.nextInt(2) : 0);
         if (attempts <= 0) return;
         for (int i = 0; i < attempts; i++) {
             BlockPos target = findTarget(level, player, center, radius);

@@ -1,7 +1,7 @@
 plugins {
     id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
+    id 'net.neoforged.gradle' version '[6.0.16,6.2)'
     id 'org.spongepowered.mixin' version '0.7.+'
 }
 
@@ -112,6 +112,7 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
+    maven { url = 'https://maven.neoforged.net/releases' }
     maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
     maven { url "https://maven.blamejared.com/" }
     maven {
@@ -140,13 +141,10 @@ repositories {
 
 dependencies {
 
-    implementation fg.deobf("curse.maven:betterdays-895618:5877548")
-    compileOnly fg.deobf(files("libs/projectatmosphere-0.3.9-pre4.jar"))
-    implementation fg.deobf("curse.maven:serene-seasons-291874:6398227")
+    implementation fg.deobf("curse.maven:betterdays-895618:6883730")
+    implementation fg.deobf("curse.maven:serene-seasons-291874:6182596")
     implementation fg.deobf("curse.maven:glitchcore-955399:5787839")
-// build.gradle
     implementation fg.deobf("curse.maven:spectrelib-993948:5217603")
-
 
 //    implementation files('libs/hourglass-1.20-1.2.1.1.jar')
     implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
@@ -156,7 +154,7 @@ dependencies {
     // The "userdev" classifier will be requested and setup by ForgeGradle.
     // If the group id is "net.minecraft" and the artifact id is one of ["client", "server", "joined"],
     // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    minecraft "net.neoforged:neoforge:${minecraft_version}-${neo_version}"
 
     // Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
@@ -181,7 +179,7 @@ dependencies {
 tasks.named('processResources', ProcessResources).configure {
     var replaceProperties = [
             minecraft_version   : minecraft_version, minecraft_version_range: minecraft_version_range,
-            forge_version       : forge_version, forge_version_range: forge_version_range,
+            neo_version         : neo_version, neo_version_range: neo_version_range,
             loader_version_range: loader_version_range,
             mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
             mod_authors         : mod_authors, mod_description: mod_description,

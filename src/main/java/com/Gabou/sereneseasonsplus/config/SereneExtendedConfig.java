@@ -1,24 +1,24 @@
 package com.Gabou.sereneseasonsplus.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 
 public class SereneExtendedConfig {
 
-    public static final ForgeConfigSpec.BooleanValue USE_ASYNC;
-    public static final ForgeConfigSpec.IntValue TICK_SNOW_PILLER;
-    public static final ForgeConfigSpec.IntValue TICK_SNOW_REPLACER;
-    public static final ForgeConfigSpec.BooleanValue ENABLE_SEASONAL_DAYLIGHT_CYCLE;
-    public static final ForgeConfigSpec.DoubleValue CUSTOM_DAY_LENGTH;
-    public static final ForgeConfigSpec.DoubleValue CUSTOM_NIGHT_LENGTH;
-    public static final ForgeConfigSpec.BooleanValue CUSTOM_CYCLE_LENGTH;
-    public static final ForgeConfigSpec.BooleanValue SNOWSTORM_ENABLED;
-    public static final ForgeConfigSpec.IntValue SNOWSTORM_INTENSITY;
+    public static final ModConfigSpec.BooleanValue USE_ASYNC;
+    public static final ModConfigSpec.IntValue TICK_SNOW_PILLER;
+    public static final ModConfigSpec.IntValue TICK_SNOW_REPLACER;
+    public static final ModConfigSpec.BooleanValue ENABLE_SEASONAL_DAYLIGHT_CYCLE;
+    public static final ModConfigSpec.DoubleValue CUSTOM_DAY_LENGTH;
+    public static final ModConfigSpec.DoubleValue CUSTOM_NIGHT_LENGTH;
+    public static final ModConfigSpec.BooleanValue CUSTOM_CYCLE_LENGTH;
+    public static final ModConfigSpec.BooleanValue SNOWSTORM_ENABLED;
+    public static final ModConfigSpec.IntValue SNOWSTORM_INTENSITY;
 
     public static final int MIN_CORES_FOR_ASYNC = 6;
 
     static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         builder.push("performance");
         USE_ASYNC = builder
                 .comment("Use async tasks for some operations to improve performance. This may cause issues with some mods.")
@@ -37,7 +37,7 @@ public class SereneExtendedConfig {
                 .comment("Enable snowstorm mode which increases snow pilling intensity.")
                 .define("enabled", false);
         SNOWSTORM_INTENSITY = builder
-                .comment("Snowstorm intensity value used by Project Atmosphere.")
+                .comment("Snowstorm intensity value used by external integrations.")
                 .defineInRange("intensity", 0, 0, 100);
         builder.pop();
         builder.push("seasonalDaylightCycle");
@@ -58,6 +58,6 @@ public class SereneExtendedConfig {
         COMMON_SPEC = builder.build();
     }
 
-    public static final ForgeConfigSpec COMMON_SPEC;
+    public static final ModConfigSpec COMMON_SPEC;
 }
 
