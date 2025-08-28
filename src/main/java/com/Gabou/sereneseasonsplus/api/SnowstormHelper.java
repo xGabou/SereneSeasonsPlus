@@ -11,7 +11,7 @@ import org.apache.logging.log4j.Logger;
 /**
  * Utility to toggle the snowstorm state in the Serene Seasons Plus config.
  *
- * <p>The Project Atmosphere mod can call these helpers to enable or disable a
+ * <p>External mods can call these helpers to enable or disable a
  * snowstorm, which affects how the snow pilling logic behaves.</p>
  */
 public class SnowstormHelper {

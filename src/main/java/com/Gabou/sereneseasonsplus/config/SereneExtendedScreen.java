@@ -1,6 +1,6 @@
 package com.Gabou.sereneseasonsplus.config;
 
-import net.Gabou.projectatmosphere.ProjectAtmosphere;
+import com.Gabou.sereneseasonsplus.SereneSeasonsPlus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -11,7 +11,7 @@ import net.minecraftforge.fml.config.ConfigTracker;
 import net.minecraftforge.fml.config.ModConfig;
 
 /**
- * Simple in-game configuration screen for Project Atmosphere.
+ * Simple in-game configuration screen.
  */
 public class SereneExtendedScreen extends Screen {
     private final Screen parent;
@@ -45,7 +45,7 @@ public class SereneExtendedScreen extends Screen {
 
 
     public SereneExtendedScreen(Screen parent) {
-        super(Component.literal("Project Atmosphere Config"));
+        super(Component.literal("Serene Seasons Plus Config"));
         this.parent = parent;
     }
 
@@ -175,7 +175,7 @@ public class SereneExtendedScreen extends Screen {
 
         try {
             // EITHER A) save via ModConfig
-            saveCommonConfigForMod(ProjectAtmosphere.MODID);
+            saveCommonConfigForMod(SereneSeasonsPlus.MODID);
 
             // OR B) if you prefer and your SPEC is registered:
             // SereneExtendedConfig.SPEC.save();

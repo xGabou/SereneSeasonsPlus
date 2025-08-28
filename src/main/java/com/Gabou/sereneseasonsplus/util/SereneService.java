@@ -1,8 +1,6 @@
 package com.Gabou.sereneseasonsplus.util;
 
-import com.Gabou.sereneseasonsplus.SereneSeasonsPlus;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
-import net.Gabou.projectatmosphere.util.AsyncAtmosphereService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,9 +34,6 @@ public class SereneService {
         if (!useAsync)
             task.run();
 
-        else if (SereneSeasonsPlus.isProjectAtmosphereLoaded) {
-            AsyncAtmosphereService.runWeather(task);
-        }
         else {
             if(ASYNC_EXECUTOR != null && !ASYNC_EXECUTOR.isShutdown()) {
                 ASYNC_EXECUTOR.submit(task);
@@ -47,7 +42,6 @@ public class SereneService {
                 task.run();
             }
         }
-
     }
 
     public static void shutdown() {

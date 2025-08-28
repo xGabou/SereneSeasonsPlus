@@ -12,8 +12,6 @@ import com.Gabou.sereneseasonsplus.features.SnowPiller;
 import com.Gabou.sereneseasonsplus.util.ConfigHacks;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.SereneService;
-import net.Gabou.projectatmosphere.event.SeasonTracker;
-import net.Gabou.projectatmosphere.registry.ClientOnlyRegistrar;
 import net.minecraft.locale.Language;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
@@ -23,7 +21,6 @@ import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.DistExecutor;
@@ -42,20 +39,16 @@ import static com.Gabou.sereneseasonsplus.SereneSeasonsPlus.MODID;
 public class SereneSeasonsPlus {
     public static final String MODID = "sereneseasonsplus";
     private static final Logger LOGGER = LogManager.getLogger(SereneSeasonsPlus.class);
-    public static boolean isProjectAtmosphereLoaded = false;
     private int ticker = 0;
     private Season.SubSeason lastSubSeason = null;
 
     public SereneSeasonsPlus(FMLJavaModLoadingContext context) {
-        isProjectAtmosphereLoaded = ModList.get().isLoaded("projectatmosphere");
         EnvironmentHelper.initialize();
         MinecraftForge.EVENT_BUS.register(SnowBlockReplacer.class);
         MinecraftForge.EVENT_BUS.register(SnowPiller.class);
         MinecraftForge.EVENT_BUS.register(this);
         context.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
-        if(!isProjectAtmosphereLoaded) {
-            MinecraftForge.EVENT_BUS.register(SeasonChangeEvent.class);
-        }
+        MinecraftForge.EVENT_BUS.register(SeasonChangeEvent.class);
 
 
         context.getModEventBus().addListener((FMLClientSetupEvent event) -> {

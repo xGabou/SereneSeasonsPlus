@@ -37,7 +37,7 @@ public class SereneExtendedConfig {
                 .comment("Enable snowstorm mode which increases snow pilling intensity.")
                 .define("enabled", false);
         SNOWSTORM_INTENSITY = builder
-                .comment("Snowstorm intensity value used by Project Atmosphere.")
+                .comment("Snowstorm intensity value used by external integrations.")
                 .defineInRange("intensity", 0, 0, 100);
         builder.pop();
         builder.push("seasonalDaylightCycle");

@@ -16,8 +16,6 @@ import java.util.Random;
 
 import com.Gabou.sereneseasonsplus.util.SereneService;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
-import net.Gabou.projectatmosphere.manager.ForecastOrchestrator;
-import net.Gabou.projectatmosphere.util.BiomeInstanceKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -101,19 +99,11 @@ public class SnowBlockReplacer {
                 playerPos = (BlockPos) entry.getValue();
                 int simulationDistance = getSimulationDistance(player);
                 radius = Mth.clamp(simulationDistance * 16,16,64);
-                if (!SereneSeasonsPlus.isProjectAtmosphereLoaded) {
-                    Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
-                    float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
-                    if (!(temperature < 0.15F)) {
-                        blocksToReplace = calculateBlocksToReplace(temperature);
-                        break;
-                    }
-                } else {
-                    float temperature = ForecastOrchestrator.getCurrentTemperature(new BiomeInstanceKey(level.getBiome(playerPos).unwrapKey().get().location(), playerPos), level.getDayTime());
-                    if (!((double) temperature < (double) 0.5F)) {
-                        blocksToReplace = calculateBlocksToReplace1(temperature);
-                        break;
-                    }
+                Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
+                float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
+                if (!(temperature < 0.15F)) {
+                    blocksToReplace = calculateBlocksToReplace(temperature);
+                    break;
                 }
             }
 
@@ -127,11 +117,6 @@ public class SnowBlockReplacer {
             }
         }
     }
-
-    private static int calculateBlocksToReplace1(float temperature) {
-        return (int) Math.ceil((double) (temperature / 5.0F));
-    }
-
 
     private static int calculateBlocksToReplace(float temperature) {
         if (temperature < 0.2F) {
