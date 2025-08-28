@@ -2,8 +2,6 @@ package com.Gabou.sereneseasonsplus.api;
 
 import com.Gabou.sereneseasonsplus.SereneSeasonsPlus;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
-import net.neoforged.fml.config.ConfigTracker;
-import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,18 +40,18 @@ public class SnowstormHelper {
      */
     private static void updateSnowstormConfig(boolean enabled, int intensity) {
         try {
+            // Update in-memory config values
             SereneExtendedConfig.SNOWSTORM_ENABLED.set(enabled);
             SereneExtendedConfig.SNOWSTORM_INTENSITY.set(intensity);
-            var set = ConfigTracker.INSTANCE.configSets().get(ModConfig.Type.COMMON);
-            if (set == null) return;
-            for (ModConfig cfg : set) {
-                if (cfg.getModId().equals(SereneSeasonsPlus.MODID)) {
-                    cfg.save(); // writes to disk
-                    return;
-                }
-            }
 
-            ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.COMMON, FMLPaths.CONFIGDIR.get());
+            // Persist to config file
+            var path = FMLPaths.CONFIGDIR.get().resolve(SereneSeasonsPlus.MODID + "-common.toml");
+            com.electronwill.nightconfig.core.file.CommentedFileConfig cfg = com.electronwill.nightconfig.core.file.CommentedFileConfig.builder(path).sync().autosave().build();
+            cfg.load();
+            cfg.set("snowstorm.enabled", enabled);
+            cfg.set("snowstorm.intensity", intensity);
+            cfg.save();
+            cfg.close();
         } catch (Exception e) {
             LOGGER.warn("Failed to update Serene Seasons Plus config: {}", e.getMessage());
         }

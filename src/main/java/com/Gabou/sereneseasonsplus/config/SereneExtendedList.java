@@ -20,10 +20,9 @@ import java.util.List;
  */
 public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.Row> {
 
-    public SereneExtendedList(Minecraft mc, int width, int height, int top, int bottom, int itemHeight) {
-        super(mc, width, height, top, bottom, itemHeight);
-        this.setRenderBackground(false);
-        this.setRenderTopAndBottom(false);
+    public SereneExtendedList(Minecraft mc, int width, int height, int top, int itemHeight) {
+        // 1.21 constructor signature: (Minecraft, width, height, top, itemHeight)
+        super(mc, width, height, top, itemHeight);
     }
 
     @Override
@@ -120,8 +119,8 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         }
 
         @Override
-        public boolean mouseScrolled(double mx, double my, double delta) {
-            for (AbstractWidget w : widgets) if (w.mouseScrolled(mx, my, delta)) return true;
+        public boolean mouseScrolled(double mx, double my, double deltaX, double deltaY) {
+            for (AbstractWidget w : widgets) if (w.mouseScrolled(mx, my, deltaX, deltaY)) return true;
             return false; // let the list handle scrolling otherwise
         }
 

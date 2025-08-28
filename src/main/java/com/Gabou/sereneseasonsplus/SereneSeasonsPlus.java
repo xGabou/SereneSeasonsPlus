@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package com.Gabou.sereneseasonsplus;
 
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
@@ -12,46 +7,43 @@ import com.Gabou.sereneseasonsplus.features.SnowPiller;
 import com.Gabou.sereneseasonsplus.util.ConfigHacks;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.SereneService;
-import net.minecraft.locale.Language;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 
-import java.util.Map;
-
-import static com.Gabou.sereneseasonsplus.SereneSeasonsPlus.MODID;
-
-@Mod(MODID)
+@Mod(SereneSeasonsPlus.MODID)
 public class SereneSeasonsPlus {
     public static final String MODID = "sereneseasonsplus";
     private static final Logger LOGGER = LogManager.getLogger(SereneSeasonsPlus.class);
     private int ticker = 0;
     private Season.SubSeason lastSubSeason = null;
 
-    public SereneSeasonsPlus(FMLJavaModLoadingContext context) {
+    public SereneSeasonsPlus(IEventBus modEventBus, ModContainer modContainer) {
         EnvironmentHelper.initialize();
         NeoForge.EVENT_BUS.register(SnowBlockReplacer.class);
         NeoForge.EVENT_BUS.register(SnowPiller.class);
         NeoForge.EVENT_BUS.register(this);
-        context.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
-        NeoForge.EVENT_BUS.register(SeasonChangeEvent.class);
+        modContainer.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
 
+        // Register integration listeners
+        SeasonChangeEvent.register();
 
-        context.getModEventBus().addListener((FMLClientSetupEvent event) -> {
-            LOGGER.info("Setting up Serene Season Plus (Common)");
-            clientSetup(event,context);
+        modEventBus.addListener((FMLClientSetupEvent event) -> {
+            LOGGER.info("Setting up Serene Seasons Plus (Common)");
+            clientSetup(event, modContainer);
         });
     }
 
@@ -61,14 +53,10 @@ public class SereneSeasonsPlus {
         SereneService.init();
     }
 
-    private void clientSetup(final FMLClientSetupEvent event, FMLJavaModLoadingContext context) {
-        LOGGER.info("Setting up Serene Season Plus (Client)");
-        event.enqueueWork(() -> {
-            SereneSeasonsPlusClient.init(context);
-        });
-
+    private void clientSetup(final FMLClientSetupEvent event, ModContainer modContainer) {
+        LOGGER.info("Setting up Serene Seasons Plus (Client)");
+        event.enqueueWork(() -> new SereneSeasonsPlusClient(modContainer));
     }
-
 
     @SubscribeEvent
     public void onServerStopping(ServerStoppingEvent event) {
@@ -84,7 +72,6 @@ public class SereneSeasonsPlus {
                 this.onTick(level);
             }
         }
-
     }
 
     private void onTick(Level level) {
@@ -92,73 +79,68 @@ public class SereneSeasonsPlus {
             this.ticker = 0;
             if (EnvironmentHelper.shouldRunMod()) {
                 Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
-                if (currentSubSeason != this.lastSubSeason ) {
+                if (currentSubSeason != this.lastSubSeason) {
                     this.lastSubSeason = currentSubSeason;
                     if (SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get()) {
                         double daySpeed = this.getDaySpeedForSeason(currentSubSeason);
                         double nightSpeed = this.getNightSpeedForSeason(currentSubSeason);
                         ConfigHacks.setTimeSpeeds(daySpeed, nightSpeed);
                         LogInfo(currentSubSeason, daySpeed, nightSpeed);
-                    }
-                    else if(SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get()) {
+                    } else if (SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get()) {
                         double daySpeed = SereneExtendedConfig.CUSTOM_DAY_LENGTH.get();
                         double nightSpeed = SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get();
                         ConfigHacks.setTimeSpeeds(daySpeed, nightSpeed);
                         LogInfo(currentSubSeason, daySpeed, nightSpeed);
-                    }
-                    else {
-                        LOGGER.info(currentSubSeason.toString()+" is active, but both seasonal and custom daylight cycle are disabled.");
+                    } else {
+                        LOGGER.info(currentSubSeason + " is active, but both seasonal and custom daylight cycle are disabled.");
                     }
                 }
-
-
             }
         }
     }
 
     private static void LogInfo(Season.SubSeason currentSubSeason, double daySpeed, double nightSpeed) {
-        LOGGER.info("Season: {} → DaySpeed: {}, NightSpeed: {}", currentSubSeason, daySpeed, nightSpeed);
+        LOGGER.info("Season: {} | DaySpeed: {}, NightSpeed: {}", currentSubSeason, daySpeed, nightSpeed);
     }
 
     private double getDaySpeedForSeason(Season.SubSeason season) {
-        double var10000;
+        double v;
         switch (season) {
-            case EARLY_SPRING -> var10000 = 1.09;
-            case MID_SPRING -> var10000 = 0.87;
-            case LATE_SPRING -> var10000 = 0.67;
-            case EARLY_SUMMER -> var10000 = 0.59;
-            case MID_SUMMER -> var10000 = 0.67;
-            case LATE_SUMMER -> var10000 = 0.86;
-            case EARLY_AUTUMN -> var10000 = 1.09;
-            case MID_AUTUMN -> var10000 = 1.28;
-            case LATE_AUTUMN -> var10000 = 1.47;
-            case EARLY_WINTER -> var10000 = 1.55;
-            case MID_WINTER -> var10000 = 1.45;
-            case LATE_WINTER -> var10000 = 1.26;
+            case EARLY_SPRING -> v = 1.09;
+            case MID_SPRING -> v = 0.87;
+            case LATE_SPRING -> v = 0.67;
+            case EARLY_SUMMER -> v = 0.59;
+            case MID_SUMMER -> v = 0.67;
+            case LATE_SUMMER -> v = 0.86;
+            case EARLY_AUTUMN -> v = 1.09;
+            case MID_AUTUMN -> v = 1.28;
+            case LATE_AUTUMN -> v = 1.47;
+            case EARLY_WINTER -> v = 1.55;
+            case MID_WINTER -> v = 1.45;
+            case LATE_WINTER -> v = 1.26;
             default -> throw new IncompatibleClassChangeError();
         }
-
-        return var10000;
+        return v;
     }
 
     private double getNightSpeedForSeason(Season.SubSeason season) {
-        double var10000;
+        double v;
         switch (season) {
-            case EARLY_SPRING -> var10000 = 0.92;
-            case MID_SPRING -> var10000 = 1.11;
-            case LATE_SPRING -> var10000 = 1.28;
-            case EARLY_SUMMER -> var10000 = 1.35;
-            case MID_SUMMER -> var10000 = 1.28;
-            case LATE_SUMMER -> var10000 = 1.12;
-            case EARLY_AUTUMN -> var10000 = 0.92;
-            case MID_AUTUMN -> var10000 = 0.77;
-            case LATE_AUTUMN -> var10000 = 0.6;
-            case EARLY_WINTER -> var10000 = 0.54;
-            case MID_WINTER -> var10000 = 0.62;
-            case LATE_WINTER -> var10000 = 0.78;
+            case EARLY_SPRING -> v = 0.92;
+            case MID_SPRING -> v = 1.11;
+            case LATE_SPRING -> v = 1.28;
+            case EARLY_SUMMER -> v = 1.35;
+            case MID_SUMMER -> v = 1.28;
+            case LATE_SUMMER -> v = 1.12;
+            case EARLY_AUTUMN -> v = 0.92;
+            case MID_AUTUMN -> v = 0.77;
+            case LATE_AUTUMN -> v = 0.6;
+            case EARLY_WINTER -> v = 0.54;
+            case MID_WINTER -> v = 0.62;
+            case LATE_WINTER -> v = 0.78;
             default -> throw new IncompatibleClassChangeError();
         }
-
-        return var10000;
+        return v;
     }
 }
+

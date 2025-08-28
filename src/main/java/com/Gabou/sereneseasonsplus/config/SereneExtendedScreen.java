@@ -7,8 +7,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.neoforged.fml.config.ConfigTracker;
-import net.neoforged.fml.config.ModConfig;
 
 /**
  * Simple in-game configuration screen.
@@ -66,8 +64,13 @@ public class SereneExtendedScreen extends Screen {
         int bottom = this.height - 40;
 
         // Create the list (row height 24) and place it
-        this.list = new SereneExtendedList(this.minecraft, panelW, this.height, top + 20, bottom - 40, 24);
-        this.list.setLeftPos(panelX);
+        this.list = new SereneExtendedList(this.minecraft, panelW, this.height, top + 20, 24);
+        // 1.21+ uses setX on lists to position them
+        try {
+            this.list.getClass().getMethod("setX", int.class).invoke(this.list, panelX);
+        } catch (Throwable t) {
+            // fallback: no-op if API differs
+        }
         this.addRenderableWidget(this.list);
 
         // Buttons
@@ -127,7 +130,7 @@ public class SereneExtendedScreen extends Screen {
     /** Draw dim background + centered panel so it looks modal/focused. */
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(g); // dims everything behind
+        this.renderBackground(g, mouseX, mouseY, partialTick); // dims everything behind
 
         // optional panel chrome
         int panelW = 480;
@@ -174,28 +177,28 @@ public class SereneExtendedScreen extends Screen {
         SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.set(parsed4);
 
         try {
-            // EITHER A) save via ModConfig
-            saveCommonConfigForMod(SereneSeasonsPlus.MODID);
-
-            // OR B) if you prefer and your SPEC is registered:
-            // SereneExtendedConfig.SPEC.save();
-
+            // Persist to file via NightConfig (NeoForge 1.21)
+            saveToFile();
             errorMessage = null;
         } catch (Exception e) {
             errorMessage = Component.literal("Failed to save config: " + e.getMessage());
         }
     }
 
-    /** Finds this mod's COMMON config and saves it. */
-    public static void saveCommonConfigForMod(String modId) {
-        var set = ConfigTracker.INSTANCE.configSets().get(ModConfig.Type.COMMON);
-        if (set == null) return;
-        for (ModConfig cfg : set) {
-            if (cfg.getModId().equals(modId)) {
-                cfg.save(); // writes to disk
-                return;
-            }
-        }
+    private void saveToFile() {
+        // Write values directly to sereneseasonsplus-common.toml using NightConfig
+        var path = net.neoforged.fml.loading.FMLPaths.CONFIGDIR.get().resolve(SereneSeasonsPlus.MODID + "-common.toml");
+        com.electronwill.nightconfig.core.file.CommentedFileConfig cfg = com.electronwill.nightconfig.core.file.CommentedFileConfig.builder(path).sync().autosave().build();
+        cfg.load();
+        cfg.set("performance.useAsync", useAsync);
+        cfg.set("snowPillerAndReplacer.tickSnowPiller", tickSnowPillerThreshold);
+        cfg.set("snowPillerAndReplacer.tickSnowReplacer", tickSnowReplacerThreshold);
+        cfg.set("seasonalDaylightCycle.enableSeasonalDaylightCycle", seasonalDaylightCycle);
+        cfg.set("seasonalDaylightCycle.customCycleLength", customDayCycle);
+        cfg.set("seasonalDaylightCycle.customDayLength", customDayLength);
+        cfg.set("seasonalDaylightCycle.customNightLength", customNightLength);
+        cfg.save();
+        cfg.close();
     }
 
     @Override
