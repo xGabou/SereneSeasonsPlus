@@ -74,6 +74,11 @@ public final class SnowPiller {
 
 
     @SubscribeEvent
+    /**
+     * Initializes thresholds and clears throttling when the server starts.
+     *
+     * @param event server starting event
+     */
     public static void onServerStarting(ServerStartingEvent event) {
         tickThresholdSnowPiller = SereneExtendedConfig.TICK_SNOW_PILLER.get();
         tickCounter = 0;
@@ -81,6 +86,11 @@ public final class SnowPiller {
     }
 
     @SubscribeEvent
+    /**
+     * Applies updated configuration at runtime.
+     *
+     * @param event server post-tick event
+     */
     public static void onConfigReload(ServerTickEvent.Post event) {
         tickThresholdSnowPiller = SereneExtendedConfig.TICK_SNOW_PILLER.get();
         SereneService.reloadConfig();
@@ -88,6 +98,11 @@ public final class SnowPiller {
     }
 
     @SubscribeEvent
+    /**
+     * Periodically schedules asynchronous snow placement around players.
+     *
+     * @param event server post-tick event
+     */
     public static void onServerTick(ServerTickEvent.Post event) {
         if (EnvironmentHelper.shouldRunMod()) {
             MinecraftServer server = event.getServer();
@@ -121,7 +136,7 @@ public final class SnowPiller {
         int attempts;
         if (!level.isRaining()) return;
 
-        // cache biome + cold check (don’t recompute)
+        
         final boolean coldEnough = level.getBiome(center).value().coldEnoughToSnow(center);
         if (!coldEnough) return;
 
@@ -151,7 +166,7 @@ public final class SnowPiller {
             return null;
         }
 
-        // Early reject: center biome not cold enough -> bail the entire search quickly.
+        
         if (!level.getBiome(center).value().coldEnoughToSnow(center)) {
             ts.recordFail(now, center);
             return null;
@@ -171,7 +186,7 @@ public final class SnowPiller {
             pos.set(x, y, z);
             below.set(x, y - 1, z);
 
-            // Fast rejects:
+            
             final BlockState stateAt = level.getBlockState(pos);
             final boolean canStackSnow =
                     stateAt.is(Blocks.SNOW)
@@ -183,26 +198,28 @@ public final class SnowPiller {
 
             if (level.getBlockState(below).is(Blocks.WATER)) continue;
 
-            // Final correctness on the actual candidate position (accounts for height/weather).
+            
             if (level.getBiome(pos).value().coldEnoughToSnow(pos)) {
                 ts.recordSuccess(center);
                 return pos.immutable();
             }
         }
 
-        // No luck this pass; throttle further attempts unless the player moves.
+        
         ts.recordFail(now, center);
         return null;
     }
 
     /**
-     * Places a snow layer at pos with basic survival checks.
-     * Returns true if the block was placed.
+     * Places a snow layer at the given position with basic survival checks.
+     *
+     * @param level server level
+     * @param pos   target position
      */
     public static void placeSnowAt(ServerLevel level, BlockPos pos) {
         final BlockState stateAt = level.getBlockState(pos);
 
-        // Case 1: already snow — add a layer if < 8
+        
         if (stateAt.is(Blocks.SNOW) && stateAt.hasProperty(SnowLayerBlock.LAYERS)) {
             int layers = stateAt.getValue(SnowLayerBlock.LAYERS);
             if (layers < 8) {
@@ -211,7 +228,7 @@ public final class SnowPiller {
             return; // already at max layers
         }
 
-        // Case 2: empty — place a new snow layer if it can survive
+        
         if (!level.isEmptyBlock(pos)) return;
 
         BlockState snow = Blocks.SNOW.defaultBlockState();
@@ -220,7 +237,7 @@ public final class SnowPiller {
     }
 
 // ──────────────────────────────────────────────────────────────────────────
-// Throttle state
+ 
 // ──────────────────────────────────────────────────────────────────────────
 
     private static final class ThrottleState {
@@ -229,7 +246,7 @@ public final class SnowPiller {
 
         boolean shouldSkip(long now, BlockPos currentCenter, int radius) {
             if (hasMovedEnough(currentCenter, radius)) {
-                // Significant movement resets throttle
+                
                 nextAllowedTick = 0L;
                 return false;
             }
@@ -256,7 +273,7 @@ public final class SnowPiller {
     }
 
 // ──────────────────────────────────────────────────────────────────────────
-// (Optional) utility if you want a one-liner from just a LevelReader
+ 
 // ──────────────────────────────────────────────────────────────────────────
 
     /**

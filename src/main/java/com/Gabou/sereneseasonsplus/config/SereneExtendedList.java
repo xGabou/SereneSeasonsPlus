@@ -19,22 +19,41 @@ import java.util.List;
  * - Avoids fragile @Override on mapping-variant methods (children/narratables)
  */
 public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.Row> {
-
+    /**
+     * Creates a scrollable list for config rows.
+     *
+     * @param mc         minecraft instance
+     * @param width      list width
+     * @param height     list height
+     * @param top        top y position
+     * @param itemHeight height of each row
+     */
     public SereneExtendedList(Minecraft mc, int width, int height, int top, int itemHeight) {
-        // 1.21 constructor signature: (Minecraft, width, height, top, itemHeight)
         super(mc, width, height, top, itemHeight);
     }
 
     @Override
+    /**
+     * Fixed content width for each row.
+     */
     public int getRowWidth() {
-        return 360; // content width (label + 200px control)
+        return 360;
     }
 
     @Override
+    /**
+     * Scrollbar position aligned to the right of the content.
+     */
     protected int getScrollbarPosition() {
         return this.getRowLeft() + getRowWidth() + 8;
     }
 
+    /**
+     * Adds a new row containing the label and provided widgets.
+     *
+     * @param label   row label
+     * @param widgets widgets to render and interact with
+     */
     public void addRow(Component label, AbstractWidget... widgets) {
         this.addEntry(new Row(this, label, widgets));
     }
@@ -45,27 +64,35 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         private final Component label;
         private final List<AbstractWidget> widgets;
 
-        // cache to avoid relaying out every frame when coords unchanged
         private int lastX = Integer.MIN_VALUE, lastY = Integer.MIN_VALUE, lastRowW = Integer.MIN_VALUE, lastRowH = Integer.MIN_VALUE;
 
+        /**
+         * Creates a row.
+         *
+         * @param owner   parent list
+         * @param label   row label
+         * @param widgets widgets in the row
+         */
         Row(SereneExtendedList owner, Component label, AbstractWidget... widgets) {
             this.owner = owner;
             this.label = label;
             this.widgets = Arrays.asList(widgets);
         }
 
+        /**
+         * Lays out widgets only when coordinates or row dimensions change.
+         */
         private void layoutIfNeeded(int x, int y, int rowWidth, int rowHeight) {
             if (x == lastX && y == lastY && rowWidth == lastRowW && rowHeight == lastRowH) return;
             lastX = x; lastY = y; lastRowW = rowWidth; lastRowH = rowHeight;
 
-            final int wx = x + rowWidth - 200;          // right-align 200px control
-            final int wy = y + (rowHeight - 20) / 2;    // center vertically (EditBox is 20px)
+            final int wx = x + rowWidth - 200;
+            final int wy = y + (rowHeight - 20) / 2;
 
             for (AbstractWidget w : widgets) {
                 if (w.getX() != wx) w.setX(wx);
                 if (w.getY() != wy) w.setY(wy);
                 if (w.getWidth() != 200) w.setWidth(200);
-                // DO NOT change height here; EditBox must remain 20px
             }
         }
 
@@ -74,33 +101,32 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
                            int mouseX, int mouseY, boolean hovered, float delta) {
             layoutIfNeeded(x, y, rowWidth, rowHeight);
 
-            // label
             g.drawString(owner.minecraft.font, label, x, y + 6, 0xFFFFFF, false);
 
-            // controls
             for (AbstractWidget w : widgets) {
                 w.render(g, mouseX, mouseY, delta);
             }
         }
 
-        // mapping-safe: don't @Override these; names vary but the list uses them
+        
+        /**
+         * Returns the narratable entries for accessibility.
+         */
         public List<? extends NarratableEntry> narratables() { return widgets; }
+        /**
+         * Returns the children listeners of this row.
+         */
         public List<? extends GuiEventListener> children()    { return widgets; }
 
-        // Focus + input forwarding so EditBox can be edited
         @Override
         public boolean mouseClicked(double mx, double my, int button) {
             for (AbstractWidget w : widgets) {
                 if (w.mouseClicked(mx, my, button)) {
-                    // select this row for the list (keeps the list happy)
                     owner.setSelected(this);
-
-                    // give GUI focus to the clicked widget
                     w.setFocused(true);
                     return true;
                 }
             }
-            // click on empty row area just selects the row
             owner.setSelected(this);
             return false;
         }
@@ -121,7 +147,7 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         @Override
         public boolean mouseScrolled(double mx, double my, double deltaX, double deltaY) {
             for (AbstractWidget w : widgets) if (w.mouseScrolled(mx, my, deltaX, deltaY)) return true;
-            return false; // let the list handle scrolling otherwise
+            return false;
         }
 
         @Override
@@ -136,7 +162,6 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
             return false;
         }
 
-        // minimal narration to satisfy variants of the API
         @Override public void updateNarration(NarrationElementOutput out) { /* no-op */ }
         public Component getNarration() { return label; }
     }

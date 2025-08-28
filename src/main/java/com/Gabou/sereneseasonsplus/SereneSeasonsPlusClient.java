@@ -6,8 +6,12 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
 public class SereneSeasonsPlusClient {
+    /**
+     * Registers the configuration screen factory for the client.
+     *
+     * @param container the active mod container
+     */
     public SereneSeasonsPlusClient(ModContainer container) {
-        // Register config screen for NeoForge 1.21.x
         container.registerExtensionPoint(
             IConfigScreenFactory.class,
             new java.util.function.Supplier<IConfigScreenFactory>() {

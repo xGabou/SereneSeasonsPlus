@@ -7,6 +7,9 @@ import sereneseasons.api.season.SeasonChangedEvent;
 
 public class SeasonChangeEvent {
 
+    /**
+     * Registers listeners that propagate season change events to the environment helper.
+     */
     public static void register() {
         EventManager.addListener((SeasonChangedEvent.Standard event) -> {
             if (event.getLevel() instanceof ServerLevel serverLevel) {

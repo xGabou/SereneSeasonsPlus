@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package com.Gabou.sereneseasonsplus.features;
 
 import com.Gabou.sereneseasonsplus.SereneSeasonsPlus;
@@ -43,6 +38,11 @@ public class SnowBlockReplacer {
 
 
     @SubscribeEvent
+    /**
+     * Initializes thresholds and clears state when the server starts.
+     *
+     * @param event server starting event
+     */
     public static void onServerStarting(ServerStartingEvent event) {
         tickThresholdSnowReplacer = SereneExtendedConfig.TICK_SNOW_REPLACER.get();
         tickCounter = 0;
@@ -52,6 +52,11 @@ public class SnowBlockReplacer {
 
 
     @SubscribeEvent
+    /**
+     * Refreshes configuration values periodically so new settings apply.
+     *
+     * @param event server post-tick event
+     */
     public static void onConfigReload(ServerTickEvent.Post event) {
         tickThresholdSnowReplacer = SereneExtendedConfig.TICK_SNOW_REPLACER.get();
         SereneService.reloadConfig();
@@ -59,6 +64,12 @@ public class SnowBlockReplacer {
     }
 
     @SubscribeEvent
+    /**
+     * On server tick, schedules asynchronous snow block replacement
+     * near players based on temperature and season.
+     *
+     * @param event server post-tick event
+     */
     public static void onServerTick(ServerTickEvent.Post event) {
         if (EnvironmentHelper.shouldRunMod()) {
             ++tickCounter;
@@ -74,6 +85,11 @@ public class SnowBlockReplacer {
         }
     }
 
+    /**
+     * Caches the current block positions for the given players.
+     *
+     * @param players iterable of players
+     */
     private static void updatePlayerPositions(Iterable<ServerPlayer> players) {
         for (ServerPlayer player : players) {
             playerPositions.put(player, player.blockPosition());
@@ -81,6 +97,11 @@ public class SnowBlockReplacer {
 
     }
 
+    /**
+     * Scans around tracked players and replaces snow blocks based on temperature.
+     *
+     * @param level the level to operate in
+     */
     private static void replaceSnowBlocks(Level level) {
         Iterator var1 = playerPositions.entrySet().iterator();
 
@@ -117,6 +138,12 @@ public class SnowBlockReplacer {
         }
     }
 
+    /**
+     * Determines how many snow blocks to replace depending on temperature.
+     *
+     * @param temperature biome temperature near player
+     * @return number of blocks to replace this pass
+     */
     private static int calculateBlocksToReplace(float temperature) {
         if (temperature < 0.2F) {
             return 1;
@@ -125,11 +152,25 @@ public class SnowBlockReplacer {
         }
     }
 
+    /**
+     * Returns the current simulation/view distance used for estimating radius.
+     *
+     * @param player the player
+     * @return view distance in chunks
+     */
     private static int getSimulationDistance(ServerPlayer player) {
         MinecraftServer server = player.getServer();
         return server != null ? server.getPlayerList().getViewDistance() : 10;
     }
 
+    /**
+     * Finds a nearby snow block position within a radius around a center.
+     *
+     * @param level  level to search
+     * @param center center position
+     * @param radius search radius
+     * @return the first matching position or {@code null}
+     */
     private static BlockPos findSnowBlockInRadius(Level level, BlockPos center, int radius) {
         for (int x = -radius; x <= radius; ++x) {
             for (int z = -radius; z <= radius; ++z) {

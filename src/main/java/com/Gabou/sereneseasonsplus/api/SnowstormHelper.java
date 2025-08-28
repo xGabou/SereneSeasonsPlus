@@ -40,11 +40,8 @@ public class SnowstormHelper {
      */
     private static void updateSnowstormConfig(boolean enabled, int intensity) {
         try {
-            // Update in-memory config values
             SereneExtendedConfig.SNOWSTORM_ENABLED.set(enabled);
             SereneExtendedConfig.SNOWSTORM_INTENSITY.set(intensity);
-
-            // Persist to config file
             var path = FMLPaths.CONFIGDIR.get().resolve(SereneSeasonsPlus.MODID + "-common.toml");
             com.electronwill.nightconfig.core.file.CommentedFileConfig cfg = com.electronwill.nightconfig.core.file.CommentedFileConfig.builder(path).sync().autosave().build();
             cfg.load();

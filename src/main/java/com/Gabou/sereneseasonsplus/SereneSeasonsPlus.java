@@ -31,6 +31,12 @@ public class SereneSeasonsPlus {
     private int ticker = 0;
     private Season.SubSeason lastSubSeason = null;
 
+    /**
+     * Constructs the mod entry point, registers event handlers, and config.
+     *
+     * @param modEventBus the mod event bus
+     * @param modContainer the active mod container
+     */
     public SereneSeasonsPlus(IEventBus modEventBus, ModContainer modContainer) {
         EnvironmentHelper.initialize();
         NeoForge.EVENT_BUS.register(SnowBlockReplacer.class);
@@ -38,7 +44,6 @@ public class SereneSeasonsPlus {
         NeoForge.EVENT_BUS.register(this);
         modContainer.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
 
-        // Register integration listeners
         SeasonChangeEvent.register();
 
         modEventBus.addListener((FMLClientSetupEvent event) -> {
@@ -48,22 +53,43 @@ public class SereneSeasonsPlus {
     }
 
     @SubscribeEvent
+    /**
+     * Initializes services when the server is starting.
+     *
+     * @param event the server starting event
+     */
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("Serene Seasons Extended is loading!");
         SereneService.init();
     }
 
+    /**
+     * Performs client-side setup such as registering config screens.
+     *
+     * @param event the client setup event
+     * @param modContainer the active mod container
+     */
     private void clientSetup(final FMLClientSetupEvent event, ModContainer modContainer) {
         LOGGER.info("Setting up Serene Seasons Plus (Client)");
         event.enqueueWork(() -> new SereneSeasonsPlusClient(modContainer));
     }
 
     @SubscribeEvent
+    /**
+     * Shuts down services when the server stops.
+     *
+     * @param event the server stopping event
+     */
     public void onServerStopping(ServerStoppingEvent event) {
         SereneService.shutdown();
     }
 
     @SubscribeEvent
+    /**
+     * Handles server post-tick to periodically update daylight cycle speeds.
+     *
+     * @param event server post-tick event
+     */
     public void onServerTick(ServerTickEvent.Post event) {
         MinecraftServer server = event.getServer();
         if (server != null) {
@@ -74,6 +100,12 @@ public class SereneSeasonsPlus {
         }
     }
 
+    /**
+     * Internal tick handler running every few seconds to adjust time speeds
+     * according to the current sub-season and configuration.
+     *
+     * @param level the overworld level
+     */
     private void onTick(Level level) {
         if (++this.ticker >= 400) {
             this.ticker = 0;
@@ -99,10 +131,23 @@ public class SereneSeasonsPlus {
         }
     }
 
+    /**
+     * Logs the current season and configured day/night speeds.
+     *
+     * @param currentSubSeason the active sub-season
+     * @param daySpeed day speed multiplier
+     * @param nightSpeed night speed multiplier
+     */
     private static void LogInfo(Season.SubSeason currentSubSeason, double daySpeed, double nightSpeed) {
         LOGGER.info("Season: {} | DaySpeed: {}, NightSpeed: {}", currentSubSeason, daySpeed, nightSpeed);
     }
 
+    /**
+     * Returns the day speed for the given sub-season.
+     *
+     * @param season sub-season
+     * @return day speed multiplier
+     */
     private double getDaySpeedForSeason(Season.SubSeason season) {
         double v;
         switch (season) {
@@ -123,6 +168,12 @@ public class SereneSeasonsPlus {
         return v;
     }
 
+    /**
+     * Returns the night speed for the given sub-season.
+     *
+     * @param season sub-season
+     * @return night speed multiplier
+     */
     private double getNightSpeedForSeason(Season.SubSeason season) {
         double v;
         switch (season) {
@@ -143,4 +194,3 @@ public class SereneSeasonsPlus {
         return v;
     }
 }
-

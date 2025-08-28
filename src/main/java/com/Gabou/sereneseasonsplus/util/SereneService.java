@@ -14,22 +14,27 @@ public class SereneService {
     private static ExecutorService ASYNC_EXECUTOR;
     private static boolean useAsync = SereneExtendedConfig.USE_ASYNC.get();
 
-    private SereneService() {
-        // Prevent instantiation
-    }
+    private SereneService() { }
 
 
+    /**
+     * Initializes the asynchronous executor service if not already initialized.
+     */
     public static void init() {
         if (initialized) return;
         initialized = true;
         ASYNC_EXECUTOR = Executors.newSingleThreadExecutor(r -> {
-            LOGGER.info("Creating Async executor");
             Thread t = new Thread(r, "useAsync");
             t.setDaemon(false);
             return t;
         });
     }
 
+    /**
+     * Runs the provided task either asynchronously (if enabled) or on the caller thread.
+     *
+     * @param task runnable task to execute
+     */
     public static void runAsync(Runnable task) {
         if (!useAsync)
             task.run();
@@ -44,11 +49,17 @@ public class SereneService {
         }
     }
 
+    /**
+     * Shuts down the executor service and marks the service uninitialized.
+     */
     public static void shutdown() {
         if (ASYNC_EXECUTOR != null) ASYNC_EXECUTOR.shutdown();
         initialized = false;
     }
 
+    /**
+     * Reloads configuration-backed flags affecting the service behavior.
+     */
     public static void reloadConfig() {
         useAsync = SereneExtendedConfig.USE_ASYNC.get();
     }
