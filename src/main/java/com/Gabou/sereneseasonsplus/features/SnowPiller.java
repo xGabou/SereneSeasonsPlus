@@ -17,9 +17,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -81,15 +81,15 @@ public final class SnowPiller {
     }
 
     @SubscribeEvent
-    public static void onConfigReload(TickEvent.ServerTickEvent event) {
+    public static void onConfigReload(ServerTickEvent.Post event) {
         tickThresholdSnowPiller = SereneExtendedConfig.TICK_SNOW_PILLER.get();
         SereneService.reloadConfig();
 
     }
 
     @SubscribeEvent
-    public static void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && EnvironmentHelper.shouldRunMod()) {
+    public static void onServerTick(ServerTickEvent.Post event) {
+        if (EnvironmentHelper.shouldRunMod()) {
             MinecraftServer server = event.getServer();
             Level level = server.getLevel(Level.OVERWORLD);
             if (level instanceof ServerLevel serverLevel) {

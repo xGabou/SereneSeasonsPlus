@@ -15,17 +15,15 @@ import com.Gabou.sereneseasonsplus.util.SereneService;
 import net.minecraft.locale.Language;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.TickEvent.Phase;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.event.server.ServerStoppingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
@@ -44,11 +42,11 @@ public class SereneSeasonsPlus {
 
     public SereneSeasonsPlus(FMLJavaModLoadingContext context) {
         EnvironmentHelper.initialize();
-        MinecraftForge.EVENT_BUS.register(SnowBlockReplacer.class);
-        MinecraftForge.EVENT_BUS.register(SnowPiller.class);
-        MinecraftForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(SnowBlockReplacer.class);
+        NeoForge.EVENT_BUS.register(SnowPiller.class);
+        NeoForge.EVENT_BUS.register(this);
         context.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
-        MinecraftForge.EVENT_BUS.register(SeasonChangeEvent.class);
+        NeoForge.EVENT_BUS.register(SeasonChangeEvent.class);
 
 
         context.getModEventBus().addListener((FMLClientSetupEvent event) -> {
@@ -78,21 +76,14 @@ public class SereneSeasonsPlus {
     }
 
     @SubscribeEvent
-    public void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase == Phase.END) {
-            MinecraftServer server = event.getServer();
-            if (server != null) {
-                Level level = server.getLevel(Level.OVERWORLD);
-                if (level != null) {
-                    this.onTick(level);
-                }
+    public void onServerTick(ServerTickEvent.Post event) {
+        MinecraftServer server = event.getServer();
+        if (server != null) {
+            Level level = server.getLevel(Level.OVERWORLD);
+            if (level != null) {
+                this.onTick(level);
             }
         }
-
-    }
-
-    @SubscribeEvent
-    public void onConfigReload(TickEvent.ServerTickEvent event) {
 
     }
 

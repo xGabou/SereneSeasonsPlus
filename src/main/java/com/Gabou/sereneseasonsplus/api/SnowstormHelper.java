@@ -2,9 +2,9 @@ package com.Gabou.sereneseasonsplus.api;
 
 import com.Gabou.sereneseasonsplus.SereneSeasonsPlus;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
-import net.minecraftforge.fml.config.ConfigTracker;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.loading.FMLPaths;
+import net.neoforged.fml.config.ConfigTracker;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

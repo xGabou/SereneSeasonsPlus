@@ -22,11 +22,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.TickEvent.Phase;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod.EventBusSubscriber;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
@@ -53,15 +52,15 @@ public class SnowBlockReplacer {
 
 
     @SubscribeEvent
-    public static void onConfigReload(TickEvent.ServerTickEvent event) {
+    public static void onConfigReload(ServerTickEvent.Post event) {
         tickThresholdSnowReplacer = SereneExtendedConfig.TICK_SNOW_REPLACER.get();
         SereneService.reloadConfig();
 
     }
 
     @SubscribeEvent
-    public static void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase == Phase.END && EnvironmentHelper.shouldRunMod()) {
+    public static void onServerTick(ServerTickEvent.Post event) {
+        if (EnvironmentHelper.shouldRunMod()) {
             ++tickCounter;
             MinecraftServer server = event.getServer();
             Level level = server.getLevel(Level.OVERWORLD);
