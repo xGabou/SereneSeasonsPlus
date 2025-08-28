@@ -19,6 +19,14 @@ public class SnowUtils {
     private static final Logger LOGGER = LogManager.getLogger("SnowUtils");
     private static final Map<String, Float> biomeTemperatures = new HashMap();
 
+    /**
+     * TODO: describe method.
+     *
+     * @param level description
+     * @param pos description
+     * @param currentSubSeason description
+     * @return description
+     */
     public static float getCachedBiomeTemperature(Level level, BlockPos pos, Season.SubSeason currentSubSeason) {
         Holder<Biome> biomeHolder = level.getBiome(pos);
         String biomeName = biomeHolder.unwrapKey().map(Object::toString).orElse("unknown");
@@ -51,15 +59,32 @@ public class SnowUtils {
             return cachedTemperature;
         }
     }
+    /**
+     * TODO: describe method.
+     *
+     * @param biomeHolder description
+     * @return description
+     */
     public static float getBiomeTemperature(Holder<Biome> biomeHolder) {
         Biome biome = biomeHolder.value();
         return biome.getBaseTemperature();
     }
+    /**
+     * TODO: describe method.
+     *
+     * @param subSeason description
+     * @return description
+     */
     private static boolean isWinterSubSeason(Season.SubSeason subSeason) {
         return subSeason == Season.SubSeason.EARLY_WINTER || subSeason == Season.SubSeason.MID_WINTER || subSeason == Season.SubSeason.LATE_WINTER;
     }
 
-    /**
+     /**
+      * TODO: describe method.
+      *
+      * @param SNOW description
+      * @return description
+      */
      * Decrement a layered block (e.g., SNOW) at the given pos. If it's at the minimum
      * layer (1) or not a layered block, remove it (set to AIR).
      * Uses update flags = 3 (neighbors + clients).
@@ -71,13 +96,12 @@ public class SnowUtils {
         breakOrDecrementLayer(level, pos, 3);
     }
 
-    /**
      * Same as {@link #breakOrDecrementLayer(Level, BlockPos)} but with custom flags.
      */
     public static void breakOrDecrementLayer(Level level, BlockPos pos, int flags) {
         BlockState state = level.getBlockState(pos);
 
-        // Handle classic layered snow: property LAYERS (1..8)
+        
         if (state.hasProperty(BlockStateProperties.LAYERS)) {
             int layers = state.getValue(BlockStateProperties.LAYERS);
             if (layers > 1) {
@@ -86,7 +110,7 @@ public class SnowUtils {
             }
         }
 
-        // Not layered (or now at 1): remove it
+        
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), flags);
     }
 }

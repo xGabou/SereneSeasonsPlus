@@ -44,14 +44,22 @@ public class SereneExtendedScreen extends Screen {
 
 
 
+    /**
+     * Constructs a new instance.
+     *
+     * @param parent description
+     */
     public SereneExtendedScreen(Screen parent) {
         super(Component.literal("Project Atmosphere Config"));
         this.parent = parent;
     }
 
+    /**
+     * TODO: describe method.
+     */
     @Override
     protected void init() {
-        // read config values...
+        
         this.useAsync = SereneExtendedConfig.USE_ASYNC.get();
         this.tickSnowPillerThreshold = SereneExtendedConfig.TICK_SNOW_PILLER.get();
         this.tickSnowReplacerThreshold = SereneExtendedConfig.TICK_SNOW_REPLACER.get();
@@ -65,12 +73,12 @@ public class SereneExtendedScreen extends Screen {
         int top = 40;
         int bottom = this.height - 40;
 
-        // Create the list (row height 24) and place it
+        
         this.list = new SereneExtendedList(this.minecraft, panelW, this.height, top + 20, bottom - 40, 24);
         this.list.setLeftPos(panelX);
         this.addRenderableWidget(this.list);
 
-        // Buttons
+        
         var asyncBtn = Button.builder(toggleLabel("Use Asynchronous Service", useAsync), b -> {
             int cores = Runtime.getRuntime().availableProcessors();
             int minCores = SereneExtendedConfig.MIN_CORES_FOR_ASYNC;
@@ -97,7 +105,7 @@ public class SereneExtendedScreen extends Screen {
         }).bounds(0,0,200,20).build();
         this.list.addRow(Component.literal("Custom Daylight Cycle"), customBtn);
 
-        // EditBoxes — create ONCE, height=20, do NOT add to screen
+        
         this.maxReplacerBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
         this.maxReplacerBox.setValue(Integer.toString(tickSnowReplacerThreshold));
         this.list.addRow(Component.literal("Tick Threshold Snow Replacer"), this.maxReplacerBox);
@@ -114,7 +122,7 @@ public class SereneExtendedScreen extends Screen {
         this.dayLengthBox.setValue(Double.toString(customDayLength));
         this.list.addRow(Component.literal("Custom Day Speed"), this.dayLengthBox);
 
-        // Only the list + Done go on the screen; NOT the boxes.
+        
         this.addRenderableWidget(
                 Button.builder(Component.translatable("gui.done"), b -> {
                     saveChanges();
@@ -124,25 +132,32 @@ public class SereneExtendedScreen extends Screen {
     }
 
 
-    /** Draw dim background + centered panel so it looks modal/focused. */
-    @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(g); // dims everything behind
+        this.renderBackground(g); 
 
-        // optional panel chrome
+        
         int panelW = 480;
         int panelX = (this.width - panelW) / 2;
         int top = 40;
         int bottom = this.height - 40;
-        g.fill(panelX - 4, top - 4, panelX + panelW + 4, bottom, 0xAA000000); // dark box
+        g.fill(panelX - 4, top - 4, panelX + panelW + 4, bottom, 0xAA000000); 
         g.drawString(this.font, "Serene Seasons Plus", panelX + 6, top - 14, 0xFFFFFF, false);
-        super.render(g, mouseX, mouseY, partialTick); // renders list + buttons
+        super.render(g, mouseX, mouseY, partialTick); 
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param name description
+     * @param enabled description
+     * @return description
+     */
     private Component toggleLabel(String name, boolean enabled) {
         return Component.literal(name + ": " + (enabled ? "ON" : "OFF"));
     }
 
+    /**
+     * TODO: describe method.
+     */
     private void saveChanges() {
         Component errorMessage;
         int parsed = this.tickSnowPillerThreshold;
@@ -174,11 +189,11 @@ public class SereneExtendedScreen extends Screen {
         SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.set(parsed4);
 
         try {
-            // EITHER A) save via ModConfig
+            
             saveCommonConfigForMod(ProjectAtmosphere.MODID);
 
-            // OR B) if you prefer and your SPEC is registered:
-            // SereneExtendedConfig.SPEC.save();
+            
+            
 
             errorMessage = null;
         } catch (Exception e) {
@@ -186,35 +201,48 @@ public class SereneExtendedScreen extends Screen {
         }
     }
 
-    /** Finds this mod's COMMON config and saves it. */
-    public static void saveCommonConfigForMod(String modId) {
-        var set = ConfigTracker.INSTANCE.configSets().get(ModConfig.Type.COMMON);
-        if (set == null) return;
-        for (ModConfig cfg : set) {
-            if (cfg.getModId().equals(modId)) {
-                cfg.save(); // writes to disk
+                cfg.save(); 
                 return;
             }
         }
     }
 
+    /**
+     * TODO: describe method.
+     */
     @Override
     public void onClose() {
         this.setFocused(false);
         Minecraft.getInstance().setScreen(parent);
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param x description
+     * @param y description
+     * @param button description
+     * @return description
+     */
     @Override
     public boolean mouseClicked(double x, double y, int button) {
         if (this.list != null && this.list.mouseClicked(x, y, button)) return true;
         return super.mouseClicked(x, y, button);
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param key description
+     * @param sc description
+     * @param mods description
+     * @return description
+     */
     @Override
     public boolean keyPressed(int key, int sc, int mods) {
         if (this.list != null && this.list.keyPressed(key, sc, mods)) return true;
 
-        // optional belt-and-suspenders: forward to boxes too
+        
         if (this.maxReplacerBox != null && this.maxReplacerBox.keyPressed(key, sc, mods)) return true;
         if (this.maxPillerBox   != null && this.maxPillerBox.keyPressed(key, sc, mods)) return true;
         if (this.nightLengthBox != null && this.nightLengthBox.keyPressed(key, sc, mods)) return true;
@@ -223,6 +251,13 @@ public class SereneExtendedScreen extends Screen {
         return super.keyPressed(key, sc, mods);
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param c description
+     * @param mods description
+     * @return description
+     */
     @Override
     public boolean charTyped(char c, int mods) {
         if (this.list != null && this.list.charTyped(c, mods)) return true;

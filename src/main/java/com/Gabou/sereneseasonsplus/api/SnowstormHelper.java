@@ -17,12 +17,16 @@ import org.apache.logging.log4j.Logger;
 public class SnowstormHelper {
     private static final Logger LOGGER = LogManager.getLogger("SnowstormHelper");
 
+    /**
+     * Constructs a new instance.
+     */
     private SnowstormHelper() {
     }
 
-    /**
-     * Enable snowstorm mode and set the desired intensity.
-     *
+     /**
+      * TODO: describe method.
+      * @return description
+      */
      * @param intensity intensity value (0-100)
      */
     public static void startSnowstorm(int intensity) {
@@ -48,7 +52,7 @@ public class SnowstormHelper {
             if (set == null) return;
             for (ModConfig cfg : set) {
                 if (cfg.getModId().equals(SereneSeasonsPlus.MODID)) {
-                    cfg.save(); // writes to disk
+                    cfg.save(); 
                     return;
                 }
             }

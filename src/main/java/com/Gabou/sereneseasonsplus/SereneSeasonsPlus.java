@@ -1,7 +1,7 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
+
+
+
+
 
 package com.Gabou.sereneseasonsplus;
 
@@ -38,6 +38,12 @@ import java.util.Map;
 
 import static com.Gabou.sereneseasonsplus.SereneSeasonsPlus.MODID;
 
+/**
+ * TODO: describe method.
+ *
+ * @param MODID description
+ * @return description
+ */
 @Mod(MODID)
 public class SereneSeasonsPlus {
     public static final String MODID = "sereneseasonsplus";
@@ -46,6 +52,11 @@ public class SereneSeasonsPlus {
     private int ticker = 0;
     private Season.SubSeason lastSubSeason = null;
 
+    /**
+     * Constructs a new instance.
+     *
+     * @param context description
+     */
     public SereneSeasonsPlus(FMLJavaModLoadingContext context) {
         isProjectAtmosphereLoaded = ModList.get().isLoaded("projectatmosphere");
         EnvironmentHelper.initialize();
@@ -64,12 +75,23 @@ public class SereneSeasonsPlus {
         });
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param event description
+     */
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("Serene Seasons Extended is loading!");
         SereneService.init();
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param event description
+     * @param context description
+     */
     private void clientSetup(final FMLClientSetupEvent event, FMLJavaModLoadingContext context) {
         LOGGER.info("Setting up Serene Season Plus (Client)");
         event.enqueueWork(() -> {
@@ -79,11 +101,21 @@ public class SereneSeasonsPlus {
     }
 
 
+    /**
+     * TODO: describe method.
+     *
+     * @param event description
+     */
     @SubscribeEvent
     public void onServerStopping(ServerStoppingEvent event) {
         SereneService.shutdown();
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param event description
+     */
     @SubscribeEvent
     public void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase == Phase.END) {
@@ -98,11 +130,21 @@ public class SereneSeasonsPlus {
 
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param event description
+     */
     @SubscribeEvent
     public void onConfigReload(TickEvent.ServerTickEvent event) {
 
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param level description
+     */
     private void onTick(Level level) {
         if (++this.ticker >= 400) {
             this.ticker = 0;
@@ -132,10 +174,23 @@ public class SereneSeasonsPlus {
         }
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param currentSubSeason description
+     * @param daySpeed description
+     * @param nightSpeed description
+     */
     private static void LogInfo(Season.SubSeason currentSubSeason, double daySpeed, double nightSpeed) {
         LOGGER.info("Season: {} → DaySpeed: {}, NightSpeed: {}", currentSubSeason, daySpeed, nightSpeed);
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param season description
+     * @return description
+     */
     private double getDaySpeedForSeason(Season.SubSeason season) {
         double var10000;
         switch (season) {
@@ -151,12 +206,22 @@ public class SereneSeasonsPlus {
             case EARLY_WINTER -> var10000 = 1.55;
             case MID_WINTER -> var10000 = 1.45;
             case LATE_WINTER -> var10000 = 1.26;
+            /**
+             * TODO: describe method.
+             * @return description
+             */
             default -> throw new IncompatibleClassChangeError();
         }
 
         return var10000;
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param season description
+     * @return description
+     */
     private double getNightSpeedForSeason(Season.SubSeason season) {
         double var10000;
         switch (season) {
@@ -172,6 +237,10 @@ public class SereneSeasonsPlus {
             case EARLY_WINTER -> var10000 = 0.54;
             case MID_WINTER -> var10000 = 0.62;
             case LATE_WINTER -> var10000 = 0.78;
+            /**
+             * TODO: describe method.
+             * @return description
+             */
             default -> throw new IncompatibleClassChangeError();
         }
 

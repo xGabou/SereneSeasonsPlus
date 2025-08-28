@@ -1,7 +1,7 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
+
+
+
+
 
 package com.Gabou.sereneseasonsplus.util;
 
@@ -23,26 +23,45 @@ public class EnvironmentHelper {
 
     private static boolean isHotSeason = false;
 
+    /**
+     * TODO: describe method.
+     * @return description
+     */
     public static boolean isHotSeason() {
         return isHotSeason;
     }
 
+    /**
+     * TODO: describe method.
+     * @return description
+     */
     public static Season.SubSeason getCurrentSeason() {
         return season;
     }
 
+    /**
+     * TODO: describe method.
+     */
     public static void initialize() {
         isServerEnvironment = !FMLEnvironment.dist.isClient();
         isSinglePlayer = !isServerEnvironment && detectSinglePlayer();
         LOGGER.info("Environment: Server = {}, Single Player = {}", isServerEnvironment, isSinglePlayer);
     }
 
+    /**
+     * TODO: describe method.
+     * @return description
+     */
     public static boolean shouldRunMod() {
         return FMLEnvironment.dist.isDedicatedServer()
                 || (FMLEnvironment.dist.isClient() && Minecraft.getInstance().hasSingleplayerServer());
     }
 
 
+    /**
+     * TODO: describe method.
+     * @return description
+     */
     private static boolean detectSinglePlayer() {
         try {
             Minecraft mcInstance = Minecraft.getInstance();
@@ -54,6 +73,11 @@ public class EnvironmentHelper {
     }
 
 
+    /**
+     * TODO: describe method.
+     *
+     * @param serverLevel description
+     */
     public static void onSeasonChange(ServerLevel serverLevel) {
         season = SeasonHelper.getSeasonState(serverLevel).getSubSeason();
         LOGGER.info("Season changed to: {}", season);

@@ -1,7 +1,7 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
+
+
+
+
 
 package com.Gabou.sereneseasonsplus.features;
 
@@ -45,6 +45,11 @@ public class SnowBlockReplacer {
     private static int tickCounter = 0;
 
 
+    /**
+     * TODO: describe method.
+     *
+     * @param event description
+     */
     @SubscribeEvent
     public static void onServerStarting(ServerStartingEvent event) {
         tickThresholdSnowReplacer = SereneExtendedConfig.TICK_SNOW_REPLACER.get();
@@ -54,6 +59,11 @@ public class SnowBlockReplacer {
     }
 
 
+    /**
+     * TODO: describe method.
+     *
+     * @param event description
+     */
     @SubscribeEvent
     public static void onConfigReload(TickEvent.ServerTickEvent event) {
         tickThresholdSnowReplacer = SereneExtendedConfig.TICK_SNOW_REPLACER.get();
@@ -61,6 +71,11 @@ public class SnowBlockReplacer {
 
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param event description
+     */
     @SubscribeEvent
     public static void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase == Phase.END && EnvironmentHelper.shouldRunMod()) {
@@ -77,6 +92,11 @@ public class SnowBlockReplacer {
         }
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param players description
+     */
     private static void updatePlayerPositions(Iterable<ServerPlayer> players) {
         for (ServerPlayer player : players) {
             playerPositions.put(player, player.blockPosition());
@@ -84,6 +104,11 @@ public class SnowBlockReplacer {
 
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param level description
+     */
     private static void replaceSnowBlocks(Level level) {
         Iterator var1 = playerPositions.entrySet().iterator();
 
@@ -128,11 +153,23 @@ public class SnowBlockReplacer {
         }
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param temperature description
+     * @return description
+     */
     private static int calculateBlocksToReplace1(float temperature) {
         return (int) Math.ceil((double) (temperature / 5.0F));
     }
 
 
+    /**
+     * TODO: describe method.
+     *
+     * @param temperature description
+     * @return description
+     */
     private static int calculateBlocksToReplace(float temperature) {
         if (temperature < 0.2F) {
             return 1;
@@ -141,11 +178,25 @@ public class SnowBlockReplacer {
         }
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param player description
+     * @return description
+     */
     private static int getSimulationDistance(ServerPlayer player) {
         MinecraftServer server = player.getServer();
         return server != null ? server.getPlayerList().getViewDistance() : 10;
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param level description
+     * @param center description
+     * @param radius description
+     * @return description
+     */
     private static BlockPos findSnowBlockInRadius(Level level, BlockPos center, int radius) {
         for (int x = -radius; x <= radius; ++x) {
             for (int z = -radius; z <= radius; ++z) {

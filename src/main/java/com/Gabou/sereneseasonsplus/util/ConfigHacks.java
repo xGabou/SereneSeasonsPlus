@@ -9,9 +9,15 @@ import org.apache.logging.log4j.Logger;
 public class ConfigHacks {
     private static final Logger LOGGER = LogManager.getLogger("ConfigHacks");
 
+    /**
+     * TODO: describe method.
+     *
+     * @param day description
+     * @param night description
+     */
     public static void setTimeSpeeds(double day, double night) {
         try {
-            // 🔧 Fix here: setAccessible(true)
+            
             Field commonField = ConfigHandler.class.getDeclaredField("COMMON");
             commonField.setAccessible(true);
             Object commonInstance = commonField.get(null);

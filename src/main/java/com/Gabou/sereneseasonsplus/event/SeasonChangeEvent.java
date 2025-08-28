@@ -8,6 +8,9 @@ import sereneseasons.api.season.SeasonChangedEvent;
 
 public class SeasonChangeEvent {
 
+    /**
+     * TODO: describe method.
+     */
     public static void register() {
         EventManager.addListener((SeasonChangedEvent.Standard event) -> {
             if (event.getLevel() instanceof ServerLevel serverLevel) {

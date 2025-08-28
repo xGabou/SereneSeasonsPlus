@@ -15,19 +15,35 @@ public enum HotSeason {
         this.boundSubSeason = boundSubSeason;
     }
 
+    /**
+     * TODO: describe method.
+     * @return description
+     */
     public Season.SubSeason getSubSeason() {
         return boundSubSeason;
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param sub description
+     * @return description
+     */
     public static HotSeason fromSubSeason(Season.SubSeason sub) {
         for (HotSeason hs : values()) {
             if (hs.boundSubSeason == sub) {
                 return hs;
             }
         }
-        return null; // or Optional.empty()
+        return null; 
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param sub description
+     * @return description
+     */
     public static boolean isHotSeason(Season.SubSeason sub) {
         return fromSubSeason(sub) != null;
     }

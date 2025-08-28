@@ -16,11 +16,17 @@ public class SereneService {
     private static ExecutorService ASYNC_EXECUTOR;
     private static boolean useAsync = SereneExtendedConfig.USE_ASYNC.get();
 
+    /**
+     * Constructs a new instance.
+     */
     private SereneService() {
-        // Prevent instantiation
+        
     }
 
 
+    /**
+     * TODO: describe method.
+     */
     public static void init() {
         if (initialized) return;
         initialized = true;
@@ -32,6 +38,11 @@ public class SereneService {
         });
     }
 
+    /**
+     * TODO: describe method.
+     *
+     * @param task description
+     */
     public static void runAsync(Runnable task) {
         if (!useAsync)
             task.run();
@@ -50,11 +61,17 @@ public class SereneService {
 
     }
 
+    /**
+     * TODO: describe method.
+     */
     public static void shutdown() {
         if (ASYNC_EXECUTOR != null) ASYNC_EXECUTOR.shutdown();
         initialized = false;
     }
 
+    /**
+     * TODO: describe method.
+     */
     public static void reloadConfig() {
         useAsync = SereneExtendedConfig.USE_ASYNC.get();
     }
