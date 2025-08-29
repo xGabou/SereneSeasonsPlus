@@ -145,6 +145,7 @@ dependencies {
     implementation "curse.maven:glitchcore-955399:5660740"
     implementation "curse.maven:betterdays-895618:6883730"
     compileOnly "curse.maven:spectrelib-993948:5217603"
+    compileOnly "curse.maven:project-atmosphere-1258344:6939978"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
