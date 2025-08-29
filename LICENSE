@@ -1,21 +1,25 @@
-MIT License
+Copyright (c) 2025 Gabou
 
-Copyright (c) 2024 Elux414
+This mod and its source code are publicly available for **educational purposes**, **inspiration**, and **inclusion in modpacks**. However, the following terms strictly apply:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. ✅ You **may include** this mod in public or private **modpacks**, provided that:
+   - Proper **credit is given** to the original author ("Gabou")
+   - The mod is **not modified or repackaged**
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+2. ✅ You **may develop addons** that depend on this mod, under these conditions:
+   - Your addon must **declare this mod as a dependency**
+   - Your addon may **not copy, modify, or include** any portion of this mod’s source code
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+3. ❌ You are **not permitted** to:
+   - Create derivative mods or forks that alter this mod’s code, behavior, or branding
+   - Reuse, redistribute, or republish the source code in any form
+   - Include the source code in your own projects (open-source or commercial) without **explicit written permission**
+
+4. ⚠️ The source code is visible only for **educational and inspirational purposes**.
+   Any use beyond reading and learning — including copying or reusing — is **strictly prohibited** without authorization.
+
+5. 🔗 You must always provide **clear and visible credit** to "Gabou" when referencing, showcasing, or building addons that rely on this mod.
+
+6. 📩 For any permission requests (e.g., for forks, reuse, or code licensing), you **must contact the author directly**.
+
+Unauthorized use or violation of these terms may result in legal action.
