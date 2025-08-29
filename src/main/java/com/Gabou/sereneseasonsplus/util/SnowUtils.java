@@ -39,7 +39,7 @@ public class SnowUtils {
             }
 
             biomeTemperatures.put(biomeName, temperature);
-            LOGGER.info("Biome: {}, Temperature: {}", biomeName, temperature);
+            //LOGGER.info("Biome: {}, Temperature: {}", biomeName, temperature);
             return temperature;
         } else {
             float cachedTemperature = (Float)biomeTemperatures.get(biomeName);
@@ -47,7 +47,7 @@ public class SnowUtils {
                 float newTemperature = getBiomeTemperature(biomeHolder);
                 if (newTemperature != cachedTemperature || cachedTemperature <= 0.14F) {
                     biomeTemperatures.put(biomeName, newTemperature);
-                    LOGGER.info("Biome: {}, Updated Temperature: {}", biomeName, newTemperature);
+                    //LOGGER.info("Biome: {}, Updated Temperature: {}", biomeName, newTemperature);
                     return newTemperature;
                 }
             }
@@ -55,7 +55,7 @@ public class SnowUtils {
             if (isWinterSubSeason(currentSubSeason) && cachedTemperature > 0.14F) {
                 cachedTemperature = 0.14F;
                 biomeTemperatures.put(biomeName, cachedTemperature);
-                LOGGER.info("Biome: {}, Reset Temperature to Winter: {}", biomeName, cachedTemperature);
+                //LOGGER.info("Biome: {}, Reset Temperature to Winter: {}", biomeName, cachedTemperature);
             }
 
             return cachedTemperature;

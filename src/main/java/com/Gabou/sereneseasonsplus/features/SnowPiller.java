@@ -5,6 +5,7 @@ import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.SereneService;
 import com.mojang.logging.LogUtils;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.server.MinecraftServer;
@@ -121,7 +122,6 @@ public final class SnowPiller {
      * @param radius search radius
      */
     public static void tickSnow(ServerLevel level, ServerPlayer player, BlockPos center, int radius) {
-
         int attempts;
         if (SereneSeasonsPlus.isProjectAtmosphereLoaded) {
             if (!SereneExtendedConfig.SNOWSTORM_ENABLED.get()) return;
