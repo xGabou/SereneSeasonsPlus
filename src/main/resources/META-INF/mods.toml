@@ -8,6 +8,7 @@ version="${mod_version}"
 displayName="Serene Seasons Plus"
 description="Addon to Serene Seasons."
 authors="Gabou"
+logoFile = "logo.png"
 credits=""
 updateJSONURL=""
 
