@@ -16,18 +16,19 @@ public enum HotSeason {
     }
 
     /**
-     * TODO: describe method.
-     * @return description
+     * Returns the Serene Seasons sub-season represented by this enum value.
+     *
+     * @return bound sub-season
      */
     public Season.SubSeason getSubSeason() {
         return boundSubSeason;
     }
 
     /**
-     * TODO: describe method.
+     * Maps a sub-season to its HotSeason enum value if it is considered hot.
      *
-     * @param sub description
-     * @return description
+     * @param sub sub-season to test
+     * @return matching HotSeason value, or null if not hot
      */
     public static HotSeason fromSubSeason(Season.SubSeason sub) {
         for (HotSeason hs : values()) {
@@ -39,10 +40,10 @@ public enum HotSeason {
     }
 
     /**
-     * TODO: describe method.
+     * Convenience predicate: whether a sub-season is considered a hot season.
      *
-     * @param sub description
-     * @return description
+     * @param sub sub-season to test
+     * @return true if the sub-season is a hot season
      */
     public static boolean isHotSeason(Season.SubSeason sub) {
         return fromSubSeason(sub) != null;

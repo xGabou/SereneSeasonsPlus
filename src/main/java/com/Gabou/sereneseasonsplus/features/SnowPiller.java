@@ -28,13 +28,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
- * SnowPiller.tick(level, player, player.blockPosition(), 16);
- * <p>
- * Public API:
- * - tick(...) -> tries to find and place snow once; returns true if placed.
- * - findTarget(...) -> returns a valid position (or null) without placing.
- * - placeSnowAt(...) -> places snow with survival checks; returns success.
- */
 public final class SnowPiller {
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -60,16 +53,16 @@ public final class SnowPiller {
     private static final Map<UUID, ThrottleState> THROTTLE = new ConcurrentHashMap<>();
 
     /**
-     * Constructs a new instance.
+     * Utility holder; not instantiable.
      */
     private SnowPiller() {
     }
 
 
     /**
-     * TODO: describe method.
+     * Initializes tick thresholds and per-player throttle state on server start.
      *
-     * @param event description
+     * @param event server starting event
      */
     @SubscribeEvent
     public static void onServerStarting(ServerStartingEvent event) {
@@ -79,9 +72,10 @@ public final class SnowPiller {
     }
 
     /**
-     * TODO: describe method.
+     * Refreshes the tick threshold and async config on server tick,
+     * allowing live config changes.
      *
-     * @param event description
+     * @param event server tick event
      */
     @SubscribeEvent
     public static void onConfigReload(TickEvent.ServerTickEvent event) {
@@ -91,9 +85,10 @@ public final class SnowPiller {
     }
 
     /**
-     * TODO: describe method.
+     * Periodically attempts to place snow around players if the environment
+     * and config permit. Work is offloaded to an async executor.
      *
-     * @param event description
+     * @param event server tick event
      */
     @SubscribeEvent
     public static void onServerTick(TickEvent.ServerTickEvent event) {
@@ -116,19 +111,12 @@ public final class SnowPiller {
 
     }
 
-     /**
-      * TODO: describe method.
-      *
-      * @param failures description
-      * @return description
-      */
+    /**
+     * Determines attempt count based on weather or snowstorm intensity, then
+     * samples positions and places snow layers around the given center.
+     *
+     * @param level  server level
      * @param player the player (used to throttle repeated failures)
-     /**
-      * TODO: describe method.
-      *
-      * @param pos description
-      * @return description
-      */
      * @param center search center (often player's block pos)
      * @param radius search radius
      */
@@ -164,7 +152,7 @@ public final class SnowPiller {
 
     /**
      * Finds a valid snow placement position near center, honoring throttle.
-     * Returns null if throttled or no position found.
+     * Returns {@code null} if throttled or if no position is suitable.
      */
     public static @Nullable BlockPos findTarget(ServerLevel level, ServerPlayer player, BlockPos center, int radius) {
         final long now = level.getGameTime();
@@ -220,8 +208,8 @@ public final class SnowPiller {
     }
 
     /**
-     * Places a snow layer at pos with basic survival checks.
-     * Returns true if the block was placed.
+     * Places a snow layer at the given position if empty and valid, or adds a
+     * layer to an existing snow block that is below max height.
      */
     public static void placeSnowAt(ServerLevel level, BlockPos pos) {
         final BlockState stateAt = level.getBlockState(pos);
@@ -247,17 +235,17 @@ public final class SnowPiller {
 
 
 
+    /**
+     * Per-player throttle state to avoid repeated failed scans when the
+     * player has not moved and conditions are unfavorable.
+     */
     private static final class ThrottleState {
         private long nextAllowedTick = 0L;
         private BlockPos lastCenter = BlockPos.ZERO;
 
         /**
-         * TODO: describe method.
-         *
-         * @param now description
-         * @param currentCenter description
-         * @param radius description
-         * @return description
+         * Whether to skip a scan until after the throttle delay unless the
+         * player has moved far enough.
          */
         boolean shouldSkip(long now, BlockPos currentCenter, int radius) {
             if (hasMovedEnough(currentCenter, radius)) {
@@ -269,10 +257,7 @@ public final class SnowPiller {
         }
 
         /**
-         * TODO: describe method.
-         *
-         * @param now description
-         * @param center description
+         * Records a failed scan, scheduling the next allowed attempt.
          */
         void recordFail(long now, BlockPos center) {
             this.lastCenter = center;
@@ -280,9 +265,7 @@ public final class SnowPiller {
         }
 
         /**
-         * TODO: describe method.
-         *
-         * @param center description
+         * Records a successful scan and clears throttling.
          */
         void recordSuccess(BlockPos center) {
             this.lastCenter = center;
@@ -290,11 +273,8 @@ public final class SnowPiller {
         }
 
         /**
-         * TODO: describe method.
-         *
-         * @param current description
-         * @param radius description
-         * @return description
+         * Whether the player has moved far enough from the last scan center to
+         * reset throttling.
          */
         private boolean hasMovedEnough(BlockPos current, int radius) {
             if (lastCenter == BlockPos.ZERO) return true;

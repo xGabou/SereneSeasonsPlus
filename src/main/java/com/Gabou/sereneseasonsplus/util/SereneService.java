@@ -17,7 +17,7 @@ public class SereneService {
     private static boolean useAsync = SereneExtendedConfig.USE_ASYNC.get();
 
     /**
-     * Constructs a new instance.
+     * Utility holder; not instantiable.
      */
     private SereneService() {
         
@@ -25,7 +25,8 @@ public class SereneService {
 
 
     /**
-     * TODO: describe method.
+     * Initializes the single-threaded executor used for background tasks when
+     * not delegating to Project Atmosphere. Safe to call more than once.
      */
     public static void init() {
         if (initialized) return;
@@ -39,9 +40,11 @@ public class SereneService {
     }
 
     /**
-     * TODO: describe method.
+     * Executes a task either synchronously, via Project Atmosphere's async
+     * weather executor, or on this class' single-thread pool depending on
+     * configuration and environment.
      *
-     * @param task description
+     * @param task unit of work to execute
      */
     public static void runAsync(Runnable task) {
         if (!useAsync)
@@ -62,7 +65,7 @@ public class SereneService {
     }
 
     /**
-     * TODO: describe method.
+     * Shuts down the internal executor, if any.
      */
     public static void shutdown() {
         if (ASYNC_EXECUTOR != null) ASYNC_EXECUTOR.shutdown();
@@ -70,7 +73,7 @@ public class SereneService {
     }
 
     /**
-     * TODO: describe method.
+     * Refreshes the cached async usage flag from the config.
      */
     public static void reloadConfig() {
         useAsync = SereneExtendedConfig.USE_ASYNC.get();

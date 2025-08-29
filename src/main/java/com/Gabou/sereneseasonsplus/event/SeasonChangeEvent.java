@@ -9,7 +9,8 @@ import sereneseasons.api.season.SeasonChangedEvent;
 public class SeasonChangeEvent {
 
     /**
-     * TODO: describe method.
+     * Subscribes to Serene Seasons events and forwards season changes to the
+     * environment helper so the mod can react (e.g., recompute hot season state).
      */
     public static void register() {
         EventManager.addListener((SeasonChangedEvent.Standard event) -> {

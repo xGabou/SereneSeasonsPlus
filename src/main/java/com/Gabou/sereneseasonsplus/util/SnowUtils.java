@@ -20,12 +20,14 @@ public class SnowUtils {
     private static final Map<String, Float> biomeTemperatures = new HashMap();
 
     /**
-     * TODO: describe method.
+     * Returns a biome's temperature, cached by biome key, with a seasonal cap
+     * applied in winter sub-seasons. The cache updates outside of winter or
+     * when values change.
      *
-     * @param level description
-     * @param pos description
-     * @param currentSubSeason description
-     * @return description
+     * @param level             level for biome lookup
+     * @param pos               position of interest
+     * @param currentSubSeason  current sub-season used to cap temperature
+     * @return cached or freshly-computed biome temperature
      */
     public static float getCachedBiomeTemperature(Level level, BlockPos pos, Season.SubSeason currentSubSeason) {
         Holder<Biome> biomeHolder = level.getBiome(pos);
@@ -60,43 +62,43 @@ public class SnowUtils {
         }
     }
     /**
-     * TODO: describe method.
+     * Extracts the base temperature from a biome holder.
      *
-     * @param biomeHolder description
-     * @return description
+     * @param biomeHolder biome holder
+     * @return base temperature reported by the biome
      */
     public static float getBiomeTemperature(Holder<Biome> biomeHolder) {
         Biome biome = biomeHolder.value();
         return biome.getBaseTemperature();
     }
     /**
-     * TODO: describe method.
+     * Whether the sub-season is one of the winter sub-seasons.
      *
-     * @param subSeason description
-     * @return description
+     * @param subSeason sub-season to test
+     * @return true if early/mid/late winter
      */
     private static boolean isWinterSubSeason(Season.SubSeason subSeason) {
         return subSeason == Season.SubSeason.EARLY_WINTER || subSeason == Season.SubSeason.MID_WINTER || subSeason == Season.SubSeason.LATE_WINTER;
     }
 
-     /**
-      * TODO: describe method.
-      *
-      * @param SNOW description
-      * @return description
-      */
-     * Decrement a layered block (e.g., SNOW) at the given pos. If it's at the minimum
-     * layer (1) or not a layered block, remove it (set to AIR).
-     * Uses update flags = 3 (neighbors + clients).
+    /**
+     * Decrements a layered block (e.g., snow) or removes it if at min layers.
+     * Convenience overload that uses flags=3 (update neighbors + clients).
      *
-     * @param level the world/level
+     * @param level level to modify
      * @param pos   target position
      */
     public static void breakOrDecrementLayer(Level level, BlockPos pos) {
         breakOrDecrementLayer(level, pos, 3);
     }
 
-     * Same as {@link #breakOrDecrementLayer(Level, BlockPos)} but with custom flags.
+    /**
+     * Decrements a layered block (e.g., snow) if possible; otherwise removes
+     * the block entirely by setting air.
+     *
+     * @param level level to modify
+     * @param pos   target position
+     * @param flags world update flags for setBlock
      */
     public static void breakOrDecrementLayer(Level level, BlockPos pos, int flags) {
         BlockState state = level.getBlockState(pos);

@@ -336,6 +336,15 @@ def prune_orphan_javadocs(text: str) -> str:
     while i < len(lines):
         line = lines[i]
         stripped = line.lstrip()
+        # Drop dangling lines that look like part of a removed Javadoc block
+        if stripped.startswith('*') and (not out or not out[-1].rstrip().endswith('/**')):
+            # consume until a line containing '*/' (inclusive)
+            while i < len(lines):
+                if '*/' in lines[i]:
+                    i += 1
+                    break
+                i += 1
+            continue
         if stripped.startswith('/**'):
             # capture doc block
             start = i
@@ -354,8 +363,15 @@ def prune_orphan_javadocs(text: str) -> str:
             while k < len(lines) and lines[k].lstrip().startswith('@'):
                 k += 1
             if k < len(lines) and _is_decl_start(lines[k]):
-                # keep doc block
-                out.extend(lines[start:end+1])
+                # If this looks like placeholder method-doc but precedes a class decl, drop it
+                doc_text = ''.join(lines[start:end+1])
+                is_placeholder = 'TODO: describe method.' in doc_text
+                is_class_decl = bool(re.match(r"^\s*(?:[\w\s]*?)?(class|interface|enum|record)\b", lines[k].lstrip()))
+                if is_placeholder and is_class_decl:
+                    # drop it
+                    pass
+                else:
+                    out.extend(lines[start:end+1])
             # else: drop it (orphan)
             continue
         else:

@@ -46,9 +46,9 @@ public class SnowBlockReplacer {
 
 
     /**
-     * TODO: describe method.
+     * Initializes tick thresholds and clears per-player position cache on server start.
      *
-     * @param event description
+     * @param event server starting event
      */
     @SubscribeEvent
     public static void onServerStarting(ServerStartingEvent event) {
@@ -60,9 +60,10 @@ public class SnowBlockReplacer {
 
 
     /**
-     * TODO: describe method.
+     * Refreshes the tick threshold and async config on server tick,
+     * allowing live config changes.
      *
-     * @param event description
+     * @param event server tick event
      */
     @SubscribeEvent
     public static void onConfigReload(TickEvent.ServerTickEvent event) {
@@ -72,9 +73,10 @@ public class SnowBlockReplacer {
     }
 
     /**
-     * TODO: describe method.
+     * Periodically removes snow blocks around players when temperature is
+     * above threshold. Offloads work to an async executor.
      *
-     * @param event description
+     * @param event server tick event
      */
     @SubscribeEvent
     public static void onServerTick(TickEvent.ServerTickEvent event) {
@@ -93,9 +95,10 @@ public class SnowBlockReplacer {
     }
 
     /**
-     * TODO: describe method.
+     * Caches current block positions for the given players to avoid repeated
+     * calls into player state from async workers.
      *
-     * @param players description
+     * @param players online players to snapshot positions for
      */
     private static void updatePlayerPositions(Iterable<ServerPlayer> players) {
         for (ServerPlayer player : players) {
@@ -105,9 +108,11 @@ public class SnowBlockReplacer {
     }
 
     /**
-     * TODO: describe method.
+     * For each tracked player, computes a search radius from the simulation
+     * distance and, if the temperature is warm enough, removes a number of
+     * nearby snow blocks.
      *
-     * @param level description
+     * @param level server level to modify
      */
     private static void replaceSnowBlocks(Level level) {
         Iterator var1 = playerPositions.entrySet().iterator();
@@ -154,10 +159,11 @@ public class SnowBlockReplacer {
     }
 
     /**
-     * TODO: describe method.
+     * Computes how many snow blocks to remove based on temperature from
+     * Project Atmosphere scale.
      *
-     * @param temperature description
-     * @return description
+     * @param temperature current temperature
+     * @return number of blocks to attempt removing
      */
     private static int calculateBlocksToReplace1(float temperature) {
         return (int) Math.ceil((double) (temperature / 5.0F));
@@ -165,10 +171,10 @@ public class SnowBlockReplacer {
 
 
     /**
-     * TODO: describe method.
+     * Computes how many snow blocks to remove based on vanilla biome temperature.
      *
-     * @param temperature description
-     * @return description
+     * @param temperature biome base temperature
+     * @return number of blocks to attempt removing
      */
     private static int calculateBlocksToReplace(float temperature) {
         if (temperature < 0.2F) {
@@ -179,10 +185,11 @@ public class SnowBlockReplacer {
     }
 
     /**
-     * TODO: describe method.
+     * Returns the server's simulation (view) distance in chunks converted to
+     * blocks, with a sensible default if unavailable.
      *
-     * @param player description
-     * @return description
+     * @param player player for server access
+     * @return view distance (in chunks) as blocks (approximate radius)
      */
     private static int getSimulationDistance(ServerPlayer player) {
         MinecraftServer server = player.getServer();
@@ -190,12 +197,13 @@ public class SnowBlockReplacer {
     }
 
     /**
-     * TODO: describe method.
+     * Finds the first snow block within a cubic search around the center.
+     * Returns null if none exists in the scanned range.
      *
-     * @param level description
-     * @param center description
-     * @param radius description
-     * @return description
+     * @param level  level to scan
+     * @param center center of the search
+     * @param radius horizontal radius to search
+     * @return the position of a snow block or null if none found
      */
     private static BlockPos findSnowBlockInRadius(Level level, BlockPos center, int radius) {
         for (int x = -radius; x <= radius; ++x) {

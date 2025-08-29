@@ -7,18 +7,13 @@ import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
-/**
- * TODO: describe method.
- *
- * @param CLIENT description
- * @return description
- */
 @OnlyIn(Dist.CLIENT)
 public class SereneSeasonsPlusClient {
     /**
-     * TODO: describe method.
+     * Registers the mod config screen with Forge's extension point so it can
+     * be opened from the Mods list in-game.
      *
-     * @param context description
+     * @param context mod loading context used to register the screen factory
      */
     public static void init(FMLJavaModLoadingContext context) {
         context.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,

@@ -18,16 +18,16 @@ public class SnowstormHelper {
     private static final Logger LOGGER = LogManager.getLogger("SnowstormHelper");
 
     /**
-     * Constructs a new instance.
+     * Utility holder; not instantiable.
      */
     private SnowstormHelper() {
     }
 
-     /**
-      * TODO: describe method.
-      * @return description
-      */
-     * @param intensity intensity value (0-100)
+    /**
+     * Enables snowstorm mode and sets the desired storm intensity.
+     * Intended to be called from Project Atmosphere when a snowstorm starts.
+     *
+     * @param intensity 0..100 intensity value written to config
      */
     public static void startSnowstorm(int intensity) {
         updateSnowstormConfig(true, intensity);
@@ -41,8 +41,8 @@ public class SnowstormHelper {
     }
 
     /**
-     * Writes snowstorm settings to sereneseasonsplus-common.toml and reloads
-     * the config so the changes take effect immediately.
+     * Writes snowstorm settings to sereneseasonsplus-common.toml and attempts
+     * to refresh Forge's config so the change applies immediately.
      */
     private static void updateSnowstormConfig(boolean enabled, int intensity) {
         try {

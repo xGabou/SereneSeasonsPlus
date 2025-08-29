@@ -12,33 +12,18 @@ import net.minecraft.network.chat.Component;
 import java.util.Arrays;
 import java.util.List;
 
- /**
-  * TODO: describe method.
-  *
-  * @param px description
-  * @return description
-  */
- * - Does NOT resize EditBox height (keep 20px)
- * - Forwards mouse/keyboard so EditBox gets focus and can type
- /**
-  * TODO: describe method.
-  *
-  * @param narratables description
-  * @return description
-  */
- * - Avoids fragile @Override on mapping-variant methods (children/narratables)
- */
 public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.Row> {
 
     /**
-     * Constructs a new instance.
+     * Creates a scrollable two-column list used by the config screen.
+     * The left column renders a label and the right hosts one or more widgets.
      *
-     * @param mc description
-     * @param width description
-     * @param height description
-     * @param top description
-     * @param bottom description
-     * @param itemHeight description
+     * @param mc         minecraft instance
+     * @param width      list width
+     * @param height     list height
+     * @param top        top y
+     * @param bottom     bottom y
+     * @param itemHeight row height in pixels
      */
     public SereneExtendedList(Minecraft mc, int width, int height, int top, int bottom, int itemHeight) {
         super(mc, width, height, top, bottom, itemHeight);
@@ -47,8 +32,7 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
     }
 
     /**
-     * TODO: describe method.
-     * @return description
+     * Width reserved for each row (label + widgets area).
      */
     @Override
     public int getRowWidth() {
@@ -56,8 +40,7 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
     }
 
     /**
-     * TODO: describe method.
-     * @return description
+     * Scrollbar x position relative to the left edge of the list.
      */
     @Override
     protected int getScrollbarPosition() {
@@ -65,10 +48,10 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
     }
 
     /**
-     * TODO: describe method.
+     * Adds a new row with a label and one or more widgets aligned to the right.
      *
-     * @param label description
-     * @param widgets description
+     * @param label   left-hand label
+     * @param widgets widgets to render on the right
      */
     public void addRow(Component label, AbstractWidget... widgets) {
         this.addEntry(new Row(this, label, widgets));
@@ -83,6 +66,10 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         
         private int lastX = Integer.MIN_VALUE, lastY = Integer.MIN_VALUE, lastRowW = Integer.MIN_VALUE, lastRowH = Integer.MIN_VALUE;
 
+        /**
+         * Creates a row bound to the given owner with a static label and one or
+         * more right-aligned widgets.
+         */
         Row(SereneExtendedList owner, Component label, AbstractWidget... widgets) {
             this.owner = owner;
             this.label = label;
@@ -90,12 +77,7 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         }
 
         /**
-         * TODO: describe method.
-         *
-         * @param x description
-         * @param y description
-         * @param rowWidth description
-         * @param rowHeight description
+         * Lazily computes and applies widget positions when the row geometry changes.
          */
         private void layoutIfNeeded(int x, int y, int rowWidth, int rowHeight) {
             if (x == lastX && y == lastY && rowWidth == lastRowW && rowHeight == lastRowH) return;
@@ -113,18 +95,7 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         }
 
         /**
-         * TODO: describe method.
-         *
-         * @param g description
-         * @param index description
-         * @param y description
-         * @param x description
-         * @param rowWidth description
-         * @param rowHeight description
-         * @param mouseX description
-         * @param mouseY description
-         * @param hovered description
-         * @param delta description
+         * Renders the row label and delegates rendering to child widgets.
          */
         @Override
         public void render(GuiGraphics g, int index, int y, int x, int rowWidth, int rowHeight,
@@ -142,24 +113,17 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
 
         
         /**
-         * TODO: describe method.
-         * @return description
+         * Narratable entries provided by child widgets.
          */
         public List<? extends NarratableEntry> narratables() { return widgets; }
         /**
-         * TODO: describe method.
-         * @return description
+         * GUI event listeners provided by child widgets.
          */
         public List<? extends GuiEventListener> children()    { return widgets; }
 
         
         /**
-         * TODO: describe method.
-         *
-         * @param mx description
-         * @param my description
-         * @param button description
-         * @return description
+         * Delegates clicks to child widgets and manages row selection/focus.
          */
         @Override
         public boolean mouseClicked(double mx, double my, int button) {
@@ -180,12 +144,7 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
 
 
         /**
-         * TODO: describe method.
-         *
-         * @param mx description
-         * @param my description
-         * @param button description
-         * @return description
+         * Forwards mouse release to child widgets.
          */
         @Override
         public boolean mouseReleased(double mx, double my, int button) {
@@ -194,14 +153,7 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         }
 
         /**
-         * TODO: describe method.
-         *
-         * @param mx description
-         * @param my description
-         * @param button description
-         * @param dx description
-         * @param dy description
-         * @return description
+         * Forwards drag events to child widgets.
          */
         @Override
         public boolean mouseDragged(double mx, double my, int button, double dx, double dy) {
@@ -210,12 +162,7 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         }
 
         /**
-         * TODO: describe method.
-         *
-         * @param mx description
-         * @param my description
-         * @param delta description
-         * @return description
+         * Forwards scroll events to child widgets.
          */
         @Override
         public boolean mouseScrolled(double mx, double my, double delta) {
@@ -224,12 +171,7 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         }
 
         /**
-         * TODO: describe method.
-         *
-         * @param key description
-         * @param sc description
-         * @param mods description
-         * @return description
+         * Forwards key events to child widgets.
          */
         @Override
         public boolean keyPressed(int key, int sc, int mods) {
@@ -238,11 +180,7 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         }
 
         /**
-         * TODO: describe method.
-         *
-         * @param c description
-         * @param mods description
-         * @return description
+         * Forwards character typed events to child widgets.
          */
         @Override
         public boolean charTyped(char c, int mods) {
@@ -252,11 +190,12 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
 
         
         /**
-         * TODO: describe method.
-         *
-         * @param out description
+         * No-op narration aggregation; child widgets provide their own narration.
          */
         @Override public void updateNarration(NarrationElementOutput out) {  }
+        /**
+         * Row narration text, derived from the label.
+         */
         public Component getNarration() { return label; }
     }
 }

@@ -10,10 +10,11 @@ public class ConfigHacks {
     private static final Logger LOGGER = LogManager.getLogger("ConfigHacks");
 
     /**
-     * TODO: describe method.
+     * Overrides BetterDays' time speed configuration using reflection.
+     * This adjusts the length of day and night without requiring a restart.
      *
-     * @param day description
-     * @param night description
+     * @param day   day speed multiplier to set
+     * @param night night speed multiplier to set
      */
     public static void setTimeSpeeds(double day, double night) {
         try {

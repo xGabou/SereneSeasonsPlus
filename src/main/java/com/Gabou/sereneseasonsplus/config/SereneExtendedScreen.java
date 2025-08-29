@@ -45,9 +45,9 @@ public class SereneExtendedScreen extends Screen {
 
 
     /**
-     * Constructs a new instance.
+     * Constructs the Serene Seasons Plus configuration screen.
      *
-     * @param parent description
+     * @param parent screen to return to when closed
      */
     public SereneExtendedScreen(Screen parent) {
         super(Component.literal("Project Atmosphere Config"));
@@ -55,7 +55,7 @@ public class SereneExtendedScreen extends Screen {
     }
 
     /**
-     * TODO: describe method.
+     * Initializes UI widgets and populates them from current config values.
      */
     @Override
     protected void init() {
@@ -131,7 +131,16 @@ public class SereneExtendedScreen extends Screen {
         );
     }
 
-
+    /**
+     * Renders the screen background, title, and child widgets.
+     *
+     * @param g           GUI graphics context
+     * @param mouseX      mouse x
+     * @param mouseY      mouse y
+     * @param partialTick partial tick time
+     */
+    @Override
+    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(g); 
 
         
@@ -145,18 +154,18 @@ public class SereneExtendedScreen extends Screen {
     }
 
     /**
-     * TODO: describe method.
+     * Builds a simple ON/OFF label for a toggleable option.
      *
-     * @param name description
-     * @param enabled description
-     * @return description
+     * @param name    option label
+     * @param enabled current state
+     * @return the composed label component
      */
     private Component toggleLabel(String name, boolean enabled) {
         return Component.literal(name + ": " + (enabled ? "ON" : "OFF"));
     }
 
     /**
-     * TODO: describe method.
+     * Reads field values, validates and persists them to the COMMON config.
      */
     private void saveChanges() {
         Component errorMessage;
@@ -201,14 +210,24 @@ public class SereneExtendedScreen extends Screen {
         }
     }
 
-                cfg.save(); 
+    /**
+     * Saves the Forge COMMON config file for the given mod id, if present.
+     *
+     * @param modId target mod id
+     */
+    private static void saveCommonConfigForMod(String modId) {
+        var set = ConfigTracker.INSTANCE.configSets().get(ModConfig.Type.COMMON);
+        if (set == null) return;
+        for (ModConfig cfg : set) {
+            if (cfg.getModId().equals(modId)) {
+                cfg.save();
                 return;
             }
         }
     }
 
     /**
-     * TODO: describe method.
+     * Restores focus and returns to the parent screen.
      */
     @Override
     public void onClose() {
@@ -217,12 +236,7 @@ public class SereneExtendedScreen extends Screen {
     }
 
     /**
-     * TODO: describe method.
-     *
-     * @param x description
-     * @param y description
-     * @param button description
-     * @return description
+     * Forwards click events to the list and its child widgets.
      */
     @Override
     public boolean mouseClicked(double x, double y, int button) {
@@ -231,12 +245,7 @@ public class SereneExtendedScreen extends Screen {
     }
 
     /**
-     * TODO: describe method.
-     *
-     * @param key description
-     * @param sc description
-     * @param mods description
-     * @return description
+     * Forwards key events to the list and focused text boxes.
      */
     @Override
     public boolean keyPressed(int key, int sc, int mods) {
@@ -252,11 +261,7 @@ public class SereneExtendedScreen extends Screen {
     }
 
     /**
-     * TODO: describe method.
-     *
-     * @param c description
-     * @param mods description
-     * @return description
+     * Forwards typed characters to the list and text boxes.
      */
     @Override
     public boolean charTyped(char c, int mods) {

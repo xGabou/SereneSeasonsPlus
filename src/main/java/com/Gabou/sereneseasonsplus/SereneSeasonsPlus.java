@@ -38,12 +38,6 @@ import java.util.Map;
 
 import static com.Gabou.sereneseasonsplus.SereneSeasonsPlus.MODID;
 
-/**
- * TODO: describe method.
- *
- * @param MODID description
- * @return description
- */
 @Mod(MODID)
 public class SereneSeasonsPlus {
     public static final String MODID = "sereneseasonsplus";
@@ -53,9 +47,10 @@ public class SereneSeasonsPlus {
     private Season.SubSeason lastSubSeason = null;
 
     /**
-     * Constructs a new instance.
+     * Mod bootstrap: registers event handlers, config, and client setup.
+     * Registers season change listeners if Project Atmosphere is absent.
      *
-     * @param context description
+     * @param context Forge mod loading context used to hook lifecycle events
      */
     public SereneSeasonsPlus(FMLJavaModLoadingContext context) {
         isProjectAtmosphereLoaded = ModList.get().isLoaded("projectatmosphere");
@@ -76,9 +71,10 @@ public class SereneSeasonsPlus {
     }
 
     /**
-     * TODO: describe method.
+     * Fired when the dedicated/server-integrated instance starts.
+     * Initializes background services used by async tasks.
      *
-     * @param event description
+     * @param event Forge server starting event
      */
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
@@ -87,10 +83,11 @@ public class SereneSeasonsPlus {
     }
 
     /**
-     * TODO: describe method.
+     * Client-only setup. Enqueues registration of client UI such as the
+     * config screen.
      *
-     * @param event description
-     * @param context description
+     * @param event   client setup event
+     * @param context mod loading context
      */
     private void clientSetup(final FMLClientSetupEvent event, FMLJavaModLoadingContext context) {
         LOGGER.info("Setting up Serene Season Plus (Client)");
@@ -102,9 +99,9 @@ public class SereneSeasonsPlus {
 
 
     /**
-     * TODO: describe method.
+     * Fired when the server is stopping. Shuts down background services.
      *
-     * @param event description
+     * @param event Forge server stopping event
      */
     @SubscribeEvent
     public void onServerStopping(ServerStoppingEvent event) {
@@ -112,9 +109,10 @@ public class SereneSeasonsPlus {
     }
 
     /**
-     * TODO: describe method.
+     * Server tick hook. At phase END we evaluate whether to run the periodic
+     * seasonal update (handled by {@link #onTick(Level)}).
      *
-     * @param event description
+     * @param event server tick event
      */
     @SubscribeEvent
     public void onServerTick(TickEvent.ServerTickEvent event) {
@@ -131,9 +129,10 @@ public class SereneSeasonsPlus {
     }
 
     /**
-     * TODO: describe method.
+     * Placeholder: reserved for config reload tick hook if needed.
+     * Currently unused.
      *
-     * @param event description
+     * @param event server tick event
      */
     @SubscribeEvent
     public void onConfigReload(TickEvent.ServerTickEvent event) {
@@ -141,9 +140,11 @@ public class SereneSeasonsPlus {
     }
 
     /**
-     * TODO: describe method.
+     * Runs every 400 ticks. If the sub-season changed, updates time-of-day
+     * speeds according to configuration (seasonal or custom) and logs the
+     * applied values.
      *
-     * @param level description
+     * @param level overworld level reference
      */
     private void onTick(Level level) {
         if (++this.ticker >= 400) {
@@ -175,22 +176,17 @@ public class SereneSeasonsPlus {
     }
 
     /**
-     * TODO: describe method.
+     * Logs the active sub-season and the computed day/night speed multipliers.
      *
-     * @param currentSubSeason description
-     * @param daySpeed description
-     * @param nightSpeed description
+     * @param currentSubSeason active Serene Seasons sub-season
+     * @param daySpeed         day speed multiplier applied
+     * @param nightSpeed       night speed multiplier applied
      */
     private static void LogInfo(Season.SubSeason currentSubSeason, double daySpeed, double nightSpeed) {
         LOGGER.info("Season: {} → DaySpeed: {}, NightSpeed: {}", currentSubSeason, daySpeed, nightSpeed);
     }
 
-    /**
-     * TODO: describe method.
-     *
-     * @param season description
-     * @return description
-     */
+    /**\n     * Returns the day speed multiplier for the given sub-season. Lower values\n     * make days longer; higher values make them shorter.\n     *\n     * @param season sub-season to evaluate\n     * @return day speed multiplier for that sub-season\n     */
     private double getDaySpeedForSeason(Season.SubSeason season) {
         double var10000;
         switch (season) {
@@ -206,22 +202,13 @@ public class SereneSeasonsPlus {
             case EARLY_WINTER -> var10000 = 1.55;
             case MID_WINTER -> var10000 = 1.45;
             case LATE_WINTER -> var10000 = 1.26;
-            /**
-             * TODO: describe method.
-             * @return description
-             */
             default -> throw new IncompatibleClassChangeError();
         }
 
         return var10000;
     }
 
-    /**
-     * TODO: describe method.
-     *
-     * @param season description
-     * @return description
-     */
+    /**\n     * Returns the day speed multiplier for the given sub-season. Lower values\n     * make days longer; higher values make them shorter.\n     *\n     * @param season sub-season to evaluate\n     * @return day speed multiplier for that sub-season\n     */
     private double getNightSpeedForSeason(Season.SubSeason season) {
         double var10000;
         switch (season) {
@@ -237,13 +224,10 @@ public class SereneSeasonsPlus {
             case EARLY_WINTER -> var10000 = 0.54;
             case MID_WINTER -> var10000 = 0.62;
             case LATE_WINTER -> var10000 = 0.78;
-            /**
-             * TODO: describe method.
-             * @return description
-             */
             default -> throw new IncompatibleClassChangeError();
         }
 
         return var10000;
     }
 }
+

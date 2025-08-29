@@ -24,23 +24,27 @@ public class EnvironmentHelper {
     private static boolean isHotSeason = false;
 
     /**
-     * TODO: describe method.
-     * @return description
+     * Returns whether the current cached sub-season counts as a "hot season"
+     * for snow behavior purposes.
+     *
+     * @return true if the active sub-season is hot
      */
     public static boolean isHotSeason() {
         return isHotSeason;
     }
 
     /**
-     * TODO: describe method.
-     * @return description
+     * Current cached sub-season for the last processed season change event.
+     *
+     * @return current sub-season or null if unknown
      */
     public static Season.SubSeason getCurrentSeason() {
         return season;
     }
 
     /**
-     * TODO: describe method.
+     * Detects environment (client/server) and single-player status and logs
+     * a summary for debugging.
      */
     public static void initialize() {
         isServerEnvironment = !FMLEnvironment.dist.isClient();
@@ -49,8 +53,10 @@ public class EnvironmentHelper {
     }
 
     /**
-     * TODO: describe method.
-     * @return description
+     * Whether seasonal logic should run in the current environment.
+     * True on dedicated servers and on clients hosting an integrated server.
+     *
+     * @return true if mod logic should execute this tick
      */
     public static boolean shouldRunMod() {
         return FMLEnvironment.dist.isDedicatedServer()
@@ -59,8 +65,9 @@ public class EnvironmentHelper {
 
 
     /**
-     * TODO: describe method.
-     * @return description
+     * Best-effort detection of single-player (integrated server) mode.
+     *
+     * @return true if the Minecraft client hosts an integrated server
      */
     private static boolean detectSinglePlayer() {
         try {
@@ -74,9 +81,10 @@ public class EnvironmentHelper {
 
 
     /**
-     * TODO: describe method.
+     * Handles a Serene Seasons change event: updates the cached sub-season,
+     * logs it, and recomputes the hot-season flag.
      *
-     * @param serverLevel description
+     * @param serverLevel the server level where the change occurred
      */
     public static void onSeasonChange(ServerLevel serverLevel) {
         season = SeasonHelper.getSeasonState(serverLevel).getSubSeason();
