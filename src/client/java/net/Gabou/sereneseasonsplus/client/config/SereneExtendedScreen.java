@@ -1,14 +1,11 @@
-package com.Gabou.sereneseasonsplus.config;
-
-import net.Gabou.projectatmosphere.ProjectAtmosphere;
+package net.Gabou.sereneseasonsplus.client.config;
+import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.fml.config.ConfigTracker;
-import net.minecraftforge.fml.config.ModConfig;
 
 /**
  * Simple in-game configuration screen for Project Atmosphere.
@@ -50,7 +47,7 @@ public class SereneExtendedScreen extends Screen {
      * @param parent screen to return to when closed
      */
     public SereneExtendedScreen(Screen parent) {
-        super(Component.literal("Project Atmosphere Config"));
+        super(Component.literal("Serene Seasons Plus Config"));
         this.parent = parent;
     }
 
@@ -197,34 +194,10 @@ public class SereneExtendedScreen extends Screen {
         SereneExtendedConfig.CUSTOM_DAY_LENGTH.set(parsed3);
         SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.set(parsed4);
 
-        try {
-            
-            saveCommonConfigForMod(ProjectAtmosphere.MODID);
-
-            
-            
-
-            errorMessage = null;
-        } catch (Exception e) {
-            errorMessage = Component.literal("Failed to save config: " + e.getMessage());
-        }
+        // Persist to Fabric config JSON
+        SereneExtendedConfig.save();
     }
 
-    /**
-     * Saves the Forge COMMON config file for the given mod id, if present.
-     *
-     * @param modId target mod id
-     */
-    private static void saveCommonConfigForMod(String modId) {
-        var set = ConfigTracker.INSTANCE.configSets().get(ModConfig.Type.COMMON);
-        if (set == null) return;
-        for (ModConfig cfg : set) {
-            if (cfg.getModId().equals(modId)) {
-                cfg.save();
-                return;
-            }
-        }
-    }
 
     /**
      * Restores focus and returns to the parent screen.

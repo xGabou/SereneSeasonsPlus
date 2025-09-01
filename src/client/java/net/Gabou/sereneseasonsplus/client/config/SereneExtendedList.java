@@ -1,4 +1,4 @@
-package com.Gabou.sereneseasonsplus.config;
+package net.Gabou.sereneseasonsplus.client.config;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;

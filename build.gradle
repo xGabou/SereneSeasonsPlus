@@ -52,8 +52,9 @@ dependencies {
     modImplementation "curse.maven:betterdays-895618:6915866"
     modImplementation "curse.maven:serene-seasons-291874:6398228"
     modImplementation "curse.maven:glitchcore-955399:5787838"
+    modImplementation "curse.maven:modmenu-308702:5162837"
 // build.gradle
-    compileOnly "curse.maven:spectrelib-993948:5217601"
+    modImplementation "curse.maven:spectrelib-993948:5217601"
 
 
 //    implementation files('libs/hourglass-1.20-1.2.1.1.jar')
@@ -67,8 +68,11 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "com.electronwill.night-config:core:3.6.7"
+    modImplementation "com.electronwill.night-config:toml:3.6.7"
 
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    modImplementation "net.jodah:typetools:0.6.3"
 
     // Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime

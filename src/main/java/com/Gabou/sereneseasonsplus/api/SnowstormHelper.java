@@ -1,10 +1,6 @@
 package com.Gabou.sereneseasonsplus.api;
 
-import com.Gabou.sereneseasonsplus.SereneSeasonsPlus;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
-import net.minecraftforge.fml.config.ConfigTracker;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -41,23 +37,13 @@ public class SnowstormHelper {
     }
 
     /**
-     * Writes snowstorm settings to sereneseasonsplus-common.toml and attempts
-     * to refresh Forge's config so the change applies immediately.
+     * Writes snowstorm settings to the Fabric JSON config and saves it.
      */
     private static void updateSnowstormConfig(boolean enabled, int intensity) {
         try {
             SereneExtendedConfig.SNOWSTORM_ENABLED.set(enabled);
             SereneExtendedConfig.SNOWSTORM_INTENSITY.set(intensity);
-            var set = ConfigTracker.INSTANCE.configSets().get(ModConfig.Type.COMMON);
-            if (set == null) return;
-            for (ModConfig cfg : set) {
-                if (cfg.getModId().equals(SereneSeasonsPlus.MODID)) {
-                    cfg.save(); 
-                    return;
-                }
-            }
-
-            ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.COMMON, FMLPaths.CONFIGDIR.get());
+            SereneExtendedConfig.save();
         } catch (Exception e) {
             LOGGER.warn("Failed to update Serene Seasons Plus config: {}", e.getMessage());
         }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "sereneseasonsplus",
-  "version": "${mod_version}",
+  "version": "1.20.1-1.0.9.5",
   "name": "Serene Seasons Plus",
   "description": "Addon to Serene Seasons.",
   "authors": [
@@ -16,12 +16,16 @@
       "com.Gabou.sereneseasonsplus.SereneSeasonsPlus"
     ],
     "client": [
-      "com.Gabou.sereneseasonsplus.SereneSeasonsPlusClient"
+      "net.Gabou.sereneseasonsplus.client.SereneSeasonsPlusClient"
+    ],
+    "modmenu": [
+      "net.Gabou.sereneseasonsplus.client.SereneSeasonsPlusModMenu"
     ]
   },
   "depends": {
     "fabricloader": ">=0.14.0",
     "fabric": "*",
+    "modmenu": ">=7.0.0",
     "minecraft": "1.20.1",
     "betterdays": "*",
     "sereneseasons": "*"

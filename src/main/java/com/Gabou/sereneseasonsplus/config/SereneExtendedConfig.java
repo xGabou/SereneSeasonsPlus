@@ -1,63 +1,147 @@
 package com.Gabou.sereneseasonsplus.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import net.fabricmc.loader.api.FabricLoader;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class SereneExtendedConfig {
 
-    public static final ForgeConfigSpec.BooleanValue USE_ASYNC;
-    public static final ForgeConfigSpec.IntValue TICK_SNOW_PILLER;
-    public static final ForgeConfigSpec.IntValue TICK_SNOW_REPLACER;
-    public static final ForgeConfigSpec.BooleanValue ENABLE_SEASONAL_DAYLIGHT_CYCLE;
-    public static final ForgeConfigSpec.DoubleValue CUSTOM_DAY_LENGTH;
-    public static final ForgeConfigSpec.DoubleValue CUSTOM_NIGHT_LENGTH;
-    public static final ForgeConfigSpec.BooleanValue CUSTOM_CYCLE_LENGTH;
-    public static final ForgeConfigSpec.BooleanValue SNOWSTORM_ENABLED;
-    public static final ForgeConfigSpec.IntValue SNOWSTORM_INTENSITY;
-
     public static final int MIN_CORES_FOR_ASYNC = 6;
 
-    static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
-        builder.push("performance");
-        USE_ASYNC = builder
-                .comment("Use async tasks for some operations to improve performance. This may cause issues with some mods.")
-                .define("useAsync", Runtime.getRuntime().availableProcessors()> MIN_CORES_FOR_ASYNC);
-        builder.pop();
-        builder.push("snowPillerAndReplacer");
-        TICK_SNOW_PILLER = builder
-                .comment("Tick interval for snow pillers in ticks. Default is 20 (1 second).")
-                .defineInRange("tickSnowPiller", 20, 1, Integer.MAX_VALUE);
-        TICK_SNOW_REPLACER = builder
-                .comment("Tick interval for snow replacer in ticks. Default is 20 (1 second).")
-                .defineInRange("tickSnowReplacer", 100, 1, Integer.MAX_VALUE);
-        builder.pop();
-        builder.push("snowstorm");
-        SNOWSTORM_ENABLED = builder
-                .comment("Enable snowstorm mode which increases snow pilling intensity.")
-                .define("enabled", false);
-        SNOWSTORM_INTENSITY = builder
-                .comment("Snowstorm intensity value used by Project Atmosphere.")
-                .defineInRange("intensity", 0, 0, 100);
-        builder.pop();
-        builder.push("seasonalDaylightCycle");
-        ENABLE_SEASONAL_DAYLIGHT_CYCLE = builder
-                .comment("Enable seasonal daylight cycle. This will change the length of day and night based on the current season.")
-                .define("enableSeasonalDaylightCycle", true);
+    public static final BooleanValue USE_ASYNC;
+    public static final IntValue TICK_SNOW_PILLER;
+    public static final IntValue TICK_SNOW_REPLACER;
+    public static final BooleanValue ENABLE_SEASONAL_DAYLIGHT_CYCLE;
+    public static final DoubleValue CUSTOM_DAY_LENGTH;
+    public static final DoubleValue CUSTOM_NIGHT_LENGTH;
+    public static final BooleanValue CUSTOM_CYCLE_LENGTH;
+    public static final BooleanValue SNOWSTORM_ENABLED;
+    public static final IntValue SNOWSTORM_INTENSITY;
 
-        CUSTOM_CYCLE_LENGTH = builder
-                .comment("If true, the day and night lengths will be determined by the custom values set below. If false, the day and night lengths will be determined by the season.")
-                .define("customCycleLength", false);
-        CUSTOM_DAY_LENGTH = builder
-                .comment("Custom day length in ticks. Only used if seasonal daylight cycle is disabled.")
-                .defineInRange("customDayLength", 1, 0.05, 100);
-        CUSTOM_NIGHT_LENGTH = builder
-                .comment("Custom night length in ticks. Only used if seasonal daylight cycle is disabled.")
-                .defineInRange("customNightLength", 1, 0.05, 100);
-        builder.pop();
-        COMMON_SPEC = builder.build();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("sereneseasonsplus.json");
+
+    static {
+        USE_ASYNC = new BooleanValue("useAsync", Runtime.getRuntime().availableProcessors() > MIN_CORES_FOR_ASYNC);
+
+        TICK_SNOW_PILLER = new IntValue("tickSnowPiller", 20, 1, Integer.MAX_VALUE);
+        TICK_SNOW_REPLACER = new IntValue("tickSnowReplacer", 100, 1, Integer.MAX_VALUE);
+
+        SNOWSTORM_ENABLED = new BooleanValue("snowstormEnabled", false);
+        SNOWSTORM_INTENSITY = new IntValue("snowstormIntensity", 0, 0, 100);
+
+        ENABLE_SEASONAL_DAYLIGHT_CYCLE = new BooleanValue("enableSeasonalDaylightCycle", true);
+        CUSTOM_CYCLE_LENGTH = new BooleanValue("customCycleLength", false);
+        CUSTOM_DAY_LENGTH = new DoubleValue("customDayLength", 1.0, 0.05, 100.0);
+        CUSTOM_NIGHT_LENGTH = new DoubleValue("customNightLength", 1.0, 0.05, 100.0);
+
+        load();
     }
 
-    public static final ForgeConfigSpec COMMON_SPEC;
+    public static void load() {
+        if (!Files.exists(CONFIG_PATH)) {
+            save();
+            return;
+        }
+        try (Reader reader = Files.newBufferedReader(CONFIG_PATH)) {
+            JsonObject obj = GSON.fromJson(reader, JsonObject.class);
+            if (obj == null) return;
+
+            USE_ASYNC.load(obj);
+            TICK_SNOW_PILLER.load(obj);
+            TICK_SNOW_REPLACER.load(obj);
+            SNOWSTORM_ENABLED.load(obj);
+            SNOWSTORM_INTENSITY.load(obj);
+            ENABLE_SEASONAL_DAYLIGHT_CYCLE.load(obj);
+            CUSTOM_CYCLE_LENGTH.load(obj);
+            CUSTOM_DAY_LENGTH.load(obj);
+            CUSTOM_NIGHT_LENGTH.load(obj);
+        } catch (Exception ignored) {
+        }
+    }
+
+    public static void save() {
+        try {
+            if (!Files.exists(CONFIG_PATH.getParent())) {
+                Files.createDirectories(CONFIG_PATH.getParent());
+            }
+            JsonObject obj = new JsonObject();
+            USE_ASYNC.save(obj);
+            TICK_SNOW_PILLER.save(obj);
+            TICK_SNOW_REPLACER.save(obj);
+            SNOWSTORM_ENABLED.save(obj);
+            SNOWSTORM_INTENSITY.save(obj);
+            ENABLE_SEASONAL_DAYLIGHT_CYCLE.save(obj);
+            CUSTOM_CYCLE_LENGTH.save(obj);
+            CUSTOM_DAY_LENGTH.save(obj);
+            CUSTOM_NIGHT_LENGTH.save(obj);
+            try (Writer writer = Files.newBufferedWriter(CONFIG_PATH)) {
+                GSON.toJson(obj, writer);
+            }
+        } catch (IOException ignored) {
+        }
+    }
+
+    public static final class BooleanValue {
+        private final String key;
+        private boolean value;
+        private final boolean def;
+        public BooleanValue(String key, boolean def) {
+            this.key = key;
+            this.value = def;
+            this.def = def;
+        }
+        public boolean get() { return value; }
+        public void set(boolean v) { this.value = v; }
+        void load(JsonObject obj) {
+            if (obj.has(key)) this.value = obj.get(key).getAsBoolean();
+        }
+        void save(JsonObject obj) { obj.addProperty(key, value); }
+    }
+
+    public static final class IntValue {
+        private final String key;
+        private int value;
+        private final int min;
+        private final int max;
+        public IntValue(String key, int def, int min, int max) {
+            this.key = key;
+            this.value = def;
+            this.min = min;
+            this.max = max;
+        }
+        public int get() { return value; }
+        public void set(int v) { this.value = Math.max(min, Math.min(max, v)); }
+        void load(JsonObject obj) {
+            if (obj.has(key)) set(obj.get(key).getAsInt());
+        }
+        void save(JsonObject obj) { obj.addProperty(key, value); }
+    }
+
+    public static final class DoubleValue {
+        private final String key;
+        private double value;
+        private final double min;
+        private final double max;
+        public DoubleValue(String key, double def, double min, double max) {
+            this.key = key;
+            this.value = def;
+            this.min = min;
+            this.max = max;
+        }
+        public double get() { return value; }
+        public void set(double v) { this.value = Math.max(min, Math.min(max, v)); }
+        void load(JsonObject obj) {
+            if (obj.has(key)) set(obj.get(key).getAsDouble());
+        }
+        void save(JsonObject obj) { obj.addProperty(key, value); }
+    }
 }
 
