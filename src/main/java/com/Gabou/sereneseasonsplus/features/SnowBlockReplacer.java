@@ -1,12 +1,14 @@
 package com.Gabou.sereneseasonsplus.features;
 
+
+
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
-
 import com.Gabou.sereneseasonsplus.util.SereneService;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
 import net.minecraft.core.BlockPos;
@@ -15,16 +17,16 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.event.TickEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 
-@Mod.EventBusSubscriber
+@EventBusSubscriber
 public class SnowBlockReplacer {
     private static final Logger LOGGER = LogManager.getLogger("SnowBlockReplacer");
     private static final Random RANDOM = new Random();
@@ -55,8 +57,7 @@ public class SnowBlockReplacer {
      *
      * @param event server post-tick event
      */
-    public static void onConfigReload(TickEvent.ServerTickEvent event) {
-        if (!event.phase.equals(TickEvent.Phase.END)) return;
+    public static void onConfigReload(ServerTickEvent.Post event) {
         tickThresholdSnowReplacer = SereneExtendedConfig.TICK_SNOW_REPLACER.get();
         SereneService.reloadConfig();
 
@@ -69,8 +70,7 @@ public class SnowBlockReplacer {
      *
      * @param event server post-tick event
      */
-    public static void onServerTick(TickEvent.ServerTickEvent event) {
-        if (!event.phase.equals(TickEvent.Phase.END)) return;
+    public static void onServerTick(ServerTickEvent.Post event) {
         if (EnvironmentHelper.shouldRunMod()) {
             ++tickCounter;
             MinecraftServer server = event.getServer();
@@ -127,8 +127,6 @@ public class SnowBlockReplacer {
         }
     }
 
-
-
     /**
      * Determines how many snow blocks to replace depending on temperature.
      *
@@ -141,6 +139,17 @@ public class SnowBlockReplacer {
         } else {
             return temperature < 0.5F ? 3 : 5;
         }
+    }
+
+    /**
+     * Computes how many snow blocks to remove based on temperature from
+     * Project Atmosphere scale.
+     *
+     * @param temperature current temperature
+     * @return number of blocks to attempt removing
+     */
+    private static int calculateBlocksToReplace1(float temperature) {
+        return (int) Math.ceil((double) (temperature / 5.0F));
     }
 
     /**

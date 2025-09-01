@@ -2,3 +2,6 @@
 /weather rain
 /season set mid_spring
 /season set mid_summer
+/weather rain
+/season set mid_winter
+/season set mid_summer

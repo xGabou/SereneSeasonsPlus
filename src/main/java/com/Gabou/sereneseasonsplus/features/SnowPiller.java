@@ -17,8 +17,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.neoforged.neoforge.event.TickEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -91,8 +91,7 @@ public final class SnowPiller {
      *
      * @param event server post-tick event
      */
-    public static void onConfigReload(TickEvent.ServerTickEvent event) {
-        if(!event.phase.equals(TickEvent.Phase.END)) return;
+    public static void onConfigReload(ServerTickEvent.Post event) {
         tickThresholdSnowPiller = SereneExtendedConfig.TICK_SNOW_PILLER.get();
         SereneService.reloadConfig();
 
@@ -104,8 +103,7 @@ public final class SnowPiller {
      *
      * @param event server post-tick event
      */
-    public static void onServerTick(TickEvent.ServerTickEvent event) {
-        if(!event.phase.equals(TickEvent.Phase.END)) return;
+    public static void onServerTick(ServerTickEvent.Post event) {
         if (EnvironmentHelper.shouldRunMod()) {
             MinecraftServer server = event.getServer();
             Level level = server.getLevel(Level.OVERWORLD);
@@ -138,7 +136,7 @@ public final class SnowPiller {
         int attempts;
         if (!level.isRaining()) return;
 
-        
+
         final boolean coldEnough = level.getBiome(center).value().coldEnoughToSnow(center);
         if (!coldEnough) return;
 
@@ -168,7 +166,7 @@ public final class SnowPiller {
             return null;
         }
 
-        
+
         if (!level.getBiome(center).value().coldEnoughToSnow(center)) {
             ts.recordFail(now, center);
             return null;
@@ -188,7 +186,7 @@ public final class SnowPiller {
             pos.set(x, y, z);
             below.set(x, y - 1, z);
 
-            
+
             final BlockState stateAt = level.getBlockState(pos);
             final boolean canStackSnow =
                     stateAt.is(Blocks.SNOW)
@@ -200,14 +198,14 @@ public final class SnowPiller {
 
             if (level.getBlockState(below).is(Blocks.WATER)) continue;
 
-            
+
             if (level.getBiome(pos).value().coldEnoughToSnow(pos)) {
                 ts.recordSuccess(center);
                 return pos.immutable();
             }
         }
 
-        
+
         ts.recordFail(now, center);
         return null;
     }
@@ -221,7 +219,7 @@ public final class SnowPiller {
     public static void placeSnowAt(ServerLevel level, BlockPos pos) {
         final BlockState stateAt = level.getBlockState(pos);
 
-        
+
         if (stateAt.is(Blocks.SNOW) && stateAt.hasProperty(SnowLayerBlock.LAYERS)) {
             int layers = stateAt.getValue(SnowLayerBlock.LAYERS);
             if (layers < 8) {
@@ -230,7 +228,7 @@ public final class SnowPiller {
             return; // already at max layers
         }
 
-        
+
         if (!level.isEmptyBlock(pos)) return;
 
         BlockState snow = Blocks.SNOW.defaultBlockState();
@@ -239,7 +237,7 @@ public final class SnowPiller {
     }
 
 // ──────────────────────────────────────────────────────────────────────────
- 
+
 // ──────────────────────────────────────────────────────────────────────────
 
     private static final class ThrottleState {
@@ -248,7 +246,7 @@ public final class SnowPiller {
 
         boolean shouldSkip(long now, BlockPos currentCenter, int radius) {
             if (hasMovedEnough(currentCenter, radius)) {
-                
+
                 nextAllowedTick = 0L;
                 return false;
             }
@@ -275,7 +273,7 @@ public final class SnowPiller {
     }
 
 // ──────────────────────────────────────────────────────────────────────────
- 
+
 // ──────────────────────────────────────────────────────────────────────────
 
     /**
