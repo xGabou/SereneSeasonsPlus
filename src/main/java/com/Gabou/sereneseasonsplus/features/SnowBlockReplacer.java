@@ -1,35 +1,30 @@
 package com.Gabou.sereneseasonsplus.features;
 
-import com.Gabou.sereneseasonsplus.SereneSeasonsPlus;
-import com.Gabou.sereneseasonsplus.api.CompatStatus;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 
 import com.Gabou.sereneseasonsplus.util.SereneService;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
-import net.Gabou.projectatmosphere.manager.ForecastOrchestrator;
-import net.Gabou.projectatmosphere.util.BiomeInstanceKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.event.TickEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 
-@EventBusSubscriber
+@Mod.EventBusSubscriber
 public class SnowBlockReplacer {
     private static final Logger LOGGER = LogManager.getLogger("SnowBlockReplacer");
     private static final Random RANDOM = new Random();
@@ -60,7 +55,8 @@ public class SnowBlockReplacer {
      *
      * @param event server post-tick event
      */
-    public static void onConfigReload(ServerTickEvent.Post event) {
+    public static void onConfigReload(TickEvent.ServerTickEvent event) {
+        if (!event.phase.equals(TickEvent.Phase.END)) return;
         tickThresholdSnowReplacer = SereneExtendedConfig.TICK_SNOW_REPLACER.get();
         SereneService.reloadConfig();
 
@@ -73,7 +69,8 @@ public class SnowBlockReplacer {
      *
      * @param event server post-tick event
      */
-    public static void onServerTick(ServerTickEvent.Post event) {
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
+        if (!event.phase.equals(TickEvent.Phase.END)) return;
         if (EnvironmentHelper.shouldRunMod()) {
             ++tickCounter;
             MinecraftServer server = event.getServer();
@@ -106,49 +103,31 @@ public class SnowBlockReplacer {
      * @param level the level to operate in
      */
     private static void replaceSnowBlocks(Level level) {
-        Iterator var1 = playerPositions.entrySet().iterator();
+        for (Map.Entry<ServerPlayer, BlockPos> entry : playerPositions.entrySet()) {
+            ServerPlayer player = entry.getKey();
+            BlockPos playerPos = entry.getValue();
 
-        while (true) {
-            BlockPos playerPos;
-            int radius;
-            int blocksToReplace;
-            while (true) {
-                if (!var1.hasNext()) {
-                    return;
-                }
+            int simulationDistance = getSimulationDistance(player);
+            int radius = Mth.clamp(simulationDistance * 16, 16, 64);
 
-                Map.Entry<ServerPlayer, BlockPos> entry = (Map.Entry) var1.next();
-                ServerPlayer player = entry.getKey();
-                playerPos = entry.getValue();
-                int simulationDistance = getSimulationDistance(player);
-                radius = Mth.clamp(simulationDistance * 16,16,64);
-                if (!CompatStatus.isProjectAtmosphereLoaded) {
-                    Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
-                    float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
-                    if (!(temperature < 0.15F)) {
-                        blocksToReplace = calculateBlocksToReplace(temperature);
+            Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
+            float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
+
+            if (temperature >= 0.15F) { // warm enough to melt
+                int blocksToReplace = calculateBlocksToReplace(temperature);
+
+                for (int i = 0; i < blocksToReplace; ++i) {
+                    BlockPos targetPos = findSnowBlockInRadius(level, playerPos, radius);
+                    if (targetPos == null) {
                         break;
                     }
-                } else {
-                    float temperature = ForecastOrchestrator.getCurrentTemperature(new BiomeInstanceKey(level.getBiome(playerPos).unwrapKey().get().location(), playerPos), level.getDayTime());
-                    if (!((double) temperature < (double) 0.5F)) {
-                        blocksToReplace = calculateBlocksToReplace1(temperature);
-                        break;
-                    }
-
-            }
-            }
-
-            for (int i = 0; i < blocksToReplace; ++i) {
-                BlockPos targetPos = findSnowBlockInRadius(level, playerPos, radius);
-                if (targetPos == null) {
-                    break;
+                    SnowUtils.breakOrDecrementLayer(level, targetPos);
                 }
-
-                SnowUtils.breakOrDecrementLayer(level,targetPos);
             }
         }
     }
+
+
 
     /**
      * Determines how many snow blocks to replace depending on temperature.
@@ -162,17 +141,6 @@ public class SnowBlockReplacer {
         } else {
             return temperature < 0.5F ? 3 : 5;
         }
-    }
-
-    /**
-     * Computes how many snow blocks to remove based on temperature from
-     * Project Atmosphere scale.
-     *
-     * @param temperature current temperature
-     * @return number of blocks to attempt removing
-     */
-    private static int calculateBlocksToReplace1(float temperature) {
-        return (int) Math.ceil((double) (temperature / 5.0F));
     }
 
     /**

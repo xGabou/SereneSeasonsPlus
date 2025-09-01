@@ -12,13 +12,14 @@ import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.TickEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
@@ -35,20 +36,20 @@ public class SereneSeasonsPlus {
      * Constructs the mod entry point, registers event handlers, and config.
      *
      * @param modEventBus the mod event bus
-     * @param modContainer the active mod container
      */
-    public SereneSeasonsPlus(IEventBus modEventBus, ModContainer modContainer) {
+    public SereneSeasonsPlus(IEventBus modEventBus) {
+        ModLoadingContext modLoadingContext = ModLoadingContext.get();
         EnvironmentHelper.initialize();
         NeoForge.EVENT_BUS.register(SnowBlockReplacer.class);
         NeoForge.EVENT_BUS.register(SnowPiller.class);
         NeoForge.EVENT_BUS.register(this);
-        modContainer.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
+        modLoadingContext.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
 
         SeasonChangeEvent.register();
 
         modEventBus.addListener((FMLClientSetupEvent event) -> {
             LOGGER.info("Setting up Serene Seasons Plus (Common)");
-            clientSetup(event, modContainer);
+            clientSetup(event, modLoadingContext);
         });
     }
 
@@ -69,7 +70,7 @@ public class SereneSeasonsPlus {
      * @param event the client setup event
      * @param modContainer the active mod container
      */
-    private void clientSetup(final FMLClientSetupEvent event, ModContainer modContainer) {
+    private void clientSetup(final FMLClientSetupEvent event, ModLoadingContext modContainer) {
         LOGGER.info("Setting up Serene Seasons Plus (Client)");
         event.enqueueWork(() -> new SereneSeasonsPlusClient(modContainer));
     }
@@ -90,7 +91,10 @@ public class SereneSeasonsPlus {
      *
      * @param event server post-tick event
      */
-    public void onServerTick(ServerTickEvent.Post event) {
+    public void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) {
+            return;
+        }
         MinecraftServer server = event.getServer();
         if (server != null) {
             Level level = server.getLevel(Level.OVERWORLD);
