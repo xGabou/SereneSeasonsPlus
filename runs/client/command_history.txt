@@ -1,0 +1,4 @@
+/season set late_winter
+/weather rain
+/season set mid_spring
+/season set mid_summer

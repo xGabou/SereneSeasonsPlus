@@ -135,9 +135,9 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
     implementation "curse.maven:serene-seasons-291874:5206533"
-    compileOnly "curse.maven:glitchcore-955399:5088442"
+    implementation "curse.maven:glitchcore-955399:5088442"
     implementation "curse.maven:betterdays-895618:5477563"
-    implementation "curse.maven:spectrelib-993948:5217603"
+    compileOnly "curse.maven:spectrelib-993948:5217603"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
