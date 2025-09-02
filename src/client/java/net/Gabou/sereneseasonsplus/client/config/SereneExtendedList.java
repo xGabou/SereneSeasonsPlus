@@ -22,13 +22,11 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
      * @param width      list width
      * @param height     list height
      * @param top        top y
-     * @param bottom     bottom y
      * @param itemHeight row height in pixels
      */
-    public SereneExtendedList(Minecraft mc, int width, int height, int top, int bottom, int itemHeight) {
-        super(mc, width, height, top, bottom, itemHeight);
+    public SereneExtendedList(Minecraft mc, int width, int height, int top, int itemHeight) {
+        super(mc, width, height, top, itemHeight);
         this.setRenderBackground(false);
-        this.setRenderTopAndBottom(false);
     }
 
     /**
@@ -36,7 +34,7 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
      */
     @Override
     public int getRowWidth() {
-        return 360; 
+        return 360;
     }
 
     /**
@@ -57,13 +55,11 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         this.addEntry(new Row(this, label, widgets));
     }
 
-    
     public static class Row extends ObjectSelectionList.Entry<Row> {
         private final SereneExtendedList owner;
         private final Component label;
         private final List<AbstractWidget> widgets;
 
-        
         private int lastX = Integer.MIN_VALUE, lastY = Integer.MIN_VALUE, lastRowW = Integer.MIN_VALUE, lastRowH = Integer.MIN_VALUE;
 
         /**
@@ -83,14 +79,13 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
             if (x == lastX && y == lastY && rowWidth == lastRowW && rowHeight == lastRowH) return;
             lastX = x; lastY = y; lastRowW = rowWidth; lastRowH = rowHeight;
 
-            final int wx = x + rowWidth - 200;          
-            final int wy = y + (rowHeight - 20) / 2;    
+            final int wx = x + rowWidth - 200;
+            final int wy = y + (rowHeight - 20) / 2;
 
             for (AbstractWidget w : widgets) {
                 if (w.getX() != wx) w.setX(wx);
                 if (w.getY() != wy) w.setY(wy);
                 if (w.getWidth() != 200) w.setWidth(200);
-                
             }
         }
 
@@ -102,26 +97,31 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
                            int mouseX, int mouseY, boolean hovered, float delta) {
             layoutIfNeeded(x, y, rowWidth, rowHeight);
 
-            
+            // Label on the left
             g.drawString(owner.minecraft.font, label, x, y + 6, 0xFFFFFF, false);
 
-            
+            // Render widgets on the right
             for (AbstractWidget w : widgets) {
                 w.render(g, mouseX, mouseY, delta);
             }
         }
 
-        
         /**
          * Narratable entries provided by child widgets.
          */
-        public List<? extends NarratableEntry> narratables() { return widgets; }
+        @Override
+        public List<? extends NarratableEntry> narratables() {
+            return widgets;
+        }
+
         /**
          * GUI event listeners provided by child widgets.
          */
-        public List<? extends GuiEventListener> children()    { return widgets; }
+        @Override
+        public List<? extends GuiEventListener> children() {
+            return widgets;
+        }
 
-        
         /**
          * Delegates clicks to child widgets and manages row selection/focus.
          */
@@ -129,19 +129,14 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         public boolean mouseClicked(double mx, double my, int button) {
             for (AbstractWidget w : widgets) {
                 if (w.mouseClicked(mx, my, button)) {
-                    
                     owner.setSelected(this);
-
-                    
-                    w.setFocused(true);
+                    w.setFocused(true); // Fabric 1.20.4 still supports this
                     return true;
                 }
             }
-            
             owner.setSelected(this);
             return false;
         }
-
 
         /**
          * Forwards mouse release to child widgets.
@@ -167,7 +162,7 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         @Override
         public boolean mouseScrolled(double mx, double my, double delta) {
             for (AbstractWidget w : widgets) if (w.mouseScrolled(mx, my, delta)) return true;
-            return false; 
+            return false;
         }
 
         /**
@@ -188,14 +183,17 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
             return false;
         }
 
-        
         /**
          * No-op narration aggregation; child widgets provide their own narration.
          */
-        @Override public void updateNarration(NarrationElementOutput out) {  }
+        @Override
+        public void updateNarration(NarrationElementOutput out) { }
+
         /**
          * Row narration text, derived from the label.
          */
-        public Component getNarration() { return label; }
+        public Component getNarration() {
+            return label;
+        }
     }
 }

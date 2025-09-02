@@ -71,7 +71,7 @@ public class SereneExtendedScreen extends Screen {
         int bottom = this.height - 40;
 
         
-        this.list = new SereneExtendedList(this.minecraft, panelW, this.height, top + 20, bottom - 40, 24);
+        this.list = new SereneExtendedList(this.minecraft, panelW, top + 20, bottom - 40, 24);
         this.list.setLeftPos(panelX);
         this.addRenderableWidget(this.list);
 

@@ -14,7 +14,7 @@ loom {
     splitEnvironmentSourceSets()
 
     mods {
-        "untitled" {
+        "sereneseasonsplus" {
             sourceSet sourceSets.main
             sourceSet sourceSets.client
         }
@@ -49,10 +49,10 @@ repositories {
 
 dependencies {
 
-    modImplementation "curse.maven:betterdays-895618:6915866"
-    modImplementation "curse.maven:serene-seasons-291874:6398228"
-    modImplementation "curse.maven:glitchcore-955399:5787838"
-    modImplementation "curse.maven:modmenu-308702:5162837"
+    modImplementation "curse.maven:betterdays-895618:5477559"
+    modImplementation "curse.maven:serene-seasons-291874:5206535"
+    modImplementation "curse.maven:glitchcore-955399:5088443"
+    modImplementation "curse.maven:modmenu-308702:5441535"
 // build.gradle
     modImplementation "curse.maven:spectrelib-993948:5217601"
 
