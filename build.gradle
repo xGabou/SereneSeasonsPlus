@@ -49,10 +49,10 @@ repositories {
 
 dependencies {
 
-    modImplementation "curse.maven:betterdays-895618:6883729"
-    modImplementation "curse.maven:serene-seasons-291874:6182595"
-    modImplementation "curse.maven:glitchcore-955399:5660741"
-    modImplementation "curse.maven:modmenu-308702:5810603"
+    modImplementation "curse.maven:betterdays-895618:6883766"
+    modImplementation "curse.maven:serene-seasons-291874:6812964"
+    modImplementation "curse.maven:glitchcore-955399:6812822"
+    modImplementation "curse.maven:modmenu-308702:6946098"
 // build.gradle
     compileOnly "curse.maven:spectrelib-993948:5217601"
 

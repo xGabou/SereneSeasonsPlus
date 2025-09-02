@@ -72,7 +72,7 @@ public final class SnowPiller {
     public static void tickSnow(ServerLevel level, ServerPlayer player, BlockPos center, int radius) {
         int attempts;
         if (!level.isRaining()) return;
-        if (!level.getBiome(center).value().coldEnoughToSnow(center)) return;
+        if (!level.getBiome(center).value().coldEnoughToSnow(center,center.getY())) return;
 
         RandomSource rnd = level.random;
         attempts = rnd.nextInt(2) + (level.isThundering() ? rnd.nextInt(2) : 0);
@@ -93,7 +93,7 @@ public final class SnowPiller {
         ThrottleState ts = THROTTLE.computeIfAbsent(pid, k -> new ThrottleState());
         if (ts.shouldSkip(now, center, MOVEMENT_RESET_RADIUS)) return null;
 
-        if (!level.getBiome(center).value().coldEnoughToSnow(center)) {
+        if (!level.getBiome(center).value().coldEnoughToSnow(center,center.getY())) {
             ts.recordFail(now, center);
             return null;
         }
@@ -120,7 +120,7 @@ public final class SnowPiller {
             if (!(level.isEmptyBlock(pos) || canStackSnow)) continue;
             if (level.getBlockState(below).is(Blocks.WATER)) continue;
 
-            if (level.getBiome(pos).value().coldEnoughToSnow(pos)) {
+            if (level.getBiome(pos).value().coldEnoughToSnow(pos,pos.getY())) {
                 ts.recordSuccess(center);
                 return pos.immutable();
             }

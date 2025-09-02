@@ -40,9 +40,11 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
      * Scrollbar x position relative to the left edge of the list.
      */
     @Override
-    protected int getScrollbarPosition() {
-        return this.getRowLeft() + getRowWidth() + 8;
+    protected int getScrollbarPositionX() {
+        return this.getRowLeft() + this.getRowWidth() + 8;
     }
+
+
 
     /**
      * Adds a new row with a label and one or more widgets aligned to the right.
