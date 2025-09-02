@@ -133,7 +133,7 @@ public class SereneExtendedScreen extends Screen {
      * Draws background, panel chrome, and delegates to list/widgets.
      */
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(g, mouseX, mouseY, partialTick);
+        this.renderTransparentBackground(g);
 
         int panelW = 480;
         int panelX = (this.width - panelW) / 2;

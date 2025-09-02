@@ -12,8 +12,6 @@ import java.util.Random;
 
 import com.Gabou.sereneseasonsplus.util.SereneService;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
-import net.Gabou.projectatmosphere.manager.ForecastOrchestrator;
-import net.Gabou.projectatmosphere.util.BiomeInstanceKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -121,22 +119,16 @@ public class SnowBlockReplacer {
                 ServerPlayer player = entry.getKey();
                 playerPos = entry.getValue();
                 int simulationDistance = getSimulationDistance(player);
-                radius = Mth.clamp(simulationDistance * 16,16,64);
-                if (!CompatStatus.isProjectAtmosphereLoaded) {
-                    Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
-                    float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
-                    if (!(temperature < 0.15F)) {
-                        blocksToReplace = calculateBlocksToReplace(temperature);
-                        break;
-                    }
-                } else {
-                    float temperature = ForecastOrchestrator.getCurrentTemperature(new BiomeInstanceKey(level.getBiome(playerPos).unwrapKey().get().location(), playerPos), level.getDayTime());
-                    if (!((double) temperature < (double) 0.5F)) {
-                        blocksToReplace = calculateBlocksToReplace1(temperature);
-                        break;
-                    }
+                radius = Mth.clamp(simulationDistance * 16, 16, 64);
 
-            }
+                Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
+                float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
+                if (!(temperature < 0.15F)) {
+                    blocksToReplace = calculateBlocksToReplace(temperature);
+                    break;
+                }
+
+
             }
 
             for (int i = 0; i < blocksToReplace; ++i) {
@@ -145,7 +137,7 @@ public class SnowBlockReplacer {
                     break;
                 }
 
-                SnowUtils.breakOrDecrementLayer(level,targetPos);
+                SnowUtils.breakOrDecrementLayer(level, targetPos);
             }
         }
     }

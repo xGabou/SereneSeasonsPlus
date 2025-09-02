@@ -137,7 +137,7 @@ public final class SnowPiller {
         if (!level.isRaining()) return;
 
         
-        final boolean coldEnough = level.getBiome(center).value().coldEnoughToSnow(center);
+        final boolean coldEnough = level.getBiome(center).value().coldEnoughToSnow(center,center.getY());
         if (!coldEnough) return;
 
         final var rnd = level.random;
@@ -167,7 +167,7 @@ public final class SnowPiller {
         }
 
         
-        if (!level.getBiome(center).value().coldEnoughToSnow(center)) {
+        if (!level.getBiome(center).value().coldEnoughToSnow(center,center.getY())) {
             ts.recordFail(now, center);
             return null;
         }
@@ -199,7 +199,7 @@ public final class SnowPiller {
             if (level.getBlockState(below).is(Blocks.WATER)) continue;
 
             
-            if (level.getBiome(pos).value().coldEnoughToSnow(pos)) {
+            if (level.getBiome(pos).value().coldEnoughToSnow(pos,pos.getY())) {
                 ts.recordSuccess(center);
                 return pos.immutable();
             }

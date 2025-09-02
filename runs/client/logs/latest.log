@@ -1,0 +1,311 @@
+[09:42:23] [main/INFO]: ModLauncher running: args [--launchTarget, neoforgeclientdev, --version, 21.8.39, --assetIndex, asset-index, --assetsDir, C:\Users\matga\.gradle\caches\minecraft\assets, --fml.fmlVersion, 9.0.18, --fml.mcVersion, 1.21.8, --fml.neoForgeVersion, 21.8.39, --fml.neoFormVersion, 20250717.133445]
+[09:42:23] [main/INFO]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 21.0.7+6-LTS
+[09:42:23] [main/INFO]: ModLauncher 9.0 starting: java version 21.0.7 by Eclipse Adoptium; OS Windows 11 arch amd64 version 10.0
+[09:42:23] [main/INFO]: Loading ImmediateWindowProvider fmlearlywindow
+[09:42:24] [main/INFO]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=union:/C:/Users/matga/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.15.2+mixin.0.8.7/2af2f021d8e02a0220dc27a7a72b4666d66d44ca/sponge-mixin-0.15.2+mixin.0.8.7.jar%23162!/ Service=ModLauncher Env=CLIENT
+[09:42:24] [main/INFO]: Found mod file "neoforge-21.8.39.jar" [locator: neoforge devenv provider ([G:\mods\SereneSeasonExtendedFix\.gradle\repositories\ng_dummy_ng\net\neoforged\neoforge\21.8.39\neoforge-21.8.39.jar])]
+[09:42:24] [main/INFO]: Found mod file "neoforge-21.8.39.jar" [locator: neoforge devenv provider ([G:\mods\SereneSeasonExtendedFix\.gradle\repositories\ng_dummy_ng\net\neoforged\neoforge\21.8.39\neoforge-21.8.39.jar])]
+[09:42:24] [main/INFO]: Found mod file "main" [locator: userdev mods and services, reader: mod manifest]
+[09:42:24] [main/INFO]: Found mod file "neoforge-21.8.39.jar" [locator: userdev mods and services, reader: mod manifest]
+[09:42:24] [main/INFO]: Found mod file "serene-seasons-291874-6812965.jar" [locator: userdev mods and services, reader: mod manifest]
+[09:42:24] [main/INFO]: Found mod file "glitchcore-955399-6812823.jar" [locator: userdev mods and services, reader: mod manifest]
+[09:42:24] [main/INFO]: Found mod file "betterdays-895618-6883767.jar" [locator: userdev mods and services, reader: mod manifest]
+[09:42:24] [main/INFO]: Found gamelibrary file "mixinextras-neoforge-0.5.0.jar" [locator: userdev mods and services, reader: mod manifest]
+[09:42:24] [fml-loadingscreen/INFO]: GL info: NVIDIA GeForce RTX 4070 Ti SUPER/PCIe/SSE2 GL version 3.2.0 NVIDIA 576.88, NVIDIA Corporation
+[09:42:24] [main/WARN]: Attempted to select a dependency jar for JarJar which was passed in as source: library:mixinextras.neoforge. Using Mod File: C:\Users\matga\.gradle\caches\modules-2\files-2.1\io.github.llamalad7\mixinextras-neoforge\0.5.0\d734b83ce6542bb70ea31755c1595b88992dbe65\mixinextras-neoforge-0.5.0.jar
+[09:42:24] [main/INFO]: Found 2 dependencies adding them to mods collection
+[09:42:24] [main/INFO]: Found library file "net.neoforged.neoforge-coremods-21.8.39.jar" [parent: neoforge-21.8.39.jar, locator: jarinjar, reader: mod manifest]
+[09:42:24] [main/INFO]: Found mod file "spectrelib-neoforge-0.17.2+1.21.jar" [parent: betterdays-895618-6883767.jar, locator: jarinjar, reader: mod manifest]
+[09:42:24] [main/INFO]: 
+     Mod List:
+		Name Version (Mod Id)
+
+		BetterDays 3.2.0.0 (betterdays)
+		GlitchCore 21.8.0.0 (glitchcore)
+		Minecraft 1.21.8 (minecraft)
+		NeoForge 21.8.39 (neoforge)
+		Serene Seasons 21.8.0.0 (sereneseasons)
+		Serene Seasons Plus 1.21.8-1.0.9.5 (sereneseasonsplus)
+		SpectreLib 0.17.2+1.21 (spectrelib)
+[09:42:24] [main/INFO]: Compatibility level set to JAVA_17
+[09:42:24] [main/INFO]: Launching target 'neoforgeclientdev' with arguments [--version, 21.8.39, --assetsDir, C:\Users\matga\.gradle\caches\minecraft\assets, --assetIndex, asset-index]
+[02sept.2025 09:42:24.901] [main/WARN] [mixin/]: Reference map 'glitchcore.refmap.json' for glitchcore.mixins.json could not be read. If this is a development environment you can ignore this message
+[02sept.2025 09:42:24.902] [main/WARN] [mixin/]: Reference map 'glitchcore.refmap.json' for glitchcore.neoforge.mixins.json could not be read. If this is a development environment you can ignore this message
+[02sept.2025 09:42:24.903] [main/WARN] [mixin/]: Reference map 'sereneseasons.refmap.json' for sereneseasons.mixins.json could not be read. If this is a development environment you can ignore this message
+[02sept.2025 09:42:24.903] [main/WARN] [mixin/]: Reference map 'sereneseasons.refmap.json' for sereneseasons.neoforge.mixins.json could not be read. If this is a development environment you can ignore this message
+[02sept.2025 09:42:26.583] [Datafixer Bootstrap/INFO] [com.mojang.datafixers.DataFixerBuilder/]: 272 Datafixer optimizations took 410 milliseconds
+[02sept.2025 09:42:26.725] [pool-10-thread-1/INFO] [MixinExtras|Service/]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.0).
+[02sept.2025 09:42:30.718] [main/WARN] [net.minecraft.commands.Commands/]: Ambiguity between arguments [teleport, location] and [teleport, destination] with inputs: [0.1 -0.5 .9, 0 0 0]
+[02sept.2025 09:42:30.719] [main/WARN] [net.minecraft.commands.Commands/]: Ambiguity between arguments [teleport, location] and [teleport, targets] with inputs: [0.1 -0.5 .9, 0 0 0]
+[02sept.2025 09:42:30.721] [main/WARN] [net.minecraft.commands.Commands/]: Ambiguity between arguments [teleport, destination] and [teleport, targets] with inputs: [Player, 0123, @e, dd12be42-52a9-4a91-a8a1-11c01849e498]
+[02sept.2025 09:42:30.722] [main/WARN] [net.minecraft.commands.Commands/]: Ambiguity between arguments [teleport, targets] and [teleport, destination] with inputs: [Player, 0123, dd12be42-52a9-4a91-a8a1-11c01849e498]
+[02sept.2025 09:42:30.722] [main/WARN] [net.minecraft.commands.Commands/]: Ambiguity between arguments [teleport, targets, location] and [teleport, targets, destination] with inputs: [0.1 -0.5 .9, 0 0 0]
+[02sept.2025 09:42:30.724] [main/WARN] [net.minecraft.commands.Commands/]: Ambiguity between arguments [waypoint, modify, waypoint, color, reset] and [waypoint, modify, waypoint, color, color] with inputs: [reset]
+[02sept.2025 09:42:30.842] [modloading-worker-0/INFO] [net.neoforged.neoforge.common.NeoForgeMod/NEOFORGE-MOD]: NeoForge mod loading, version 21.8.39, for MC 1.21.8
+[02sept.2025 09:42:30.850] [modloading-worker-0/WARN] [EnvironmentHelper/]: Failed to determine single-player mode: Cannot invoke "net.minecraft.client.Minecraft.hasSingleplayerServer()" because "mcInstance" is null
+[02sept.2025 09:42:30.850] [modloading-worker-0/INFO] [EnvironmentHelper/]: Environment: Server = false, Single Player = false
+[02sept.2025 09:42:30.868] [modloading-worker-0/INFO] [glitchcore/]: Registered synced config with path sereneseasons/fertility.toml
+[02sept.2025 09:42:30.868] [modloading-worker-0/INFO] [glitchcore/]: Registered synced config with path sereneseasons/seasons.toml
+[02sept.2025 09:42:31.295] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/G:/mods/SereneSeasonExtendedFix/.gradle/repositories/ng_dummy_ng/net/neoforged/neoforge/21.8.39/neoforge-21.8.39.jar%23219!/assets/.mcassetsroot' uses unexpected schema
+[02sept.2025 09:42:31.296] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/G:/mods/SereneSeasonExtendedFix/.gradle/repositories/ng_dummy_ng/net/neoforged/neoforge/21.8.39/neoforge-21.8.39.jar%23219!/data/.mcassetsroot' uses unexpected schema
+[02sept.2025 09:42:31.324] [Render thread/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[02sept.2025 09:42:31.336] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Setting user: Dev
+[02sept.2025 09:42:31.464] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Backend library: LWJGL version 3.3.3+5
+[02sept.2025 09:42:31.652] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Using optional rendering extensions: GL_ARB_buffer_storage, GL_KHR_debug, GL_ARB_vertex_attrib_binding, GL_ARB_direct_state_access
+[02sept.2025 09:42:32.108] [Render thread/INFO] [net.minecraft.server.packs.resources.ReloadableResourceManager/]: Reloading ResourceManager: vanilla, mod_resources, mod/betterdays, mod/glitchcore, mod/sereneseasons, mod/neoforge, mod/sereneseasonsplus, mod/spectrelib
+[02sept.2025 09:42:32.221] [NeoForge Version Check/INFO] [net.neoforged.fml.VersionChecker/]: [betterdays] Starting version check at https://raw.githubusercontent.com/wendall911/BetterDays/1.21/files/updates.json
+[02sept.2025 09:42:32.222] [resourceLoad/INFO] [net.minecraft.client.gui.font.providers.UnihexProvider/]: Found unifont_all_no_pua-15.1.04.hex, loading
+[02sept.2025 09:42:32.304] [resourceLoad/INFO] [com.Gabou.sereneseasonsplus.SereneSeasonsPlus/]: Setting up Serene Seasons Plus (Common)
+[02sept.2025 09:42:32.304] [resourceLoad/INFO] [com.Gabou.sereneseasonsplus.SereneSeasonsPlus/]: Setting up Serene Seasons Plus (Client)
+[02sept.2025 09:42:32.315] [resourceLoad/INFO] [SpectreLib/]: Registering config screens for mod betterdays with 2 config(s)
+[02sept.2025 09:42:32.607] [NeoForge Version Check/INFO] [net.neoforged.fml.VersionChecker/]: [betterdays] Found status: AHEAD Current: 3.2.0.0 Target: null
+[02sept.2025 09:42:33.268] [Render thread/ERROR] [net.minecraft.client.sounds.SoundManager/]: Missing subtitle translation{key='subtitles.block.trapdoor.toggle', args=[]} for sound event: minecraft:block.bamboo_wood_trapdoor.open
+[02sept.2025 09:42:33.268] [Render thread/ERROR] [net.minecraft.client.sounds.SoundManager/]: Missing subtitle translation{key='subtitles.entity.wolf.ambient', args=[]} for sound event: minecraft:entity.wolf.ambient
+[02sept.2025 09:42:33.269] [Render thread/ERROR] [net.minecraft.client.sounds.SoundManager/]: Missing subtitle translation{key='subtitles.block.iron_trapdoor.open', args=[]} for sound event: minecraft:block.iron_trapdoor.open
+[02sept.2025 09:42:33.269] [Render thread/ERROR] [net.minecraft.client.sounds.SoundManager/]: Missing subtitle translation{key='subtitles.block.iron_trapdoor.close', args=[]} for sound event: minecraft:block.iron_trapdoor.close
+[02sept.2025 09:42:33.269] [Render thread/ERROR] [net.minecraft.client.sounds.SoundManager/]: Missing subtitle translation{key='subtitles.entity.wolf.ambient', args=[]} for sound event: minecraft:entity.wolf.pant
+[02sept.2025 09:42:33.269] [Render thread/ERROR] [net.minecraft.client.sounds.SoundManager/]: Missing subtitle translation{key='subtitles.entity.wolf.ambient', args=[]} for sound event: minecraft:entity.wolf.whine
+[02sept.2025 09:42:33.269] [Render thread/ERROR] [net.minecraft.client.sounds.SoundManager/]: Missing subtitle translation{key='subtitles.block.trapdoor.toggle', args=[]} for sound event: minecraft:block.cherry_wood_trapdoor.open
+[02sept.2025 09:42:33.269] [Render thread/ERROR] [net.minecraft.client.sounds.SoundManager/]: Missing subtitle translation{key='subtitles.block.trapdoor.toggle', args=[]} for sound event: minecraft:block.cherry_wood_trapdoor.close
+[02sept.2025 09:42:33.269] [Render thread/ERROR] [net.minecraft.client.sounds.SoundManager/]: Missing subtitle translation{key='subtitles.ambient.cave', args=[]} for sound event: minecraft:ambient.cave
+[02sept.2025 09:42:33.269] [Render thread/ERROR] [net.minecraft.client.sounds.SoundManager/]: Missing subtitle translation{key='subtitles.block.trapdoor.toggle', args=[]} for sound event: minecraft:block.bamboo_wood_trapdoor.close
+[02sept.2025 09:42:33.269] [Render thread/ERROR] [net.minecraft.client.sounds.SoundManager/]: Missing subtitle translation{key='subtitles.block.trapdoor.toggle', args=[]} for sound event: minecraft:block.nether_wood_trapdoor.close
+[02sept.2025 09:42:33.269] [Render thread/ERROR] [net.minecraft.client.sounds.SoundManager/]: Missing subtitle translation{key='subtitles.block.trapdoor.toggle', args=[]} for sound event: minecraft:block.wooden_trapdoor.close
+[02sept.2025 09:42:33.269] [Render thread/ERROR] [net.minecraft.client.sounds.SoundManager/]: Missing subtitle translation{key='subtitles.block.trapdoor.toggle', args=[]} for sound event: minecraft:block.nether_wood_trapdoor.open
+[02sept.2025 09:42:33.269] [Render thread/ERROR] [net.minecraft.client.sounds.SoundManager/]: Missing subtitle translation{key='subtitles.block.trapdoor.toggle', args=[]} for sound event: minecraft:block.wooden_trapdoor.open
+[02sept.2025 09:42:33.269] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.armadillo.unroll_finish
+[02sept.2025 09:42:33.269] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.armadillo.peek
+[02sept.2025 09:42:33.269] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.armadillo.unroll_start
+[02sept.2025 09:42:33.269] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.bogged.ambient
+[02sept.2025 09:42:33.269] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.bogged.death
+[02sept.2025 09:42:33.269] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.bogged.hurt
+[02sept.2025 09:42:33.269] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.bogged.shear
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.bogged.step
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:ui.hud.bubble_pop
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.bundle.insert_fail
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.cactus_flower.break
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.cactus_flower.place
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.cobweb.break
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.cobweb.step
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.cobweb.place
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.cobweb.hit
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.cobweb.fall
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.creaking.ambient
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.creaking.activate
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.creaking.deactivate
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.creaking.attack
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.creaking.death
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.creaking.step
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.creaking.freeze
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.creaking.unfreeze
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.creaking.spawn
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.creaking.sway
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.creaking.twitch
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.creaking_heart.break
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.creaking_heart.fall
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.creaking_heart.hit
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.creaking_heart.hurt
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.creaking_heart.place
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.creaking_heart.step
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.creaking_heart.idle
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.creaking_heart.spawn
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.deadbush.idle
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.donkey.jump
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.dried_ghast.break
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.dried_ghast.step
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.dried_ghast.fall
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.dried_ghast.ambient
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.dried_ghast.ambient_water
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.dried_ghast.place
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.dried_ghast.place_in_water
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.dried_ghast.transition
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.dry_grass.ambient
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.eyeblossom.open_long
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.eyeblossom.open
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.eyeblossom.close_long
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.eyeblossom.close
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.eyeblossom.idle
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.firefly_bush.idle
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.ghastling.ambient
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.ghastling.death
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.ghastling.hurt
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.ghastling.spawn
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.happy_ghast.ambient
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.happy_ghast.death
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.happy_ghast.hurt
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.happy_ghast.riding
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.heavy_core.break
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.heavy_core.fall
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.heavy_core.hit
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.heavy_core.place
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.heavy_core.step
+[02sept.2025 09:42:33.270] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.trial_spawner.about_to_spawn_item
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.trial_spawner.spawn_item
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.trial_spawner.spawn_item_begin
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.trial_spawner.ominous_activate
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.trial_spawner.ambient_ominous
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.happy_ghast.equip
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.happy_ghast.unequip
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.happy_ghast.harness_goggles_up
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.happy_ghast.harness_goggles_down
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.horse_armor.unequip
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.iron.break
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.iron.step
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.iron.place
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.iron.hit
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.iron.fall
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.leaf_litter.break
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.leaf_litter.step
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.leaf_litter.place
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.leaf_litter.hit
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.leaf_litter.fall
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.lead.untied
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.lead.tied
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.lead.break
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.llama_carpet.unequip
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.mace.smash_air
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.mace.smash_ground
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.mace.smash_ground_heavy
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.mule.jump
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:music_disc.lava_chicken
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:music_disc.creator
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:music_disc.creator_music_box
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:music_disc.precipice
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:music_disc.tears
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.ominous_bottle.dispose
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.pale_hanging_moss.idle
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.parrot.imitate.bogged
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.parrot.imitate.creaking
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.sand.idle
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.shears.snip
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.spawner.break
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.spawner.fall
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.spawner.hit
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.spawner.place
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.spawner.step
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.resin.break
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.resin.fall
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.resin.place
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.resin.step
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.resin_bricks.break
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.resin_bricks.fall
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.resin_bricks.hit
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.resin_bricks.place
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.resin_bricks.step
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.vault.reject_rewarded_player
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:block.wet_sponge.dries
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.wolf_armor.break
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.wolf_armor.crack
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.wolf_armor.damage
+[02sept.2025 09:42:33.271] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.wolf_armor.repair
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_puglin.ambient
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_puglin.death
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_puglin.growl
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_puglin.hurt
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_puglin.pant
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_puglin.whine
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_sad.ambient
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_sad.death
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_sad.growl
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_sad.hurt
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_sad.pant
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_sad.whine
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_angry.ambient
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_angry.death
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_angry.growl
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_angry.hurt
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_angry.pant
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_angry.whine
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_grumpy.ambient
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_grumpy.death
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_grumpy.growl
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_grumpy.hurt
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_grumpy.pant
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_grumpy.whine
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_big.ambient
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_big.death
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_big.growl
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_big.hurt
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_big.pant
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_big.whine
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_cute.ambient
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_cute.death
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_cute.growl
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_cute.hurt
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_cute.pant
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.wolf_cute.whine
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:event.mob_effect.bad_omen
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:event.mob_effect.trial_omen
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:event.mob_effect.raid_omen
+[02sept.2025 09:42:33.272] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.saddle.unequip
+[02sept.2025 09:42:33.451] [Render thread/INFO] [com.mojang.blaze3d.audio.Library/]: OpenAL initialized on device OpenAL Soft on Haut-parleurs (Realtek(R) Audio)
+[02sept.2025 09:42:33.452] [Render thread/INFO] [net.minecraft.client.sounds.SoundEngine/SOUNDS]: Sound engine started
+[02sept.2025 09:42:33.510] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x512x4 minecraft:textures/atlas/blocks.png-atlas
+[02sept.2025 09:42:33.516] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/signs.png-atlas
+[02sept.2025 09:42:33.517] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
+[02sept.2025 09:42:33.517] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
+[02sept.2025 09:42:33.518] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 2048x1024x4 minecraft:textures/atlas/armor_trims.png-atlas
+[02sept.2025 09:42:33.519] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
+[02sept.2025 09:42:33.521] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 128x64x4 minecraft:textures/atlas/decorated_pot.png-atlas
+[02sept.2025 09:42:33.521] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
+[02sept.2025 09:42:33.522] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
+[02sept.2025 09:42:33.524] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 64x64x0 minecraft:textures/atlas/map_decorations.png-atlas
+[02sept.2025 09:42:33.527] [Render thread/INFO] [net.neoforged.neoforge.client.entity.animation.json.AnimationLoader/]: Loaded 0 entity animations
+[02sept.2025 09:42:33.777] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x0 minecraft:textures/atlas/particles.png-atlas
+[02sept.2025 09:42:33.778] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x0 minecraft:textures/atlas/paintings.png-atlas
+[02sept.2025 09:42:33.778] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x512x0 minecraft:textures/atlas/gui.png-atlas
+[02sept.2025 09:42:50.671] [Render thread/WARN] [net.minecraft.server.MinecraftServer/]: Missing data pack tests
+[02sept.2025 09:42:51.500] [Render thread/INFO] [net.minecraft.world.item.crafting.RecipeManager/]: Loaded 1409 recipes
+[02sept.2025 09:42:51.509] [Render thread/INFO] [net.minecraft.advancements.AdvancementTree/]: Loaded 1522 advancements
+[02sept.2025 09:42:51.511] [Render thread/INFO] [net.neoforged.neoforge.common.crafting.RecipePriorityManager/]: Loaded 0 recipe priority overrides
+[02sept.2025 09:43:01.572] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Starting integrated minecraft server version 1.21.8
+[02sept.2025 09:43:01.572] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Generating keypair
+[02sept.2025 09:43:03.230] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Preparing start region for dimension minecraft:overworld
+[02sept.2025 09:43:03.257] [progressListener/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[02sept.2025 09:43:03.749] [progressListener/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[02sept.2025 09:43:04.241] [progressListener/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 18%
+[02sept.2025 09:43:04.758] [progressListener/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 51%
+[02sept.2025 09:43:04.939] [Server thread/INFO] [net.neoforged.neoforge.server.permission.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler
+[02sept.2025 09:43:04.939] [Server thread/INFO] [SnowBlockReplacer/]: SnowBlockReplacer initialized with tick threshold: 100
+[02sept.2025 09:43:04.940] [Server thread/INFO] [com.Gabou.sereneseasonsplus.SereneSeasonsPlus/]: Serene Seasons Extended is loading!
+[02sept.2025 09:43:04.940] [progressListener/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Time elapsed: 1702 ms
+[02sept.2025 09:43:04.941] [Server thread/INFO] [SnowBlockReplacer/]: SnowBlockReplacer initialized with tick threshold: 100
+[02sept.2025 09:43:04.942] [Server thread/WARN] [net.neoforged.neoforge.common.TagConventionLogWarning/]: 
+   Dev warning - Legacy Tags detected. Please migrate your 'forge' namespace tags to the 'c' namespace! See net.neoforged.neoforge.common.Tags.java for all tags.
+   NOTE: Many tags have been moved around or renamed. Some new ones were added so please review the new tags.
+    And make sure you follow tag conventions for new tags! The convention is `c` with nouns generally being plural and adjectives being singular.
+   You can disable this message in NeoForge's common config by setting `logLegacyTagWarnings` to "SILENCED" or see individual tags with "DEV_VERBOSE".
+
+[02sept.2025 09:43:04.971] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing view distance to 12, from 10
+[02sept.2025 09:43:04.971] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing simulation distance to 12, from 0
+[02sept.2025 09:43:05.704] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Dev[local:E:fcdae898] logged in with entity id 15 at (13.5, 81.0, -49.5)
+[02sept.2025 09:43:05.756] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev joined the game
+[02sept.2025 09:43:05.907] [Render thread/INFO] [net.minecraft.client.renderer.DynamicUniformStorage/]: Resizing Dynamic Transforms UBO, capacity limit of 2 reached during a single frame. New capacity will be 4.
+[02sept.2025 09:43:05.937] [Render thread/INFO] [net.minecraft.client.renderer.DynamicUniformStorage/]: Resizing Dynamic Transforms UBO, capacity limit of 4 reached during a single frame. New capacity will be 8.
+[02sept.2025 09:43:05.940] [Render thread/INFO] [net.minecraft.advancements.AdvancementTree/]: Loaded 2 advancements
+[02sept.2025 09:43:06.097] [Render thread/INFO] [net.minecraft.client.renderer.DynamicUniformStorage/]: Resizing Dynamic Transforms UBO, capacity limit of 8 reached during a single frame. New capacity will be 16.
+[02sept.2025 09:43:06.118] [Render thread/INFO] [net.minecraft.client.renderer.DynamicUniformStorage/]: Resizing Dynamic Transforms UBO, capacity limit of 16 reached during a single frame. New capacity will be 32.
+[02sept.2025 09:43:06.194] [Render thread/INFO] [net.minecraft.client.renderer.DynamicUniformStorage/]: Resizing Dynamic Transforms UBO, capacity limit of 32 reached during a single frame. New capacity will be 64.
+[02sept.2025 09:43:06.301] [Render thread/INFO] [net.minecraft.client.renderer.DynamicUniformStorage/]: Resizing Dynamic Transforms UBO, capacity limit of 64 reached during a single frame. New capacity will be 128.
+[02sept.2025 09:43:07.413] [useAsync/INFO] [SnowUtils/]: Biome: ResourceKey[minecraft:worldgen/biome / minecraft:old_growth_spruce_taiga], Temperature: 0.25
+[02sept.2025 09:43:07.606] [Render thread/INFO] [net.minecraft.client.renderer.DynamicUniformStorage/]: Resizing Dynamic Transforms UBO, capacity limit of 128 reached during a single frame. New capacity will be 256.
+[02sept.2025 09:43:09.557] [Render thread/INFO] [net.minecraft.client.renderer.DynamicUniformStorage/]: Resizing Dynamic Transforms UBO, capacity limit of 256 reached during a single frame. New capacity will be 512.
+[02sept.2025 09:43:11.728] [Render thread/INFO] [net.minecraft.client.renderer.DynamicUniformStorage/]: Resizing Dynamic Transforms UBO, capacity limit of 512 reached during a single frame. New capacity will be 1024.
+[02sept.2025 09:43:11.992] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
+[02sept.2025 09:43:12.020] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[02sept.2025 09:43:12.060] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[02sept.2025 09:43:12.060] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[02sept.2025 09:45:15.267] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Dev lost connection: Disconnected
+[02sept.2025 09:45:15.268] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev left the game
+[02sept.2025 09:45:15.282] [Server thread/INFO] [net.minecraft.server.network.ServerCommonPacketListenerImpl/]: Stopping singleplayer server as player logged out
+[02sept.2025 09:45:15.335] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Stopping server
+[02sept.2025 09:45:15.336] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving players
+[02sept.2025 09:45:15.336] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving worlds
+[02sept.2025 09:45:16.821] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[02sept.2025 09:45:17.430] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[02sept.2025 09:45:17.432] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[02sept.2025 09:45:17.437] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (New World (2)): All chunks are saved
+[02sept.2025 09:45:17.437] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[02sept.2025 09:45:17.437] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[02sept.2025 09:45:17.438] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage: All dimensions are saved
+[02sept.2025 09:45:25.921] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Stopping!

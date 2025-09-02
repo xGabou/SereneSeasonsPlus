@@ -40,12 +40,12 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         return 360;
     }
 
-    @Override
     /**
      * Scrollbar position aligned to the right of the content.
      */
-    protected int getScrollbarPosition() {
-        return this.getRowLeft() + getRowWidth() + 8;
+    @Override
+    protected int scrollBarX() {
+        return this.getRowLeft() + this.getRowWidth() + 8;
     }
 
     /**
