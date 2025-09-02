@@ -54,7 +54,7 @@ dependencies {
     modImplementation "curse.maven:glitchcore-955399:5352265"
     modImplementation "curse.maven:modmenu-308702:5441532"
 // build.gradle
-    modImplementation "curse.maven:spectrelib-993948:5217601"
+    compileOnly "curse.maven:spectrelib-993948:5217601"
 
 
 //    implementation files('libs/hourglass-1.20-1.2.1.1.jar')
