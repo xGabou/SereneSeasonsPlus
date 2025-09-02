@@ -71,8 +71,12 @@ public class SereneExtendedScreen extends Screen {
         int bottom = this.height - 40;
 
         
-        this.list = new SereneExtendedList(this.minecraft, panelW, top + 20, bottom - 40, 24);
-        this.list.setLeftPos(panelX);
+        this.list = new SereneExtendedList(this.minecraft, panelW, this.height, top + 20, 24);
+        try {
+            this.list.getClass().getMethod("setX", int.class).invoke(this.list, panelX);
+        } catch (Throwable t) {
+
+        }
         this.addRenderableWidget(this.list);
 
         
@@ -138,7 +142,7 @@ public class SereneExtendedScreen extends Screen {
      */
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(g); 
+        this.renderBackground(g, mouseX, mouseY, partialTick);
 
         
         int panelW = 480;

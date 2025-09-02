@@ -109,7 +109,6 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         /**
          * Narratable entries provided by child widgets.
          */
-        @Override
         public List<? extends NarratableEntry> narratables() {
             return widgets;
         }
@@ -117,7 +116,6 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         /**
          * GUI event listeners provided by child widgets.
          */
-        @Override
         public List<? extends GuiEventListener> children() {
             return widgets;
         }
@@ -160,8 +158,8 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
          * Forwards scroll events to child widgets.
          */
         @Override
-        public boolean mouseScrolled(double mx, double my, double delta) {
-            for (AbstractWidget w : widgets) if (w.mouseScrolled(mx, my, delta)) return true;
+        public boolean mouseScrolled(double mx, double my, double dx, double dy) {
+            for (AbstractWidget w : widgets) if (w.mouseScrolled(mx, my, dx, dy)) return true;
             return false;
         }
 
