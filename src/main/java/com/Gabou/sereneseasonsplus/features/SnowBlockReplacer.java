@@ -10,22 +10,29 @@ import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import com.Gabou.sereneseasonsplus.util.SereneService;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
 import net.Gabou.projectatmosphere.manager.ForecastOrchestrator;
 import net.Gabou.projectatmosphere.util.BiomeInstanceKey;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
+import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -39,6 +46,7 @@ public class SnowBlockReplacer {
     private static final Logger LOGGER = LogManager.getLogger("SnowBlockReplacer");
     private static final Random RANDOM = new Random();
     private static final Map<ServerPlayer, BlockPos> playerPositions = new HashMap();
+    private static final Set<ChunkPos> meltingChunks = new HashSet();
 
     private static int tickThresholdSnowReplacer;
     private static int tickThresholdSnowReplacerForHotSeasons = 30;
@@ -88,9 +96,49 @@ public class SnowBlockReplacer {
                 if (tickCounter % tickThresholdSnowReplacer == 0 || (tickCounter % tickThresholdSnowReplacerForHotSeasons == 0) && EnvironmentHelper.isHotSeason()) {
                     updatePlayerPositions(server.getPlayerList().getPlayers());
                     SereneService.runAsync(() -> replaceSnowBlocks(level));
+                    if (!meltingChunks.isEmpty()) {
+                        SereneService.runAsync(() -> processMeltingChunks(level));
+                    }
                 }
 
             }
+        }
+    }
+
+    /**
+     * Handles snow and ice in chunks when they are loaded based on temperature.
+     * Extremely warm chunks have all snow removed immediately. Borderline warm
+     * chunks have their snow layers reduced and are queued for gradual melting.
+     *
+     * @param event chunk load event
+     */
+    @SubscribeEvent
+    public static void onChunkLoad(ChunkEvent.Load event) {
+        if (!(event.getChunk() instanceof LevelChunk chunk)) {
+            return;
+        }
+
+        Level level = (Level) event.getLevel();
+        if (level.isClientSide()) {
+            return;
+        }
+
+        ChunkPos chunkPos = chunk.getPos();
+        BlockPos worldPos = chunkPos.getWorldPosition();
+
+        Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
+        float temperature;
+        if (!SereneSeasonsPlus.isProjectAtmosphereLoaded) {
+            temperature = SnowUtils.getCachedBiomeTemperature(level, worldPos, currentSubSeason);
+        } else {
+            temperature = ForecastOrchestrator.getCurrentTemperature(new BiomeInstanceKey(level.getBiome(worldPos).unwrapKey().get().location(), worldPos), level.getDayTime());
+        }
+
+        if (temperature >= 0.5F) {
+            clearSnowAndIce(level, chunkPos);
+        } else if (temperature >= 0.15F) {
+            accelerateMelt(level, chunkPos);
+            meltingChunks.add(chunkPos);
         }
     }
 
@@ -218,6 +266,112 @@ public class SnowBlockReplacer {
         }
 
         return null;
+    }
+
+    /**
+     * Processes queued melting chunks by randomly removing snow layers over time.
+     * Chunks are removed from the queue once no snow remains.
+     *
+     * @param level server level to modify
+     */
+    private static void processMeltingChunks(Level level) {
+        Iterator<ChunkPos> iterator = meltingChunks.iterator();
+        while (iterator.hasNext()) {
+            ChunkPos pos = iterator.next();
+            LevelChunk chunk = level.getChunk(pos.x, pos.z);
+            boolean found = false;
+            for (int i = 0; i < 5; ++i) {
+                BlockPos snowPos = findSnowBlockInChunk(level, chunk);
+                if (snowPos == null) {
+                    break;
+                }
+                found = true;
+                SnowUtils.breakOrDecrementLayer(level, snowPos);
+            }
+            if (!found) {
+                iterator.remove();
+            }
+        }
+    }
+
+    /**
+     * Finds a random snow block within the given chunk.
+     *
+     * @param level level to scan
+     * @param chunk chunk to search
+     * @return position of a snow block or null if none found
+     */
+    private static BlockPos findSnowBlockInChunk(Level level, LevelChunk chunk) {
+        int minY = level.getMinBuildHeight();
+        int maxY = level.getMaxBuildHeight();
+        ChunkPos cp = chunk.getPos();
+        for (int attempts = 0; attempts < 64; ++attempts) {
+            int x = cp.getMinBlockX() + RANDOM.nextInt(16);
+            int z = cp.getMinBlockZ() + RANDOM.nextInt(16);
+            int y = RANDOM.nextInt(maxY - minY) + minY;
+            BlockPos pos = new BlockPos(x, y, z);
+            BlockState state = chunk.getBlockState(pos);
+            if (state.is(Blocks.SNOW_BLOCK) || state.is(Blocks.SNOW)) {
+                return pos;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Immediately removes snow and ice in the given chunk.
+     *
+     * @param level level to modify
+     * @param chunkPos target chunk position
+     */
+    private static void clearSnowAndIce(Level level, ChunkPos chunkPos) {
+        int minY = level.getMinBuildHeight();
+        int maxY = level.getMaxBuildHeight();
+        for (int x = 0; x < 16; ++x) {
+            for (int z = 0; z < 16; ++z) {
+                for (int y = minY; y < maxY; ++y) {
+                    BlockPos pos = new BlockPos(chunkPos.getMinBlockX() + x, y, chunkPos.getMinBlockZ() + z);
+                    BlockState state = level.getBlockState(pos);
+                    if (state.is(Blocks.SNOW) || state.is(Blocks.SNOW_BLOCK)) {
+                        level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+                    } else if (state.is(Blocks.ICE)) {
+                        level.setBlock(pos, Blocks.WATER.defaultBlockState(), 2);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Reduces snow layers in a chunk to simulate a rapid warm-up.
+     *
+     * @param level level to modify
+     * @param chunkPos target chunk position
+     */
+    private static void accelerateMelt(Level level, ChunkPos chunkPos) {
+        int minY = level.getMinBuildHeight();
+        int maxY = level.getMaxBuildHeight();
+        for (int x = 0; x < 16; ++x) {
+            for (int z = 0; z < 16; ++z) {
+                for (int y = minY; y < maxY; ++y) {
+                    BlockPos pos = new BlockPos(chunkPos.getMinBlockX() + x, y, chunkPos.getMinBlockZ() + z);
+                    BlockState state = level.getBlockState(pos);
+                    if (state.is(Blocks.SNOW_BLOCK)) {
+                        level.setBlock(pos, Blocks.SNOW.defaultBlockState().setValue(BlockStateProperties.LAYERS, 4), 2);
+                    } else if (state.is(Blocks.SNOW)) {
+                        int layers = state.getValue(BlockStateProperties.LAYERS);
+                        int newLayers = Math.max(0, layers - 3);
+                        if (newLayers > 0) {
+                            level.setBlock(pos, state.setValue(BlockStateProperties.LAYERS, newLayers), 2);
+                        } else {
+                            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+                        }
+                    } else if (state.is(Blocks.ICE)) {
+                        level.setBlock(pos, Blocks.WATER.defaultBlockState(), 2);
+                    }
+                }
+            }
+        }
     }
 
 
