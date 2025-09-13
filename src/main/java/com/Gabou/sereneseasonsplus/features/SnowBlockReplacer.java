@@ -21,6 +21,7 @@ import com.Gabou.sereneseasonsplus.util.SnowUtils;
 import net.Gabou.projectatmosphere.manager.ForecastOrchestrator;
 import net.Gabou.projectatmosphere.util.BiomeInstanceKey;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -91,7 +92,7 @@ public class SnowBlockReplacer {
         if (event.phase == Phase.END && EnvironmentHelper.shouldRunMod()) {
             ++tickCounter;
             MinecraftServer server = event.getServer();
-            Level level = server.getLevel(Level.OVERWORLD);
+            ServerLevel level = server.getLevel(Level.OVERWORLD);
             if (level != null && !level.isClientSide()) {
                 if (tickCounter % tickThresholdSnowReplacer == 0 || (tickCounter % tickThresholdSnowReplacerForHotSeasons == 0) && EnvironmentHelper.isHotSeason()) {
                     updatePlayerPositions(server.getPlayerList().getPlayers());
@@ -130,16 +131,24 @@ public class SnowBlockReplacer {
         float temperature;
         if (!SereneSeasonsPlus.isProjectAtmosphereLoaded) {
             temperature = SnowUtils.getCachedBiomeTemperature(level, worldPos, currentSubSeason);
+            if (temperature >= 0.5F) {
+                clearSnowAndIce(level, chunkPos);
+            } else if (temperature >= 0.15F) {
+                accelerateMelt(level, chunkPos);
+                meltingChunks.add(chunkPos);
+            }
         } else {
             temperature = ForecastOrchestrator.getCurrentTemperature(new BiomeInstanceKey(level.getBiome(worldPos).unwrapKey().get().location(), worldPos), level.getDayTime());
+            if (temperature >= 10.0F) {
+                clearSnowAndIce(level, chunkPos);
+            } else if (temperature >= 0.5F) {
+                accelerateMelt(level, chunkPos);
+                meltingChunks.add(chunkPos);
+            }
         }
 
-        if (temperature >= 0.5F) {
-            clearSnowAndIce(level, chunkPos);
-        } else if (temperature >= 0.15F) {
-            accelerateMelt(level, chunkPos);
-            meltingChunks.add(chunkPos);
-        }
+
+
     }
 
     /**
@@ -162,7 +171,7 @@ public class SnowBlockReplacer {
      *
      * @param level server level to modify
      */
-    private static void replaceSnowBlocks(Level level) {
+    private static void replaceSnowBlocks(ServerLevel level) {
         Iterator var1 = playerPositions.entrySet().iterator();
 
         while (true) {
@@ -175,8 +184,8 @@ public class SnowBlockReplacer {
                 }
 
                 Map.Entry<ServerPlayer, BlockPos> entry = (Map.Entry) var1.next();
-                ServerPlayer player = (ServerPlayer) entry.getKey();
-                playerPos = (BlockPos) entry.getValue();
+                ServerPlayer player = entry.getKey();
+                playerPos = entry.getValue();
                 int simulationDistance = getSimulationDistance(player);
                 radius = Mth.clamp(simulationDistance * 16,16,64);
                 if (!SereneSeasonsPlus.isProjectAtmosphereLoaded) {
