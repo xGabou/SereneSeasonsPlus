@@ -16,6 +16,18 @@ buildscript {
 apply plugin: 'org.jetbrains.gradle.plugin.idea-ext'
 apply plugin: 'net.minecraftforge.gradleutils'
 
+changelog {
+    fromTag '9.2.0'
+}
+
+ext {
+    mod_version = gradleutils.getTagOffsetVersion()
+    changelog_file = rootProject.file("build/changelog.txt")
+    trimChangelog = (String text) -> {
+        def m = text =~ /(?s) - (?:[0-9.]+) (.+?)(?=( - )|$)/
+        return '```\n' + m[0][1].replaceAll(/(?m)^ */, '')
+    }
+}
 
 subprojects {
     apply plugin: 'java'
@@ -57,6 +69,14 @@ subprojects {
         maven {
             name = 'Forge'
             url = "https://maven.minecraftforge.net"
+        }
+        maven {
+            url "https://www.cursemaven.com"
+            content { includeGroup "curse.maven" }
+        }
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
         }
     }
 

@@ -4,7 +4,9 @@ plugins {
 base.archivesName.set("${mod_name}-fabric")
 
 loom {
-    accessWidenerPath = project(":Common").file("src/main/resources/${mod_id}.accesswidener")
+    // Sépare les sources client et serveur
+    splitEnvironmentSourceSets()
+
     runs {
         client {
             client()
@@ -21,22 +23,33 @@ loom {
     }
 }
 
+// Inclut les ressources du common
 processResources {
     from project(":Common").sourceSets.main.resources
 }
 
-tasks.withType(JavaCompile) {
+// Inclut le code du common dans le build Fabric
+tasks.withType(JavaCompile).configureEach {
     source(project(":Common").sourceSets.main.allSource)
 }
 
+// Déclare ton mod avec les 2 sources : main + client
+loom {
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+}
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${loader_version}"
-    modImplementation "net.fabricmc.fabric-api:${fabric_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 
-    implementation project(":common")
+    implementation project(":Common")
 
     // tes dépendances Fabric spécifiques
     modImplementation "curse.maven:serene-seasons-291874:6398228"
@@ -44,5 +57,3 @@ dependencies {
     modImplementation "curse.maven:spectrelib-993948:5217601"
     modImplementation "curse.maven:modmenu-308702:5162837"
 }
-
-

@@ -1,23 +1,23 @@
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        maven {
-            name = 'MinecraftForge'
-            url = 'https://maven.minecraftforge.net/'
-        }
-        maven {
-            name = 'Fabric'
-            url = 'https://maven.fabricmc.net/'
-        }
+include("common", "forge", "fabric")
+pluginManagement.repositories {
+    gradlePluginPortal()
+    maven {
+        name = "Fabric"
+        url = "https://maven.fabricmc.net/"
     }
-}
-
-plugins {
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.7.0'
+    maven {
+        name = "Forge"
+        url = "https://maven.minecraftforge.net"
+    }
+    maven {
+        name = "Sponge Snapshots"
+        url = "https://repo.spongepowered.org/repository/maven-public/"
+    }
 }
 
 rootProject.name = "sereneseasonsplus"
 
-include("common")
-include("forge")
-include("fabric")
+// We want lowercase folder names but uppercase project names
+project(":common").name = "Common"
+project(":forge").name = "Forge"
+project(":fabric").name = "Fabric"
