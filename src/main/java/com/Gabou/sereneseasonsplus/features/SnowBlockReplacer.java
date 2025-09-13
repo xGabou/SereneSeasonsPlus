@@ -15,6 +15,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.Collections;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.Gabou.sereneseasonsplus.util.SereneService;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
@@ -31,6 +33,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.level.ChunkEvent;
@@ -46,8 +49,9 @@ import sereneseasons.api.season.SeasonHelper;
 public class SnowBlockReplacer {
     private static final Logger LOGGER = LogManager.getLogger("SnowBlockReplacer");
     private static final Random RANDOM = new Random();
-    private static final Map<ServerPlayer, BlockPos> playerPositions = new HashMap();
-    private static final Set<ChunkPos> meltingChunks = new HashSet();
+    private static final Map<ServerPlayer, BlockPos> playerPositions = new ConcurrentHashMap<>();
+    private static final Set<ChunkPos> meltingChunks = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private static final Set<ChunkPos> chunksToClear = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private static int tickThresholdSnowReplacer;
     private static int tickThresholdSnowReplacerForHotSeasons = 30;
@@ -102,6 +106,11 @@ public class SnowBlockReplacer {
                     }
                 }
 
+                // Always drain a small budget of chunks queued from load to avoid load-time stalls
+                if (!chunksToClear.isEmpty()) {
+                    processChunksToClear(level, 2); // process up to 2 chunks per tick
+                }
+
             }
         }
     }
@@ -116,11 +125,13 @@ public class SnowBlockReplacer {
     @SubscribeEvent
     public static void onChunkLoad(ChunkEvent.Load event) {
         if (!(event.getChunk() instanceof LevelChunk chunk)) {
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: non-LevelChunk, skipping");
             return;
         }
 
         Level level = (Level) event.getLevel();
         if (level.isClientSide()) {
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: client side, skipping");
             return;
         }
 
@@ -131,19 +142,33 @@ public class SnowBlockReplacer {
         float temperature;
         if (!SereneSeasonsPlus.isProjectAtmosphereLoaded) {
             temperature = SnowUtils.getCachedBiomeTemperature(level, worldPos, currentSubSeason);
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: {} temp={} (SS scale)", chunkPos, temperature);
             if (temperature >= 0.5F) {
-                clearSnowAndIce(level, chunkPos);
+                chunksToClear.add(chunkPos);
+                if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: queued clear {} (queue={})", chunkPos, chunksToClear.size());
             } else if (temperature >= 0.15F) {
+                long t0 = System.nanoTime();
                 accelerateMelt(level, chunkPos);
                 meltingChunks.add(chunkPos);
+                if (LOGGER.isDebugEnabled()) {
+                    long dt = (System.nanoTime() - t0) / 1_000_000L;
+                    LOGGER.debug("onChunkLoad: accelerated melt {} in {} ms; queued gradual melt (size={})", chunkPos, dt, meltingChunks.size());
+                }
             }
         } else {
             temperature = ForecastOrchestrator.getCurrentTemperature(new BiomeInstanceKey(level.getBiome(worldPos).unwrapKey().get().location(), worldPos), level.getDayTime());
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: {} temp={} (PA scale)", chunkPos, temperature);
             if (temperature >= 10.0F) {
-                clearSnowAndIce(level, chunkPos);
+                chunksToClear.add(chunkPos);
+                if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: queued clear {} (queue={})", chunkPos, chunksToClear.size());
             } else if (temperature >= 0.5F) {
+                long t0 = System.nanoTime();
                 accelerateMelt(level, chunkPos);
                 meltingChunks.add(chunkPos);
+                if (LOGGER.isDebugEnabled()) {
+                    long dt = (System.nanoTime() - t0) / 1_000_000L;
+                    LOGGER.debug("onChunkLoad: accelerated melt {} in {} ms; queued gradual melt (size={})", chunkPos, dt, meltingChunks.size());
+                }
             }
         }
 
@@ -284,11 +309,15 @@ public class SnowBlockReplacer {
      * @param level server level to modify
      */
     private static void processMeltingChunks(Level level) {
+        long t0All = System.nanoTime();
         Iterator<ChunkPos> iterator = meltingChunks.iterator();
+        int processed = 0;
+        Set<ChunkPos> toRemove = new HashSet<>();
         while (iterator.hasNext()) {
             ChunkPos pos = iterator.next();
             LevelChunk chunk = level.getChunk(pos.x, pos.z);
             boolean found = false;
+            long t0 = System.nanoTime();
             for (int i = 0; i < 5; ++i) {
                 BlockPos snowPos = findSnowBlockInChunk(level, chunk);
                 if (snowPos == null) {
@@ -298,8 +327,20 @@ public class SnowBlockReplacer {
                 SnowUtils.breakOrDecrementLayer(level, snowPos);
             }
             if (!found) {
-                iterator.remove();
+                toRemove.add(pos);
             }
+            if (LOGGER.isDebugEnabled()) {
+                long dt = (System.nanoTime() - t0) / 1_000_000L;
+                LOGGER.debug("processMeltingChunks: chunk {} took {} ms{}", pos, dt, found ? "" : " (no snow, removed from queue)");
+            }
+            processed++;
+        }
+        if (!toRemove.isEmpty()) {
+            meltingChunks.removeAll(toRemove);
+        }
+        if (LOGGER.isDebugEnabled()) {
+            long dtAll = (System.nanoTime() - t0All) / 1_000_000L;
+            LOGGER.debug("processMeltingChunks: processed {} entries in {} ms (remaining={})", processed, dtAll, meltingChunks.size());
         }
     }
 
@@ -334,20 +375,42 @@ public class SnowBlockReplacer {
      * @param chunkPos target chunk position
      */
     private static void clearSnowAndIce(Level level, ChunkPos chunkPos) {
+        long t0 = System.nanoTime();
         int minY = level.getMinBuildHeight();
-        int maxY = level.getMaxBuildHeight();
-        for (int x = 0; x < 16; ++x) {
-            for (int z = 0; z < 16; ++z) {
-                for (int y = minY; y < maxY; ++y) {
-                    BlockPos pos = new BlockPos(chunkPos.getMinBlockX() + x, y, chunkPos.getMinBlockZ() + z);
-                    BlockState state = level.getBlockState(pos);
+        int baseX = chunkPos.getMinBlockX();
+        int baseZ = chunkPos.getMinBlockZ();
+        BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
+
+        for (int dx = 0; dx < 16; ++dx) {
+            int worldX = baseX + dx;
+            for (int dz = 0; dz < 16; ++dz) {
+                int worldZ = baseZ + dz;
+                int topY = level.getHeight(Heightmap.Types.MOTION_BLOCKING, worldX, worldZ);
+                int startY = topY + 1; // include snow that sits above the surface
+                int endY = Math.max(minY, topY - 8); // scan a small band below the surface
+
+                // Quick skip if this column doesn't present snow/ice at surface
+                BlockState surface = level.getBlockState(mutable.set(worldX, topY, worldZ));
+                BlockState above = level.getBlockState(mutable.set(worldX, topY + 1, worldZ));
+                if (!(surface.is(Blocks.SNOW) || surface.is(Blocks.SNOW_BLOCK) || surface.is(Blocks.ICE)
+                        || above.is(Blocks.SNOW) || above.is(Blocks.SNOW_BLOCK))) {
+                    continue;
+                }
+
+                for (int y = startY; y >= endY; --y) {
+                    mutable.set(worldX, y, worldZ);
+                    BlockState state = level.getBlockState(mutable);
                     if (state.is(Blocks.SNOW) || state.is(Blocks.SNOW_BLOCK)) {
-                        level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+                        level.setBlock(mutable, Blocks.AIR.defaultBlockState(), 2);
                     } else if (state.is(Blocks.ICE)) {
-                        level.setBlock(pos, Blocks.WATER.defaultBlockState(), 2);
+                        level.setBlock(mutable, Blocks.WATER.defaultBlockState(), 2);
                     }
                 }
             }
+        }
+        if (LOGGER.isDebugEnabled()) {
+            long dt = (System.nanoTime() - t0) / 1_000_000L;
+            LOGGER.debug("clearSnowAndIce: {} took {} ms", chunkPos, dt);
         }
     }
 
@@ -358,29 +421,78 @@ public class SnowBlockReplacer {
      * @param chunkPos target chunk position
      */
     private static void accelerateMelt(Level level, ChunkPos chunkPos) {
+        long t0 = System.nanoTime();
         int minY = level.getMinBuildHeight();
-        int maxY = level.getMaxBuildHeight();
-        for (int x = 0; x < 16; ++x) {
-            for (int z = 0; z < 16; ++z) {
-                for (int y = minY; y < maxY; ++y) {
-                    BlockPos pos = new BlockPos(chunkPos.getMinBlockX() + x, y, chunkPos.getMinBlockZ() + z);
-                    BlockState state = level.getBlockState(pos);
+        int baseX = chunkPos.getMinBlockX();
+        int baseZ = chunkPos.getMinBlockZ();
+        BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
+
+        for (int dx = 0; dx < 16; ++dx) {
+            int worldX = baseX + dx;
+            for (int dz = 0; dz < 16; ++dz) {
+                int worldZ = baseZ + dz;
+                int topY = level.getHeight(Heightmap.Types.MOTION_BLOCKING, worldX, worldZ);
+                int startY = topY + 1;
+                int endY = Math.max(minY, topY - 8);
+
+                // Quick skip if this column doesn't present snow/ice at surface
+                BlockState surface = level.getBlockState(mutable.set(worldX, topY, worldZ));
+                BlockState above = level.getBlockState(mutable.set(worldX, topY + 1, worldZ));
+                if (!(surface.is(Blocks.SNOW) || surface.is(Blocks.SNOW_BLOCK) || surface.is(Blocks.ICE)
+                        || above.is(Blocks.SNOW) || above.is(Blocks.SNOW_BLOCK))) {
+                    continue;
+                }
+
+                for (int y = startY; y >= endY; --y) {
+                    mutable.set(worldX, y, worldZ);
+                    BlockState state = level.getBlockState(mutable);
                     if (state.is(Blocks.SNOW_BLOCK)) {
-                        level.setBlock(pos, Blocks.SNOW.defaultBlockState().setValue(BlockStateProperties.LAYERS, 4), 2);
+                        level.setBlock(mutable, Blocks.SNOW.defaultBlockState().setValue(BlockStateProperties.LAYERS, 4), 2);
                     } else if (state.is(Blocks.SNOW)) {
                         int layers = state.getValue(BlockStateProperties.LAYERS);
                         int newLayers = Math.max(0, layers - 3);
                         if (newLayers > 0) {
-                            level.setBlock(pos, state.setValue(BlockStateProperties.LAYERS, newLayers), 2);
+                            level.setBlock(mutable, state.setValue(BlockStateProperties.LAYERS, newLayers), 2);
                         } else {
-                            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+                            level.setBlock(mutable, Blocks.AIR.defaultBlockState(), 2);
                         }
                     } else if (state.is(Blocks.ICE)) {
-                        level.setBlock(pos, Blocks.WATER.defaultBlockState(), 2);
+                        level.setBlock(mutable, Blocks.WATER.defaultBlockState(), 2);
                     }
                 }
             }
         }
+        if (LOGGER.isDebugEnabled()) {
+            long dt = (System.nanoTime() - t0) / 1_000_000L;
+            LOGGER.debug("accelerateMelt: {} took {} ms", chunkPos, dt);
+        }
+    }
+
+    /**
+     * Processes a limited number of queued chunks that require immediate clearing.
+     * Avoids running heavy logic in the ChunkEvent.Load handler.
+     */
+    private static void processChunksToClear(Level level, int budget) {
+        if (budget <= 0) return;
+        if (LOGGER.isDebugEnabled()) LOGGER.debug("processChunksToClear: start budget={} queue={}", budget, chunksToClear.size());
+        Iterator<ChunkPos> it = chunksToClear.iterator();
+        while (budget > 0 && it.hasNext()) {
+            ChunkPos pos = it.next();
+            BlockPos check = new BlockPos(pos.getMinBlockX(), level.getMinBuildHeight(), pos.getMinBlockZ());
+            if (!level.hasChunkAt(check)) {
+                // Skip for now; keep it queued until the chunk is loaded again
+                continue;
+            }
+            long t0 = System.nanoTime();
+            clearSnowAndIce(level, pos);
+            chunksToClear.remove(pos);
+            budget--;
+            if (LOGGER.isDebugEnabled()) {
+                long dt = (System.nanoTime() - t0) / 1_000_000L;
+                LOGGER.debug("processChunksToClear: cleared {} in {} ms (budget left={} queue={})", pos, dt, budget, chunksToClear.size());
+            }
+        }
+        if (LOGGER.isDebugEnabled()) LOGGER.debug("processChunksToClear: end (remaining queue={})", chunksToClear.size());
     }
 
 
