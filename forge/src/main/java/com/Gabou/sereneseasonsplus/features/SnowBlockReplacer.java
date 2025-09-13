@@ -9,7 +9,6 @@ import com.Gabou.sereneseasonsplus.SereneSeasonsPlus;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -108,7 +107,7 @@ public class SnowBlockReplacer {
 
                 // Always drain a small budget of chunks queued from load to avoid load-time stalls
                 if (!chunksToClear.isEmpty()) {
-                    processChunksToClear(level, 2); // process up to 2 chunks per tick
+                    processChunksToClear(level, 10); // process up to 2 chunks per tick
                 }
 
             }

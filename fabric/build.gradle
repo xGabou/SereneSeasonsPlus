@@ -1,0 +1,48 @@
+plugins {
+    id "fabric-loom" version "1.10-SNAPSHOT"
+}
+base.archivesName.set("${mod_name}-fabric")
+
+loom {
+    accessWidenerPath = project(":Common").file("src/main/resources/${mod_id}.accesswidener")
+    runs {
+        client {
+            client()
+            setConfigName("Fabric Client")
+            ideConfigGenerated(true)
+            runDir("run")
+        }
+        server {
+            server()
+            setConfigName("Fabric Server")
+            ideConfigGenerated(true)
+            runDir("run")
+        }
+    }
+}
+
+processResources {
+    from project(":Common").sourceSets.main.resources
+}
+
+tasks.withType(JavaCompile) {
+    source(project(":Common").sourceSets.main.allSource)
+}
+
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
+    modImplementation "net.fabricmc.fabric-api:${fabric_version}"
+
+    implementation project(":common")
+
+    // tes dépendances Fabric spécifiques
+    modImplementation "curse.maven:serene-seasons-291874:6398228"
+    modImplementation "curse.maven:glitchcore-955399:5787838"
+    modImplementation "curse.maven:spectrelib-993948:5217601"
+    modImplementation "curse.maven:modmenu-308702:5162837"
+}
+
+
