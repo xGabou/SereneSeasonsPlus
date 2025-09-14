@@ -62,22 +62,11 @@ subprojects {
 
     repositories {
         mavenCentral()
-        maven {
-            name = 'Sponge / Mixin'
-            url = 'https://repo.spongepowered.org/repository/maven-public/'
-        }
-        maven {
-            name = 'Forge'
-            url = "https://maven.minecraftforge.net"
-        }
-        maven {
-            url "https://www.cursemaven.com"
-            content { includeGroup "curse.maven" }
-        }
-        maven {
-            name = 'Fabric'
-            url = 'https://maven.fabricmc.net/'
-        }
+        maven { name = 'Sponge / Mixin'; url = 'https://repo.spongepowered.org/repository/maven-public/' }
+        maven { name = 'Forge'; url = "https://maven.minecraftforge.net" }
+        maven { url "https://www.cursemaven.com"; content { includeGroup "curse.maven" } }
+        maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
+        maven { url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1" }
     }
 
     tasks.withType(JavaCompile).configureEach {
@@ -89,20 +78,34 @@ subprojects {
         var expandProps = [
                 minecraft_version : minecraft_version, minecraft_version_range: minecraft_version_range,
                 forge_version     : forge_version, forge_version_range: forge_version_range, forge_loader_version_range: loader_version_range,
-                mod_id            :mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
+                mod_id            : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
                 mod_authors       : mod_authors, mod_description: mod_description,
-
         ]
-        filesMatching(['pack.mcmeta', 'fabric.mod.json', 'META-INF/mods.toml', "*.mixins.json"]) {
-            expand expandProps
+
+        // inclure seulement ce qui correspond au projet
+        if (project.name == "Forge") {
+            filesMatching(['pack.mcmeta', 'META-INF/mods.toml']) {
+                expand expandProps
+            }
+        } else if (project.name == "Fabric") {
+            filesMatching(['pack.mcmeta', 'fabric.mod.json']) {
+                expand expandProps
+            }
+        } else {
+            // Common : juste pack.mcmeta si besoin
+            filesMatching(['pack.mcmeta']) {
+                expand expandProps
+            }
         }
+
         inputs.properties(expandProps)
+
+        // fix dupliqués si jamais
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
 
-    // Disables Gradle's custom module metadata from being published to maven. The
-    // metadata includes mapped dependencies which are not reasonably consumable by
-    // other mod developers.
     tasks.withType(GenerateModuleMetadata) {
         enabled = false
     }
 }
+

@@ -7,7 +7,7 @@ import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 @OnlyIn(Dist.CLIENT)
-public class SereneSeasonsPlusClient {
+public class SereneSeasonsPlusClientForge {
     /**
      * Registers the mod config screen with Forge's extension point so it can
      * be opened from the Mods list in-game.

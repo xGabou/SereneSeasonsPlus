@@ -5,7 +5,8 @@ import org.slf4j.LoggerFactory;
 import sereneseasons.api.season.Season;
 
 public class SereneSeasonPlusCommon {
-
+    protected int ticker = 0;
+    protected Season.SubSeason lastSubSeason = null;
     public static final String MODID = "sereneseasonsplus";
     protected static final Logger LOGGER = LoggerFactory.getLogger(MODID);
 

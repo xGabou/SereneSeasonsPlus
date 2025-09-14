@@ -18,12 +18,16 @@ minecraft {
             workingDirectory project.file('run')
             ideaModule "${rootProject.name}.${project.name}.main"
             taskName 'Client'
+            jvmArg "-Ddevauth.enabled=true"
+            jvmArg "-Ddevauth.account=main"
+            jvmArg "-Dlog4j2.level=DEBUG"
         }
 
         server {
             workingDirectory project.file('run')
             ideaModule "${rootProject.name}.${project.name}.main"
             taskName 'Server'
+            jvmArg "-Dlog4j2.level=DEBUG"
         }
 
         data {
@@ -66,8 +70,10 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     compileOnly project(":Common")
     // tes dépendances Forge spécifiques
+    implementation fg.deobf("curse.maven:betterdays-895618:5877548")
+    compileOnly fg.deobf("curse.maven:project-atmosphere-1258344:6994348")
     implementation fg.deobf("curse.maven:serene-seasons-291874:6398227")
     implementation fg.deobf("curse.maven:glitchcore-955399:5787839")
     implementation fg.deobf("curse.maven:spectrelib-993948:5217603")
-    compileOnly fg.deobf("curse.maven:project-atmosphere-1258344:6994348")
+    runtimeOnly("me.djtheredstoner:DevAuth-forge-latest:1.2.1")
 }

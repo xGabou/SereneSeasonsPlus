@@ -1,5 +1,5 @@
 package com.Gabou.sereneseasonsplus.features;
-import com.Gabou.sereneseasonsplus.SereneSeasonsPlus;
+import com.Gabou.sereneseasonsplus.SereneSeasonsPlusForge;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -15,12 +15,12 @@ import static com.Gabou.sereneseasonsplus.features.CommonSnowBlockReplacer.*;
 public class ForgeSnowEnvironmentHandler implements SnowEnvironmentHandler {
     @Override
     public int getBlocksToReplace(ServerLevel level, BlockPos playerPos) {
-        if (!SereneSeasonsPlus.isProjectAtmosphereLoaded) {
+        if (!SereneSeasonsPlusForge.isProjectAtmosphereLoaded) {
             Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
             float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
 
             if (temperature >= 0.15F) {
-                return SnowBlockReplacer.calculateBlocksToReplace(temperature);
+                return CommonSnowBlockReplacer.calculateBlocksToReplace(temperature);
             }
         } else {
             float temperature = ForecastOrchestrator.getCurrentTemperature(
@@ -29,7 +29,7 @@ public class ForgeSnowEnvironmentHandler implements SnowEnvironmentHandler {
             );
 
             if (temperature >= 0.5F) {
-                return SnowBlockReplacer.calculateBlocksToReplace1(temperature);
+                return CommonSnowBlockReplacer.calculateBlocksToReplace1(temperature);
             }
         }
         return 0;
@@ -38,7 +38,7 @@ public class ForgeSnowEnvironmentHandler implements SnowEnvironmentHandler {
     @Override
     public void processChunks(Level level, BlockPos worldPos, Season.SubSeason currentSubSeason, ChunkPos chunkPos) {
         float temperature;
-        if (!SereneSeasonsPlus.isProjectAtmosphereLoaded) {
+        if (!SereneSeasonsPlusForge.isProjectAtmosphereLoaded) {
             temperature = SnowUtils.getCachedBiomeTemperature(level, worldPos, currentSubSeason);
             if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: {} temp={} (SS scale)", chunkPos, temperature);
             if (temperature >= 0.5F) {

@@ -1,6 +1,6 @@
 package com.Gabou.sereneseasonsplus.api;
 
-import com.Gabou.sereneseasonsplus.SereneSeasonsPlus;
+import com.Gabou.sereneseasonsplus.SereneSeasonsPlusForge;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import net.minecraftforge.fml.config.ConfigTracker;
 import net.minecraftforge.fml.config.ModConfig;
@@ -51,7 +51,7 @@ public class SnowstormHelper {
             var set = ConfigTracker.INSTANCE.configSets().get(ModConfig.Type.COMMON);
             if (set == null) return;
             for (ModConfig cfg : set) {
-                if (cfg.getModId().equals(SereneSeasonsPlus.MODID)) {
+                if (cfg.getModId().equals(SereneSeasonsPlusForge.MODID)) {
                     cfg.save(); 
                     return;
                 }

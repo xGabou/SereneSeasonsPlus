@@ -7,15 +7,15 @@ package com.Gabou.sereneseasonsplus;
 
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
-import com.Gabou.sereneseasonsplus.features.ForgeSnowEnvironmentHandler;
-import com.Gabou.sereneseasonsplus.features.SnowBlockReplacer;
-import com.Gabou.sereneseasonsplus.features.SnowPiller;
+import com.Gabou.sereneseasonsplus.features.*;
 import com.Gabou.sereneseasonsplus.util.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
+import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -27,17 +27,12 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static com.Gabou.sereneseasonsplus.SereneSeasonsPlus.MODID;
+import static com.Gabou.sereneseasonsplus.SereneSeasonsPlusForge.MODID;
 
 @Mod(MODID)
-public class SereneSeasonsPlus extends SereneSeasonPlusCommon{
+public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
 
     public static boolean isProjectAtmosphereLoaded = false;
-    private int ticker = 0;
-    private Season.SubSeason lastSubSeason = null;
 
     /**
      * Mod bootstrap: registers event handlers, config, and client setup.
@@ -45,18 +40,20 @@ public class SereneSeasonsPlus extends SereneSeasonPlusCommon{
      *
      * @param context Forge mod loading context used to hook lifecycle events
      */
-    public SereneSeasonsPlus(FMLJavaModLoadingContext context) {
+    public SereneSeasonsPlusForge(FMLJavaModLoadingContext context) {
         isProjectAtmosphereLoaded = ModList.get().isLoaded("projectatmosphere");
-        MinecraftForge.EVENT_BUS.register(SnowBlockReplacer.class);
-        MinecraftForge.EVENT_BUS.register(SnowPiller.class);
         MinecraftForge.EVENT_BUS.register(this);
-        SereneService.HANDLER = new ForgeAsyncExecutorHandler();
-        SnowBlockReplacer.HANDLER = new ForgeSnowEnvironmentHandler();
+        CommonSnowBlockReplacer.HANDLER = new ForgeSnowEnvironmentHandler();
         EnvironmentHelper.init(new ForgeEnvironmentHelper());
         context.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
         if(!isProjectAtmosphereLoaded) {
-            MinecraftForge.EVENT_BUS.register(SeasonChangeEvent.class);
+            SeasonChangeEvent.register();
+            CommonSnowPiller.init(new VanillaSnowHandler());
         }
+        else{
+            CommonSnowPiller.init(new AtmosphereSnowHandler());
+        }
+
 
 
         context.getModEventBus().addListener((FMLClientSetupEvent event) -> {
@@ -74,7 +71,32 @@ public class SereneSeasonsPlus extends SereneSeasonPlusCommon{
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("Serene Seasons Extended is loading!");
+        SereneService.HANDLER = new ForgeAsyncExecutorHandler();
+        CommonSnowBlockReplacer.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get());
+        CommonSnowPiller.onServerStarting(SereneExtendedConfig.TICK_SNOW_PILLER.get());
+    }
 
+    /**
+     * Handles snow and ice in chunks when they are loaded based on temperature.
+     * Extremely warm chunks have all snow removed immediately. Borderline warm
+     * chunks have their snow layers reduced and are queued for gradual melting.
+     *
+     * @param event chunk load event
+     */
+    @SubscribeEvent
+    public static void onChunkLoad(ChunkEvent.Load event) {
+        if (!(event.getChunk() instanceof LevelChunk chunk)) {
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: non-LevelChunk, skipping");
+            return;
+        }
+
+        Level level = (Level) event.getLevel();
+        if (level.isClientSide()) {
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: client side, skipping");
+            return;
+        }
+
+        CommonSnowBlockReplacer.handleOnChunkLoad(chunk);
     }
 
     /**
@@ -87,10 +109,12 @@ public class SereneSeasonsPlus extends SereneSeasonPlusCommon{
     private void clientSetup(final FMLClientSetupEvent event, FMLJavaModLoadingContext context) {
         LOGGER.info("Setting up Serene Season Plus (Client)");
         event.enqueueWork(() -> {
-            SereneSeasonsPlusClient.init(context);
+            SereneSeasonsPlusClientForge.init(context);
         });
 
     }
+
+
 
 
     /**
@@ -101,6 +125,7 @@ public class SereneSeasonsPlus extends SereneSeasonPlusCommon{
     @SubscribeEvent
     public void onServerStopping(ServerStoppingEvent event) {
         SereneService.HANDLER.shutdown();
+        SereneService.HANDLER = null;
     }
 
     /**
@@ -117,6 +142,8 @@ public class SereneSeasonsPlus extends SereneSeasonPlusCommon{
                 Level level = server.getLevel(Level.OVERWORLD);
                 if (level != null) {
                     this.onTick(level);
+                    CommonSnowBlockReplacer.handleServerTick(event.getServer());
+                    CommonSnowPiller.handleServerTick(level);
                 }
             }
         }
@@ -131,7 +158,9 @@ public class SereneSeasonsPlus extends SereneSeasonPlusCommon{
      */
     @SubscribeEvent
     public void onConfigReload(TickEvent.ServerTickEvent event) {
-
+        CommonSnowBlockReplacer.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get());
+        CommonSnowPiller.onConfigReload(SereneExtendedConfig.TICK_SNOW_PILLER.get());
+        SereneService.reloadConfig();
     }
 
     /**

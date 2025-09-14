@@ -13,12 +13,16 @@ loom {
             setConfigName("Fabric Client")
             ideConfigGenerated(true)
             runDir("run")
+            vmArg "-Ddevauth.enabled=true"
+            vmArg "-Ddevauth.account=main"
+            vmArg "-Dlog4j2.level=DEBUG"
         }
         server {
             server()
             setConfigName("Fabric Server")
             ideConfigGenerated(true)
             runDir("run")
+            vmArg "-Dlog4j2.level=DEBUG"
         }
     }
 }
@@ -52,8 +56,13 @@ dependencies {
     implementation project(":Common")
 
     // tes dépendances Fabric spécifiques
+    modImplementation "curse.maven:betterdays-895618:6915866"
     modImplementation "curse.maven:serene-seasons-291874:6398228"
     modImplementation "curse.maven:glitchcore-955399:5787838"
-    modImplementation "curse.maven:spectrelib-993948:5217601"
     modImplementation "curse.maven:modmenu-308702:5162837"
+    modImplementation "curse.maven:spectrelib-993948:5217601"
+    include implementation("com.electronwill.night-config:toml:${nightconfig_version}")
+    include implementation("com.electronwill.night-config:core:${nightconfig_version}")
+    include implementation("net.jodah:typetools:0.6.3")
+    runtimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.1")
 }

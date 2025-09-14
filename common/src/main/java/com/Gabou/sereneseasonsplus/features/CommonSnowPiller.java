@@ -1,6 +1,8 @@
 package com.Gabou.sereneseasonsplus.features;
 
+import com.Gabou.sereneseasonsplus.util.ISnowHandler;
 import com.Gabou.sereneseasonsplus.util.SereneService;
+import com.Gabou.sereneseasonsplus.util.SnowUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CommonSnowPiller {
 
+    protected static ISnowHandler delegate;
     protected static int tickThresholdSnowPiller;
 
     /**
@@ -36,8 +39,14 @@ public class CommonSnowPiller {
 
     protected static int tickCounter = 0;
 
+
+    /** Called once at mod init (Fabric/Forge) to choose impl */
+    public static void init(ISnowHandler impl) {
+        delegate = impl;
+    }
+
     protected static final Map<UUID, ThrottleState> THROTTLE = new ConcurrentHashMap<>();
-    protected static void handleServerTick(Level level) {
+    public static void handleServerTick(Level level) {
         if (level instanceof ServerLevel serverLevel) {
             ++tickCounter;
             if (tickCounter % tickThresholdSnowPiller == 0) {
@@ -52,41 +61,19 @@ public class CommonSnowPiller {
         }
     }
     /**
-     * Determines attempt count based on weather or snowstorm intensity, then
-     * samples positions and places snow layers around the given center.
-     *
-     * @param level  server level
-     * @param player the player (used to throttle repeated failures)
-     * @param center search center (often player's block pos)
-     * @param radius search radius
+     * Determines attempt count based on weather or snowstorm intensity,
+     * then samples positions and places snow layers around the given center.
      */
     public static void tickSnow(ServerLevel level, ServerPlayer player, BlockPos center, int radius) {
-        int attempts;
-        if (SereneSeasonsPlus.isProjectAtmosphereLoaded) {
-            if (!SereneExtendedConfig.SNOWSTORM_ENABLED.get()) return;
-
-
-            attempts = Math.max(0, SereneExtendedConfig.SNOWSTORM_INTENSITY.get() / 20);
-
-        } else {
-            if (!level.isRaining()) return;
-
-
-            final boolean coldEnough = level.getBiome(center).value().coldEnoughToSnow(center);
-            if (!coldEnough) return;
-
-            final var rnd = level.random;
-            attempts = rnd.nextInt(2) + (level.isThundering() ? rnd.nextInt(2) : 0);
-        }
+        int attempts = delegate.getAttemptCount(level, center);
         if (attempts <= 0) return;
+
         for (int i = 0; i < attempts; i++) {
             BlockPos target = findTarget(level, player, center, radius);
             if (target != null) {
                 placeSnowAt(level, target);
             }
         }
-
-
     }
 
     /**
@@ -171,6 +158,26 @@ public class CommonSnowPiller {
 
 
     /**
+     * Refreshes the tick threshold and async config on server tick,
+     * allowing live config changes.
+     *
+     */
+    public static void onConfigReload(int config) {
+        tickThresholdSnowPiller = config;
+    }
+
+    /**
+     * Initializes tick thresholds and per-player throttle state on server start.
+     *
+     * @param config config value for tick threshold
+     */
+    public static void onServerStarting(int config) {
+        tickThresholdSnowPiller = config;
+        tickCounter = 0;
+        THROTTLE.clear();
+    }
+
+    /**
      * Per-player throttle state to avoid repeated failed scans when the
      * player has not moved and conditions are unfavorable.
      */
@@ -230,4 +237,5 @@ public class CommonSnowPiller {
     public static boolean canSnowSurvive(LevelReader level, BlockPos pos) {
         return Blocks.SNOW.defaultBlockState().canSurvive(level, pos);
     }
+
 }
