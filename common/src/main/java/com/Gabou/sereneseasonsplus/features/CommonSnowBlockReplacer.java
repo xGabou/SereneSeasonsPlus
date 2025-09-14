@@ -56,7 +56,7 @@ public class CommonSnowBlockReplacer {
 
             // Always drain a small budget of chunks queued from load to avoid load-time stalls
             if (!chunksToClear.isEmpty()) {
-                processChunksToClear(level, 10); // process up to 2 chunks per tick
+                processChunksToClear(level,30 ); // process up to 2 chunks per tick
             }
             if (!meltQueue.isEmpty()) {
                 int processed = 0;
@@ -297,7 +297,7 @@ public class CommonSnowBlockReplacer {
     }
 
     public static void handleOnChunkLoad(LevelChunk chunk) {
-        meltQueue.add( chunk.getPos());
+        meltQueue.add(chunk.getPos());
     }
 
 

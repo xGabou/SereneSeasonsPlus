@@ -76,28 +76,28 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
         CommonSnowPiller.onServerStarting(SereneExtendedConfig.TICK_SNOW_PILLER.get());
     }
 
-    /**
-     * Handles snow and ice in chunks when they are loaded based on temperature.
-     * Extremely warm chunks have all snow removed immediately. Borderline warm
-     * chunks have their snow layers reduced and are queued for gradual melting.
-     *
-     * @param event chunk load event
-     */
-    @SubscribeEvent
-    public static void onChunkLoad(ChunkEvent.Load event) {
-        if (!(event.getChunk() instanceof LevelChunk chunk)) {
-            if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: non-LevelChunk, skipping");
-            return;
-        }
-
-        Level level = (Level) event.getLevel();
-        if (level.isClientSide()) {
-            if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: client side, skipping");
-            return;
-        }
-
-        CommonSnowBlockReplacer.handleOnChunkLoad(chunk);
-    }
+//    /**
+//     * Handles snow and ice in chunks when they are loaded based on temperature.
+//     * Extremely warm chunks have all snow removed immediately. Borderline warm
+//     * chunks have their snow layers reduced and are queued for gradual melting.
+//     *
+//     * @param event chunk load event
+//     */
+//    @SubscribeEvent
+//    public void onChunkLoad(ChunkEvent.Load event) {
+//        if (!(event.getChunk() instanceof LevelChunk chunk)) {
+//            if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: non-LevelChunk, skipping");
+//            return;
+//        }
+//
+//        Level level = (Level) event.getLevel();
+//        if (level.isClientSide()) {
+//            if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: client side, skipping");
+//            return;
+//        }
+//
+//        CommonSnowBlockReplacer.handleOnChunkLoad(chunk);
+//    }
 
     /**
      * Client-only setup. Enqueues registration of client UI such as the

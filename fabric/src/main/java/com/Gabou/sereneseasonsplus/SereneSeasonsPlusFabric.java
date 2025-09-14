@@ -27,7 +27,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         // Server lifecycle hooks
         ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStarting);
         ServerLifecycleEvents.SERVER_STOPPING.register(this::onServerStopping);
-        ServerChunkEvents.CHUNK_LOAD.register(this::onChunkLoad);
+        //ServerChunkEvents.CHUNK_LOAD.register(this::onChunkLoad);
         EnvironmentHelper.init(new FabricEnvironmentHelper());
         SeasonChangeEvent.register();
         SereneExtendedConfig.registerReloadListener(this::onConfigReload);
@@ -43,9 +43,9 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         CommonSnowBlockReplacer.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get());
     }
 
-    private void onChunkLoad(ServerLevel level, LevelChunk chunk) {
-        CommonSnowBlockReplacer.handleOnChunkLoad(chunk);
-    }
+//    private void onChunkLoad(ServerLevel level, LevelChunk chunk) {
+//        CommonSnowBlockReplacer.handleOnChunkLoad(chunk);
+//    }
     private void onServerStarting(MinecraftServer server) {
         LOGGER.info("Serene Seasons Plus server starting!");
         SereneService.HANDLER = new FabricAsyncExecutorHandler();

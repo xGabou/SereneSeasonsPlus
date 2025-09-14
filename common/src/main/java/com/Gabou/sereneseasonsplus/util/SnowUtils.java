@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -81,33 +82,24 @@ public class SnowUtils {
     }
 
     /**
-     * Decrements a layered block (e.g., snow) or removes it if at min layers.
-     * Convenience overload that uses flags=3 (update neighbors + clients).
-     *
-     * @param level level to modify
-     * @param pos   target position
-     */
-    public static void breakOrDecrementLayer(Level level, BlockPos pos) {
-        breakOrDecrementLayer(level, pos, 3);
-    }
-
-    /**
      * Decrements a layered block (e.g., snow) if possible; otherwise removes
      * the block entirely by setting air.
      *
      * @param level level to modify
      * @param pos   target position
-     * @param flags world update flags for setBlock
      */
-    public static void breakOrDecrementLayer(Level level, BlockPos pos, int flags) {
+    public static void breakOrDecrementLayer(Level level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
         if (state.hasProperty(BlockStateProperties.LAYERS)) {
             int layers = state.getValue(BlockStateProperties.LAYERS);
             if (layers > 1) {
-                level.setBlock(pos, state.setValue(BlockStateProperties.LAYERS, layers - 1), flags);
+                level.setBlock(pos, state.setValue(BlockStateProperties.LAYERS, layers - 1),
+                        Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
                 return;
             }
         }
-        level.setBlock(pos, Blocks.AIR.defaultBlockState(), flags);
+        level.setBlock(pos, Blocks.AIR.defaultBlockState(),
+                Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
     }
+
 }

@@ -15,4 +15,6 @@ dependencies {
     compileOnly "curse.maven:glitchcore-955399:5787839"      // BetterDays / GlitchCore
     compileOnly "curse.maven:spectrelib-993948:5217603"
     compileOnly "curse.maven:betterdays-895618:5877548"
+
+    compileOnly group:'org.spongepowered', name: 'mixin', version: '0.8.5'
 }

@@ -6,7 +6,9 @@ base.archivesName.set("${mod_name}-fabric")
 loom {
     // Sépare les sources client et serveur
     splitEnvironmentSourceSets()
-
+    mixin {
+        defaultRefmapName.set("${mod_id}.refmap.json")
+    }
     runs {
         client {
             client()
