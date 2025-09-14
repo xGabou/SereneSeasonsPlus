@@ -18,7 +18,6 @@ public class ConfigHacks {
      */
     public static void setTimeSpeeds(double day, double night) {
         try {
-            
             Field commonField = ConfigHandler.class.getDeclaredField("COMMON");
             commonField.setAccessible(true);
             Object commonInstance = commonField.get(null);
@@ -33,10 +32,9 @@ public class ConfigHacks {
             var nightValue = (SpectreConfigSpec.DoubleValue) nightField.get(commonInstance);
             nightValue.set(night);
 
-            LOGGER.info("✅ Updated daySpeed = {}, nightSpeed = {}", day, night);
+            LOGGER.info("Updated daySpeed = {}, nightSpeed = {}", day, night);
         } catch (Exception e) {
-            LOGGER.error("❌ Failed to set time speeds dynamically", e);
+            LOGGER.error("Failed to set time speeds dynamically", e);
         }
     }
-
 }

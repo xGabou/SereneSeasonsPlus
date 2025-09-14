@@ -2,6 +2,7 @@ package com.Gabou.sereneseasonsplus.features;
 
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
+import com.Gabou.sereneseasonsplus.util.FabricEnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.SereneService;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
 
@@ -22,7 +23,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-public class SnowBlockReplacer {
+public class SnowBlockReplacer extends CommonSnowBlockReplacer{
+    public static SnowEnvironmentHandler HANDLER = new DefaultSnowEnvironmentHandler();
+
     private static final Logger LOGGER = LoggerFactory.getLogger("sereneseasonsplus/SnowBlockReplacer");
     private static final Random RANDOM = new Random();
     private static final Map<ServerPlayer, BlockPos> playerPositions = new HashMap<>();

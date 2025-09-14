@@ -1,14 +1,12 @@
 package com.Gabou.sereneseasonsplus;
 
-import com.Gabou.sereneseasonsplus.features.SnowBlockReplacer;
-import com.Gabou.sereneseasonsplus.features.SnowPiller;
 import com.Gabou.sereneseasonsplus.util.ConfigHacks;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
+import com.Gabou.sereneseasonsplus.util.FabricEnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.SereneService;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sereneseasons.api.season.Season;
@@ -31,6 +29,7 @@ public class SereneSeasonsPlus implements ModInitializer {
         // Server lifecycle hooks
         ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStarting);
         ServerLifecycleEvents.SERVER_STOPPING.register(this::onServerStopping);
+        EnvironmentHelper.init(new FabricEnvironmentHelper());
 
         // Server tick hook
         ServerTickEvents.END_SERVER_TICK.register(this::onServerTick);

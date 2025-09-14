@@ -69,4 +69,5 @@ dependencies {
     implementation fg.deobf("curse.maven:serene-seasons-291874:6398227")
     implementation fg.deobf("curse.maven:glitchcore-955399:5787839")
     implementation fg.deobf("curse.maven:spectrelib-993948:5217603")
+    compileOnly fg.deobf("curse.maven:project-atmosphere-1258344:6994348")
 }

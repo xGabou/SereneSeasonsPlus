@@ -7,11 +7,10 @@ package com.Gabou.sereneseasonsplus;
 
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
+import com.Gabou.sereneseasonsplus.features.ForgeSnowEnvironmentHandler;
 import com.Gabou.sereneseasonsplus.features.SnowBlockReplacer;
 import com.Gabou.sereneseasonsplus.features.SnowPiller;
-import com.Gabou.sereneseasonsplus.util.ConfigHacks;
-import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
-import com.Gabou.sereneseasonsplus.util.SereneService;
+import com.Gabou.sereneseasonsplus.util.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
@@ -48,10 +47,12 @@ public class SereneSeasonsPlus {
      */
     public SereneSeasonsPlus(FMLJavaModLoadingContext context) {
         isProjectAtmosphereLoaded = ModList.get().isLoaded("projectatmosphere");
-        EnvironmentHelper.initialize();
         MinecraftForge.EVENT_BUS.register(SnowBlockReplacer.class);
         MinecraftForge.EVENT_BUS.register(SnowPiller.class);
         MinecraftForge.EVENT_BUS.register(this);
+        SereneService.HANDLER = new ForgeAsyncExecutorHandler();
+        SnowBlockReplacer.HANDLER = new ForgeSnowEnvironmentHandler();
+        EnvironmentHelper.init(new ForgeEnvironmentHelper());
         context.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
         if(!isProjectAtmosphereLoaded) {
             MinecraftForge.EVENT_BUS.register(SeasonChangeEvent.class);
@@ -73,7 +74,7 @@ public class SereneSeasonsPlus {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("Serene Seasons Extended is loading!");
-        SereneService.init();
+
     }
 
     /**
@@ -99,7 +100,7 @@ public class SereneSeasonsPlus {
      */
     @SubscribeEvent
     public void onServerStopping(ServerStoppingEvent event) {
-        SereneService.shutdown();
+        SereneService.HANDLER.shutdown();
     }
 
     /**

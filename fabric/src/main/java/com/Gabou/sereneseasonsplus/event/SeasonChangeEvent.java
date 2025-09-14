@@ -1,6 +1,7 @@
 package com.Gabou.sereneseasonsplus.event;
 
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
+import com.Gabou.sereneseasonsplus.util.FabricEnvironmentHelper;
 import glitchcore.event.EventManager;
 import net.minecraft.server.level.ServerLevel;
 import sereneseasons.api.season.SeasonChangedEvent;

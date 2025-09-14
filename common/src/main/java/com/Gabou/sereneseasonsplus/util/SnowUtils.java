@@ -39,7 +39,6 @@ public class SnowUtils {
             }
 
             biomeTemperatures.put(biomeName, temperature);
-            //LOGGER.info("Biome: {}, Temperature: {}", biomeName, temperature);
             return temperature;
         } else {
             float cachedTemperature = (Float)biomeTemperatures.get(biomeName);
@@ -47,7 +46,6 @@ public class SnowUtils {
                 float newTemperature = getBiomeTemperature(biomeHolder);
                 if (newTemperature != cachedTemperature || cachedTemperature <= 0.14F) {
                     biomeTemperatures.put(biomeName, newTemperature);
-                    //LOGGER.info("Biome: {}, Updated Temperature: {}", biomeName, newTemperature);
                     return newTemperature;
                 }
             }
@@ -55,12 +53,12 @@ public class SnowUtils {
             if (isWinterSubSeason(currentSubSeason) && cachedTemperature > 0.14F) {
                 cachedTemperature = 0.14F;
                 biomeTemperatures.put(biomeName, cachedTemperature);
-                //LOGGER.info("Biome: {}, Reset Temperature to Winter: {}", biomeName, cachedTemperature);
             }
 
             return cachedTemperature;
         }
     }
+
     /**
      * Extracts the base temperature from a biome holder.
      *
@@ -71,6 +69,7 @@ public class SnowUtils {
         Biome biome = biomeHolder.value();
         return biome.getBaseTemperature();
     }
+
     /**
      * Whether the sub-season is one of the winter sub-seasons.
      *
@@ -102,8 +101,6 @@ public class SnowUtils {
      */
     public static void breakOrDecrementLayer(Level level, BlockPos pos, int flags) {
         BlockState state = level.getBlockState(pos);
-
-        
         if (state.hasProperty(BlockStateProperties.LAYERS)) {
             int layers = state.getValue(BlockStateProperties.LAYERS);
             if (layers > 1) {
@@ -111,8 +108,6 @@ public class SnowUtils {
                 return;
             }
         }
-
-        
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), flags);
     }
 }

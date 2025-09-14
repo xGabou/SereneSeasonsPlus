@@ -36,7 +36,7 @@ public enum HotSeason {
                 return hs;
             }
         }
-        return null; 
+        return null;
     }
 
     /**
