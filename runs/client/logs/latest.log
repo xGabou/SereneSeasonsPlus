@@ -42,8 +42,8 @@
 [01sept.2025 12:41:37.350] [Worker-Main-14/INFO] [net.minecraft.client.gui.font.providers.UnihexProvider/]: Found unifont_all_no_pua-15.1.04.hex, loading
 [01sept.2025 12:41:37.395] [Forge Version Check/INFO] [net.neoforged.fml.VersionChecker/]: [betterdays] Starting version check at https://raw.githubusercontent.com/wendall911/BetterDays/1.20.4/files/updates.json
 [01sept.2025 12:41:37.659] [Forge Version Check/INFO] [net.neoforged.fml.VersionChecker/]: [betterdays] Found status: UP_TO_DATE Current: 1.20.4-3.1.0.6-NEOFORGE Target: null
-[01sept.2025 12:41:39.706] [Worker-Main-9/INFO] [com.Gabou.sereneseasonsplus.SereneSeasonsPlus/]: Setting up Serene Seasons Plus (Common)
-[01sept.2025 12:41:39.706] [Worker-Main-9/INFO] [com.Gabou.sereneseasonsplus.SereneSeasonsPlus/]: Setting up Serene Seasons Plus (Client)
+[01sept.2025 12:41:39.706] [Worker-Main-9/INFO] [com.Gabou.sereneseasonsplus.SereneSeasonsPlusNeoForge/]: Setting up Serene Seasons Plus (Common)
+[01sept.2025 12:41:39.706] [Worker-Main-9/INFO] [com.Gabou.sereneseasonsplus.SereneSeasonsPlusNeoForge/]: Setting up Serene Seasons Plus (Client)
 [01sept.2025 12:41:39.707] [Worker-Main-20/INFO] [SpectreLib/]: Registering config screens for mod betterdays with 2 config(s)
 [01sept.2025 12:41:39.943] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.goat_horn.play
 [01sept.2025 12:41:39.943] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.goat.screaming.horn_break

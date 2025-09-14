@@ -260,7 +260,7 @@
 [01sept.2025 12:41:29.037] [background-scan-handler-6/DEBUG] [net.neoforged.fml.loading.moddiscovery.Scanner/SCAN]: Scanning  with language loader javafml
 [01sept.2025 12:41:29.040] [background-scan-handler-0/DEBUG] [net.neoforged.fml.javafmlmod.FMLJavaModLanguageProvider/SCAN]: Found @Mod class betterdays.BetterDaysNeoForge with id betterdays
 [01sept.2025 12:41:29.040] [background-scan-handler-6/DEBUG] [net.neoforged.fml.javafmlmod.FMLJavaModLanguageProvider/SCAN]: Found @Mod class com.illusivesoulworks.spectrelib.SpectreNeoForgeMod with id spectrelib
-[01sept.2025 12:41:29.040] [background-scan-handler-5/DEBUG] [net.neoforged.fml.javafmlmod.FMLJavaModLanguageProvider/SCAN]: Found @Mod class com.Gabou.sereneseasonsplus.SereneSeasonsPlus with id sereneseasonsplus
+[01sept.2025 12:41:29.040] [background-scan-handler-5/DEBUG] [net.neoforged.fml.javafmlmod.FMLJavaModLanguageProvider/SCAN]: Found @Mod class com.Gabou.sereneseasonsplus.SereneSeasonsPlusNeoForge with id sereneseasonsplus
 [01sept.2025 12:41:29.040] [background-scan-handler-3/DEBUG] [net.neoforged.fml.javafmlmod.FMLJavaModLanguageProvider/SCAN]: Found @Mod class sereneseasons.neoforge.core.SereneSeasonsNeoForge with id sereneseasons
 [01sept.2025 12:41:29.040] [background-scan-handler-2/DEBUG] [net.neoforged.fml.javafmlmod.FMLJavaModLanguageProvider/SCAN]: Found @Mod class glitchcore.neoforge.GlitchCoreNeoForge with id glitchcore
 [01sept.2025 12:41:29.135] [background-scan-handler-4/DEBUG] [net.neoforged.fml.loading.moddiscovery.MinecraftLocator/SCAN]: Scan finished: Mod File: /
@@ -633,7 +633,7 @@
 [01sept.2025 12:41:36.373] [Render thread/DEBUG] [net.neoforged.fml.javafmlmod.FMLModContainer/LOADING]: Creating FMLModContainer instance for glitchcore.neoforge.GlitchCoreNeoForge
 [01sept.2025 12:41:36.374] [Render thread/DEBUG] [net.neoforged.fml.javafmlmod.FMLModContainer/LOADING]: Creating FMLModContainer instance for sereneseasons.neoforge.core.SereneSeasonsNeoForge
 [01sept.2025 12:41:36.374] [Render thread/DEBUG] [net.neoforged.fml.javafmlmod.FMLModContainer/LOADING]: Creating FMLModContainer instance for net.neoforged.neoforge.common.NeoForgeMod
-[01sept.2025 12:41:36.374] [Render thread/DEBUG] [net.neoforged.fml.javafmlmod.FMLModContainer/LOADING]: Creating FMLModContainer instance for com.Gabou.sereneseasonsplus.SereneSeasonsPlus
+[01sept.2025 12:41:36.374] [Render thread/DEBUG] [net.neoforged.fml.javafmlmod.FMLModContainer/LOADING]: Creating FMLModContainer instance for com.Gabou.sereneseasonsplus.SereneSeasonsPlusNeoForge
 [01sept.2025 12:41:36.375] [Render thread/DEBUG] [net.neoforged.fml.javafmlmod.FMLModContainer/LOADING]: Creating FMLModContainer instance for com.illusivesoulworks.spectrelib.SpectreNeoForgeMod
 [01sept.2025 12:41:36.393] [modloading-worker-0/DEBUG] [mixin/]: Mixing impl.MixinPacketHandler from glitchcore.neoforge.mixins.json into glitchcore.network.PacketHandler
 [01sept.2025 12:41:36.393] [modloading-worker-0/DEBUG] [net.neoforged.neoforge.internal.versions.neoforge.NeoForgeVersion/CORE]: NeoForge Version package package net.neoforged.neoforge.internal.versions.neoforge, NeoForge, version 20.4 from cpw.mods.modlauncher.TransformingClassLoader@33a55bd8
@@ -744,8 +744,8 @@
 [01sept.2025 12:41:37.659] [Forge Version Check/INFO] [net.neoforged.fml.VersionChecker/]: [betterdays] Found status: UP_TO_DATE Current: 1.20.4-3.1.0.6-NEOFORGE Target: null
 [01sept.2025 12:41:39.702] [Render thread/DEBUG] [net.neoforged.fml.DeferredWorkQueue/LOADING]: Dispatching synchronous work for work queue COMMON_SETUP: 1 jobs
 [01sept.2025 12:41:39.702] [Render thread/DEBUG] [net.neoforged.fml.DeferredWorkQueue/LOADING]: Synchronous work queue completed in 450.5 μs
-[01sept.2025 12:41:39.706] [Worker-Main-9/INFO] [com.Gabou.sereneseasonsplus.SereneSeasonsPlus/]: Setting up Serene Seasons Plus (Common)
-[01sept.2025 12:41:39.706] [Worker-Main-9/INFO] [com.Gabou.sereneseasonsplus.SereneSeasonsPlus/]: Setting up Serene Seasons Plus (Client)
+[01sept.2025 12:41:39.706] [Worker-Main-9/INFO] [com.Gabou.sereneseasonsplus.SereneSeasonsPlusNeoForge/]: Setting up Serene Seasons Plus (Common)
+[01sept.2025 12:41:39.706] [Worker-Main-9/INFO] [com.Gabou.sereneseasonsplus.SereneSeasonsPlusNeoForge/]: Setting up Serene Seasons Plus (Client)
 [01sept.2025 12:41:39.707] [Worker-Main-20/INFO] [SpectreLib/]: Registering config screens for mod betterdays with 2 config(s)
 [01sept.2025 12:41:39.734] [Render thread/DEBUG] [net.neoforged.fml.DeferredWorkQueue/LOADING]: Dispatching synchronous work for work queue SIDED_SETUP: 2 jobs
 [01sept.2025 12:41:39.737] [Render thread/DEBUG] [net.neoforged.fml.DeferredWorkQueue/LOADING]: Synchronous work queue completed in 2.456 ms

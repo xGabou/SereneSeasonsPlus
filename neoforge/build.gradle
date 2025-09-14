@@ -1,0 +1,82 @@
+plugins {
+    id "net.neoforged.gradle.userdev" version "7.0.140"
+    id "net.neoforged.gradle.mixin" version "7.0.140"
+}
+
+base.archivesName.set("${mod_name}-neoforge")
+
+mixin {
+    config "${mod_id}.mixins.json"
+    config "${mod_id}.neoforge.mixins.json"
+}
+
+minecraft {
+    mappings {
+        channel = official()
+        version.put "minecraft", minecraft_version
+    }
+
+    runs {
+        configureEach {
+            modSource project.sourceSets.main
+        }
+
+        client {
+            workingDirectory.set(project.file("run"))
+            systemProperty "neoforge.enabledGameTestNamespaces", mod_id
+            jvmArguments.add("-Ddevauth.enabled=true")
+            jvmArguments.add("-Ddevauth.account=main")
+            jvmArguments.add("-Dlog4j2.level=DEBUG")
+        }
+
+        server {
+            workingDirectory.set(project.file("run"))
+            systemProperty "neoforge.enabledGameTestNamespaces", mod_id
+            jvmArguments.add("-Dlog4j2.level=DEBUG")
+        }
+    }
+}
+configurations.all {
+    // Keep NeoForge's ASM 9.8
+    resolutionStrategy.force "org.ow2.asm:asm:9.8",
+            "org.ow2.asm:asm-commons:9.8",
+            "org.ow2.asm:asm-tree:9.8",
+            "org.ow2.asm:asm-util:9.8",
+            "org.ow2.asm:asm-analysis:9.8"
+
+    // Prevent older ASM from leaking in
+    exclude group: "org.ow2.asm", module: "asm-all"
+    exclude group: "org.ow2.asm", module: "asm-debug-all"
+}
+
+dependencies {
+    implementation "net.neoforged:neoforge:${neo_version}"
+    implementation project(":Common") // gives you sources & resources
+    implementation "curse.maven:serene-seasons-291874:5206533"
+    implementation "curse.maven:glitchcore-955399:5088442"
+    implementation "curse.maven:betterdays-895618:5477563"
+    compileOnly "curse.maven:spectrelib-993948:5217603"
+    runtimeOnly "me.djtheredstoner:DevAuth-neoforge:1.2.1"
+}
+TaskCollection.metaClass.excludingNeoTasks = { ->
+    delegate.matching { !it.name.startsWith("neo") }
+}
+tasks.withType(JavaCompile).excludingNeoTasks().configureEach {
+    source(project(":Common").sourceSets.main.allSource)
+}
+
+tasks.withType(Javadoc).excludingNeoTasks().configureEach {
+    source(project(":Common").sourceSets.main.allJava)
+}
+tasks.named("sourcesJar", Jar) {
+    from(project(":Common").sourceSets.main.allSource)
+}
+tasks.withType(ProcessResources).excludingNeoTasks().configureEach {
+    from project(":Common").sourceSets.main.resources
+    filesMatching("${mod_id}.mixins.json") {
+        expand "refmap_target": "${mod_id}."
+    }
+}
+
+
+
