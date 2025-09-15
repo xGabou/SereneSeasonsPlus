@@ -15,6 +15,7 @@ import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.TickEvent;
+import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 
@@ -92,6 +93,19 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
                 CommonSnowPiller.handleServerTick(level);
             }
         }
+    }
+
+    @SubscribeEvent
+    /**
+     * Queues chunk processing when chunks load (e.g., as players move),
+     * so snow/ice are cleared or accelerated-melted immediately without rejoining.
+     */
+    public void onChunkLoad(ChunkEvent.Load event) {
+        if (!(event.getChunk() instanceof net.minecraft.world.level.chunk.LevelChunk chunk)) return;
+        var level = chunk.getLevel();
+        if (level == null || level.isClientSide()) return;
+        if (!level.dimensionType().natural()) return;
+        CommonSnowBlockReplacer.handleOnChunkLoad(chunk);
     }
 
 

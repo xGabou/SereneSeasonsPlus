@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
@@ -27,7 +28,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         // Server lifecycle hooks
         ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStarting);
         ServerLifecycleEvents.SERVER_STOPPING.register(this::onServerStopping);
-        //ServerChunkEvents.CHUNK_LOAD.register(this::onChunkLoad);
+        ServerChunkEvents.CHUNK_LOAD.register(this::onChunkLoad);
         EnvironmentHelper.init(new FabricEnvironmentHelper());
         SeasonChangeEvent.register();
         SereneExtendedConfig.registerReloadListener(this::onConfigReload);
@@ -66,5 +67,15 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
             CommonSnowPiller.handleServerTick(level);
         }
     }
+
+    private void onChunkLoad(ServerLevel level, ChunkAccess chunkAccess) {
+        if (level == null) return;
+        if (!(chunkAccess instanceof net.minecraft.world.level.chunk.LevelChunk chunk)) return;
+        if (level.isClientSide()) return;
+        if (!level.dimensionType().natural()) return;
+
+        CommonSnowBlockReplacer.handleOnChunkLoad(chunk);
+    }
+
 
 }
