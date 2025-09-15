@@ -57,6 +57,7 @@ dependencies {
     implementation "curse.maven:betterdays-895618:5477563"
     compileOnly "curse.maven:spectrelib-993948:5217603"
     runtimeOnly "me.djtheredstoner:DevAuth-neoforge:1.2.1"
+    runtimeOnly "curse.maven:spark-361579:5243943"
 }
 TaskCollection.metaClass.excludingNeoTasks = { ->
     delegate.matching { !it.name.startsWith("neo") }

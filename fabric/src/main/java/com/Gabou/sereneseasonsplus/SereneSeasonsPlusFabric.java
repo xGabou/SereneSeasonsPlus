@@ -2,24 +2,22 @@ package com.Gabou.sereneseasonsplus;
 
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
-import com.Gabou.sereneseasonsplus.features.CommonSnowBlockReplacer;
-import com.Gabou.sereneseasonsplus.features.CommonSnowPiller;
-import com.Gabou.sereneseasonsplus.util.*;
+import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
+import com.Gabou.sereneseasonsplus.mixin.MinecraftServerInvoker;
+import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
+import com.Gabou.sereneseasonsplus.util.FabricAsyncExecutorHandler;
+import com.Gabou.sereneseasonsplus.util.FabricEnvironmentHelper;
+import com.Gabou.sereneseasonsplus.util.SereneService;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.LevelChunk;
-import sereneseasons.api.season.Season;
-import sereneseasons.api.season.SeasonHelper;
-
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.ChunkAccess;
 
 public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements ModInitializer {
-
 
 
     @Override
@@ -34,38 +32,35 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         SereneExtendedConfig.registerReloadListener(this::onConfigReload);
 
         // Server tick hook
-        ServerTickEvents.END_SERVER_TICK.register(this::onServerTick);
-
-        CommonSnowPiller.init(new VanillaSnowHandler());
+        ServerTickEvents.START_WORLD_TICK.register(this::onWorldTick);
 
         // If you have client-only stuff, register it in SereneSeasonsPlusClientFabric
     }
+
     private void onConfigReload() {
-        CommonSnowBlockReplacer.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get());
+        CommonSnowBlockFeature.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
+        SereneService.reloadConfig();
     }
 
-//    private void onChunkLoad(ServerLevel level, LevelChunk chunk) {
+    //    private void onChunkLoad(ServerLevel level, LevelChunk chunk) {
 //        CommonSnowBlockReplacer.handleOnChunkLoad(chunk);
 //    }
     private void onServerStarting(MinecraftServer server) {
         LOGGER.info("Serene Seasons Plus server starting!");
         SereneService.HANDLER = new FabricAsyncExecutorHandler();
-        CommonSnowBlockReplacer.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get());
-        CommonSnowPiller.onServerStarting(SereneExtendedConfig.TICK_SNOW_PILLER.get());
+        CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
     }
 
     private void onServerStopping(MinecraftServer server) {
         SereneService.shutdown();
         SereneService.HANDLER = null;
+        CommonSnowBlockFeature.onServerStopping();
     }
 
-    private void onServerTick(MinecraftServer server) {
-        Level level = server.getLevel(Level.OVERWORLD);
-        if (level != null) {
-            this.onTick(level,SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(),SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(),SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(),SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
-            CommonSnowBlockReplacer.handleServerTick(server);
-            CommonSnowPiller.handleServerTick(level);
-        }
+    private void onWorldTick(ServerLevel level) {
+        this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
+        CommonSnowBlockFeature.handleServerTick((MinecraftServerInvoker) level.getServer(), level);
+
     }
 
     private void onChunkLoad(ServerLevel level, ChunkAccess chunkAccess) {
@@ -74,7 +69,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         if (level.isClientSide()) return;
         if (!level.dimensionType().natural()) return;
 
-        CommonSnowBlockReplacer.handleOnChunkLoad(chunk);
+        CommonSnowBlockFeature.handleOnChunkLoad(chunk.getPos());
     }
 
 

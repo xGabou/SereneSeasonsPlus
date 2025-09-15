@@ -7,5 +7,5 @@ import sereneseasons.api.season.Season;
 
 public interface SnowEnvironmentHandler {
     int getBlocksToReplace(ServerLevel level, BlockPos playerPos);
-    void processChunks(ServerLevel level, BlockPos worldPos, Season.SubSeason currentSubSeason, ChunkPos chunkPos);
+     CommonSnowBlockFeature.WeatherDecision decideWeatherAction(ServerLevel level, Season.SubSeason sub, float temperature);
 }

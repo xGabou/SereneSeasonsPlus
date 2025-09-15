@@ -1,6 +1,6 @@
 package com.Gabou.sereneseasonsplus.mixin;
 
-import com.Gabou.sereneseasonsplus.features.CommonSnowBlockReplacer;
+import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,6 +21,7 @@ public class ServerLevelMixin {
             ),remap = false
     )
     private void snow$addToQueue(LevelChunk chunk, int randomTickSpeed, CallbackInfo ci) {
-        if (chunk.getLevel().dimensionType().natural()) CommonSnowBlockReplacer.handleOnChunkLoad(chunk);
+        if (chunk.getLevel().dimensionType().natural()) ChunkQueue.tryAdd(chunk.getPos(),true);
     }
+
 }

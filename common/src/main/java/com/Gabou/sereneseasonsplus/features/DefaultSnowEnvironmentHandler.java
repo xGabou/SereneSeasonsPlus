@@ -1,5 +1,9 @@
 package com.Gabou.sereneseasonsplus.features;
 
+import com.Gabou.sereneseasonsplus.features.snowstorm.IWeatherChunk;
+import com.Gabou.sereneseasonsplus.features.snowstorm.WeatherState;
+import com.Gabou.sereneseasonsplus.storage.Priority;
+import com.Gabou.sereneseasonsplus.util.SereneService;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -7,7 +11,7 @@ import net.minecraft.world.level.ChunkPos;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 
-import static com.Gabou.sereneseasonsplus.features.CommonSnowBlockReplacer.*;
+import static com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.*;
 
 public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
     @Override
@@ -16,47 +20,62 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
         float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
 
         if (temperature >= 0.15F) {
-            return CommonSnowBlockReplacer.calculateBlocksToReplace(temperature);
+            return CommonSnowBlockFeature.calculateBlocksToReplace(temperature);
         }
         return 0;
     }
 
     @Override
-    public void processChunks(ServerLevel level, BlockPos worldPos, Season.SubSeason sub, ChunkPos chunkPos) {
-        doMeltingLogic(level, sub, chunkPos, SnowUtils.getCachedBiomeTemperature(level, worldPos, sub));
-    }
+    public WeatherDecision decideWeatherAction(ServerLevel level, Season.SubSeason sub, float temperature) {
+        // Default = snowfall (if precipitating), gradual
+        boolean isRaining = level.isRaining();
+        Action action = isRaining && temperature < 0.5F ? Action.SNOW : Action.NONE;
+        Priority priority = Priority.GRADUAL;
 
-    public static void doMeltingLogic(ServerLevel level, Season.SubSeason sub, ChunkPos chunkPos, float temperature) {
         switch (sub) {
-            case EARLY_SPRING, LATE_AUTUMN -> {
-                if (temperature >= 0.15F) {
-                    // gradual only
-                    meltingChunks.add(chunkPos);
-                }
-            }
             case MID_SPRING, MID_AUTUMN -> {
                 if (temperature >= 0.15F && temperature < 0.5F) {
-                    // gradual + accelerated melt
-                    level.getServer().execute(() -> accelerateMelt(level, chunkPos));
-                    meltingChunks.add(chunkPos);
+                    action = Action.MELT;
+                    priority = Priority.ACCELERATED;
                 } else if (temperature >= 0.5F) {
-                    // accelerated only
-                    level.getServer().execute(() -> accelerateMelt(level, chunkPos));
+                    action = Action.MELT;
+                    priority = Priority.ACCELERATED;
+                } else if (isRaining) {
+                    action = Action.SNOW;
+                    priority = Priority.GRADUAL;
                 }
             }
             case LATE_SPRING, EARLY_AUTUMN,
                  EARLY_SUMMER, MID_SUMMER, LATE_SUMMER -> {
                 if (temperature >= 0.5F) {
-                    // hot enough to wipe snow
-                    chunksToClear.add(chunkPos);
+                    action = Action.CLEAR;
+                    priority = Priority.URGENT;
                 } else if (temperature >= 0.15F) {
-                    // still melting zone
-                    meltingChunks.add(chunkPos);
+                    action = Action.MELT;
+                    priority = Priority.GRADUAL;
+                } else if (isRaining) {
+                    action = Action.SNOW;
+                    priority = Priority.GRADUAL;
+                }
+            }
+            case EARLY_SPRING, LATE_AUTUMN -> {
+                if (temperature >= 0.15F) {
+                    action = Action.MELT;
+                    priority = Priority.GRADUAL;
+                } else if (isRaining) {
+                    action = Action.SNOW;
+                    priority = Priority.GRADUAL;
                 }
             }
             default -> {
-                // Winter or too cold → keep snow
+                if (isRaining && temperature < 0.5F) {
+                    action = Action.SNOW;
+                    priority = Priority.GRADUAL;
+                }
             }
         }
+
+
+        return new WeatherDecision(action, priority);
     }
 }

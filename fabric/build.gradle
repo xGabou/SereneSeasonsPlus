@@ -58,4 +58,5 @@ dependencies {
     include implementation("com.electronwill.night-config:core:${nightconfig_version}")
     include implementation("net.jodah:typetools:0.6.3")
     runtimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.1")
+    modImplementation "curse.maven:spark-361579:4950610"
 }

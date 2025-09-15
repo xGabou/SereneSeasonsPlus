@@ -15,7 +15,15 @@ public class ChunkQueue {
     public static void tryAdd(ChunkPos chunkPos, boolean currentTick) {
         if (Memory.hasForgotten(chunkPos)) {
             Memory.remember(chunkPos);
-            add(new Entry(chunkPos, 0), currentTick);
+            // Each chunk has 256 surface columns
+            add(new Entry(chunkPos, 0, 256), currentTick);
+        }
+    }
+
+    public static void tryAdd(ChunkPos chunkPos, boolean currentTick, int workLeft) {
+        if (Memory.hasForgotten(chunkPos)) {
+            Memory.remember(chunkPos);
+            add(new Entry(chunkPos, 0, workLeft), currentTick);
         }
     }
 
@@ -24,6 +32,7 @@ public class ChunkQueue {
         if (currentTick) currentTickChunks.add(entry);
         else nextTickChunks.add(entry);
     }
+
 
     /** Returns the size of the current-tick queue. */
     public static int size() {
@@ -52,6 +61,7 @@ public class ChunkQueue {
         nextTickChunks.clear();
     }
 
-    public record Entry(ChunkPos pos, int sittingFor) {
-    }
+    public record Entry(ChunkPos pos, int sittingFor, int workLeft) {}
+
+
 }
