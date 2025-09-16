@@ -25,7 +25,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
     public void onInitialize() {
         LOGGER.info("Initializing Serene Seasons Plus (Fabric)");
         // Server lifecycle hooks
-        ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStarting);
+        ServerLifecycleEvents.SERVER_STARTED.register(this::onServerStarting);
         ServerLifecycleEvents.SERVER_STOPPING.register(this::onServerStopping);
         ServerChunkEvents.CHUNK_LOAD.register(this::onChunkLoad);
         EnvironmentHelper.init(new FabricEnvironmentHelper());
@@ -60,6 +60,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
     }
 
     private void onWorldTick(ServerLevel level) {
+        if( level.dimension() != Level.OVERWORLD) return;
         this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
         CommonSnowBlockFeature.handleServerTick((MinecraftServerInvoker) level.getServer(), level);
 

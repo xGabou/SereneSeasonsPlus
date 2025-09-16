@@ -9,7 +9,7 @@ public class VanillaSnowHandler implements ISnowHandler {
     public int getAttemptCount(ServerLevel level, ChunkPos center) {
         if (!level.isRaining()) return 0;
 
-        final boolean coldEnough = level.getBiome(center.getWorldPosition()).value().coldEnoughToSnow(center.getWorldPosition());
+        final boolean coldEnough = level.getBiome(center.getMiddleBlockPosition(65)).value().coldEnoughToSnow(center.getMiddleBlockPosition(65));
         if (!coldEnough) return 0;
 
         final var rnd = level.random;

@@ -44,6 +44,7 @@ public class CommonSnowBlockFeature {
     public static final Logger LOGGER = LogManager.getLogger("SnowBlockReplacer");
     protected static final Random RANDOM = new Random();
     protected static final Map<ServerPlayer, BlockPos> playerPositions = new ConcurrentHashMap<>();
+    public static final int MAX_MEMORY = 10000;
 
     protected static boolean snowStormEnabled = false;
     protected static int tickThresholdSnowReplacer;
@@ -80,49 +81,46 @@ public class CommonSnowBlockFeature {
         }
 
         public static boolean doesNeedRefilling() {
-            return value && counter > 5;
+            return value && counter > 5 && coolDown>200;
         }
     }
 
+
+    protected static int coolDown = 0;
 
     public static void handleServerTick(MinecraftServerInvoker server, ServerLevel level) {
         long t0All = System.nanoTime();
         ++tickCounter;
 
         if (level != null && !level.isClientSide()) {
-
             int viewDist = Math.min(level.getServer().getPlayerList().getViewDistance(), 16);
-            if (tickCounter % tickThresholdSnowReplacer == 0&&tickCounter>500) {
+            if (tickCounter % tickThresholdSnowReplacer == 0 && tickCounter > 500) {
                 replaceSnowBlocks(level);
                 updatePlayerPositions(level.players());
-                if(NeedRefilling.doesNeedRefilling()){
-                    NeedRefilling.set(false,0);
-                    if (ChunkQueue.isEmpty()) {
-                        Memory.erase();
-                        for (ServerPlayer player : playerPositions.keySet()) {
-                            ChunkPos center = player.chunkPosition();
-                            for (int dx = -viewDist; dx <= viewDist; dx++) {
-                                for (int dz = -viewDist; dz <= viewDist; dz++) {
-                                    int cx = center.x + dx;
-                                    int cz = center.z + dz;
+                if (NeedRefilling.doesNeedRefilling() && ChunkQueue.areEmpty()) {
+                    doLogicForRefilling(level);
 
-                                    if (!level.hasChunk(cx, cz)) continue;
-                                    ChunkQueue.tryAdd(new ChunkPos(cx, cz), false);
-                                }
-                            }
-                        }
-                    }
                 }
+
             }
             if (ChunkQueue.isEmpty()) {
                 ChunkQueue.shuffle();
                 long dtAll = (System.nanoTime() - t0All) / 1_000_000L;
-                LOGGER.info("Processed up to {} chunks in {} ms; queue size={}", MemoryHandler.getMaxChunksToProcessPerTick(), dtAll, ChunkQueue.size());
-                NeedRefilling.set(true,NeedRefilling.getCounter()+1);
+
+                NeedRefilling.set(true, NeedRefilling.getCounter() + 1);
+
+                if(NeedRefilling.getCounter()>5)
+                    ++coolDown;
+                //LOGGER.info("Processed up to {} chunks in {} ms; queue size={}; CoolDown:{} ", MemoryHandler.getMaxChunksToProcessPerTick(), dtAll, ChunkQueue.size(), coolDown);
                 return;
             }
-            NeedRefilling.set(false,0);
-            LOGGER.info("Will try to process {} chunks", ChunkQueue.size());
+            if(Memory.isFull() || ChunkQueue.isFull()) {
+                ChunkQueue.clear();
+                doLogicForRefilling(level);
+                return;
+            }
+            NeedRefilling.set(false, 0);
+            //LOGGER.info("Will try to process {} chunks", ChunkQueue.size());
             int oldSize = ChunkQueue.size();
             for (int i = 0; i < Mth.clamp(ChunkQueue.size(), 0, MemoryHandler.getMaxChunksToProcessPerTick()); i++) {
                 long t0 = System.nanoTime();
@@ -147,7 +145,7 @@ public class CommonSnowBlockFeature {
 
 
                     if (sittingFor < 100) {
-                        ChunkQueue.add(new ChunkQueue.Entry(chunkPos, sittingFor + 1, workLeft,now), false);
+                        ChunkQueue.add(new ChunkQueue.Entry(chunkPos, sittingFor + 1, workLeft, now), false);
                         i--; // Act as if we never began processing this chunk, to make sure we at least process something.
                     } else {
                         // It's been sitting for a while, and it's still not loaded. Let's just forget it -- it'll make its
@@ -162,46 +160,65 @@ public class CommonSnowBlockFeature {
                 }
 
                 processChunk(level,
-                        SeasonHelper.getSeasonState(level).getSubSeason(), SnowUtils.getCachedBiomeTemperature(level, chunkPos.getWorldPosition(), SeasonHelper.getSeasonState(level).getSubSeason()), entry);
-                if (playerPositions.keySet().stream().anyMatch(serverPlayer ->
-                        serverPlayer.position().closerThan(chunkPos.getWorldPosition().getCenter(), viewDist*8))) {
-                    Memory.forget(chunkPos);
-                    ChunkQueue.tryAdd(chunkPos,false);
-                }
+                        SeasonHelper.getSeasonState(level).getSubSeason(), SnowUtils.getCachedBiomeTemperature(level, chunkPos.getMiddleBlockPosition(65), SeasonHelper.getSeasonState(level).getSubSeason()), entry);
                 if (!server.tempsEcoule() && i >= MemoryHandler.getMinChunksToProcessPerTick()) {
                     break;
+
                 }
 
                 long dt = (System.nanoTime() - t0) / 1_000_000L;
-                LOGGER.info("Processed chunk {} in {} ms; queue size={}", chunkPos, dt, ChunkQueue.size());
+                //LOGGER.info("Processed chunk {} in {} ms; queue size={}", chunkPos, dt, ChunkQueue.size());
             }
 
 
             long dtAll = (System.nanoTime() - t0All) / 1_000_000L;
-            LOGGER.info("Processed up to {} chunks in {} ms; queue size={}; old queue size ={}", MemoryHandler.getMaxChunksToProcessPerTick(), dtAll, ChunkQueue.size(), oldSize);
+            //LOGGER.info("Processed up to {} chunks in {} ms; queue size={}; old queue size ={}", MemoryHandler.getMaxChunksToProcessPerTick(), dtAll, ChunkQueue.size(), oldSize);
 
         }
     }
 
+    private static void doLogicForRefilling(ServerLevel level) {
+        NeedRefilling.set(false, 0);
+        Memory.erase();
+        ChunkMapInvoker chunkMap = (ChunkMapInvoker) level.getChunkSource().chunkMap;
+
+        int viewDist = Math.min(level.getServer().getPlayerList().getViewDistance(), 16);
+
+        for (ChunkHolder chunk : chunkMap.snow$getChunks()) {
+            ChunkPos chunkPos = chunk.getPos();
+
+            boolean nearPlayer = playerPositions.values().stream().anyMatch(playerPos -> {
+                ChunkPos playerChunk = new ChunkPos(playerPos);
+                int dx = Math.abs(playerChunk.x - chunkPos.x);
+                int dz = Math.abs(playerChunk.z - chunkPos.z);
+                return dx <= viewDist && dz <= viewDist;
+            });
+
+            if (nearPlayer) {
+                ChunkQueue.tryAdd(chunkPos, false);
+            }
+        }
+
+        coolDown = 0;
+    }
+
+
 
     public static void processChunk(ServerLevel level, Season.SubSeason sub, float temperature, ChunkQueue.Entry entry) {
-
-        WeatherDecision decision = HANDLER.decideWeatherAction(level, sub, temperature);
         int workLeft = entry.workLeft();
-        int sittingFor = entry.sittingFor();
         ChunkPos chunkPos = entry.pos();
-        long lastSkipped = entry.lastSkipped();
-        long now = level.getGameTime();
-
+//        if(entry.pos().equals(new ChunkPos(341, -97)))
+//            //LOGGER.info("Processing chunk 341,-97");
+        WeatherDecision decision = HANDLER.decideWeatherAction(level, sub, temperature,level.getBiome(chunkPos.getMiddleBlockPosition(65)).value().coldEnoughToSnow(chunkPos.getMiddleBlockPosition(65)));
         int budget = switch (decision.priority()) {
             case URGENT -> 256;       // full wipe
-            case ACCELERATED -> 64;   // faster
-            case GRADUAL -> 16; // slower
+            case ACCELERATED -> level.getRandom().nextInt(48) + 1;   // faster
+           case GRADUAL -> level.getRandom().nextInt(5) + 1; // 1–5
         };
 
         LOGGER.info(decision.priority() + "" + decision.action());
         switch (decision.action()) {
-            case SNOW -> doSnowFall(level, chunkPos, budget);
+            case SNOW -> doSnowFall(level, entry, budget);
 
             case MELT -> {
                 if (decision.priority() == Priority.ACCELERATED) {
@@ -221,7 +238,7 @@ public class CommonSnowBlockFeature {
 
         // requeue if still work left
         if (workLeft > budget) {
-            ChunkQueue.add(entry,false);
+            ChunkQueue.add(entry, false);
         }
     }
 
@@ -388,9 +405,14 @@ public class CommonSnowBlockFeature {
         }
     }
 
-    public static void doSnowFall(ServerLevel level, ChunkPos chunkPos, int budget) {
+    public static void doSnowFall(ServerLevel level,ChunkQueue.Entry entry, int budget) {
         final int[] processed = {0};
+        ChunkPos chunkPos = entry.pos();
 
+        if (level.getRandom().nextInt(5) != 0) {
+            ChunkQueue.add(entry, false);
+            return;
+        }
         // Check if a snowstorm is active for this chunk
         boolean stormActive = CommonSnowBlockFeature.isSnowStormAt(level, chunkPos);
         int stormIntensity = CommonSnowBlockFeature.getSnowStormIntensity(level, chunkPos);
@@ -402,7 +424,7 @@ public class CommonSnowBlockFeature {
         }
 
         // Normal snowfall
-        sampleRandomChunkColumns(level, chunkPos,4, (pos, state) -> {
+        sampleRandomChunkColumns(level, chunkPos, 4, (pos, state) -> {
             if (processed[0] >= budget) return;
 
             if (level.isEmptyBlock(pos.below())) return;
@@ -414,7 +436,7 @@ public class CommonSnowBlockFeature {
         });
     }
 
-    private static void sampleRandomChunkColumns(ServerLevel level, ChunkPos chunkPos,int attempts, BiConsumer<BlockPos.MutableBlockPos, BlockState> action) {
+    private static void sampleRandomChunkColumns(ServerLevel level, ChunkPos chunkPos, int attempts, BiConsumer<BlockPos.MutableBlockPos, BlockState> action) {
         int minY = level.getMinBuildHeight();
         int baseX = chunkPos.getMinBlockX();
         int baseZ = chunkPos.getMinBlockZ();
@@ -437,7 +459,7 @@ public class CommonSnowBlockFeature {
 
         int cap = Mth.clamp(maxLayers, 1, 8);
 
-        sampleRandomChunkColumns(level, chunkPos,16, (pos, state) -> {
+        sampleRandomChunkColumns(level, chunkPos, 16, (pos, state) -> {
             if (processed[0] >= budget) return;
 
             int step = (cap <= 2) ? 1 : rng.nextInt(1, cap); // inclusive 1..cap-1
@@ -535,7 +557,7 @@ public class CommonSnowBlockFeature {
     public static void handleOnChunkLoad(LevelChunk chunk, ServerLevel level) {
         if (tickCounter <= 500) return;
         ChunkPos chunkPos = chunk.getPos();
-        LOGGER.info("Loading " + chunkPos.getWorldPosition());
+        //LOGGER.info("Loading " + chunkPos.getMiddleBlockPosition(65));
         ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
         Season.SubSeason currentSeason = SeasonHelper.getSeasonState(level).getSubSeason();
 
@@ -620,7 +642,7 @@ public class CommonSnowBlockFeature {
         tickThresholdSnowReplacer = config;
         tickCounter = 0;
         playerPositions.clear();
-        LOGGER.info("SnowBlockReplacer initialized with tick threshold: {}", tickThresholdSnowReplacer);
+        //LOGGER.info("SnowBlockReplacer initialized with tick threshold: {}", tickThresholdSnowReplacer);
         tickCounter = 0;
         snowStormEnabled = snowStorm;
         Memory.erase();

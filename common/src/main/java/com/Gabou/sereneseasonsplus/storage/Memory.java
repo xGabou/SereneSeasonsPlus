@@ -30,4 +30,12 @@ public class Memory {
     public static void erase() {
         data.clear();
     }
+
+    public static int getSize() {
+        return data.size();
+    }
+
+    public static boolean isFull() {
+        return getSize() >= MemoryHandler.getMaxSize();
+    }
 }

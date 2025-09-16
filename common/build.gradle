@@ -14,6 +14,6 @@ dependencies {
     compileOnly "curse.maven:serene-seasons-291874:5206533"
     compileOnly "curse.maven:glitchcore-955399:5088442"
     compileOnly "curse.maven:betterdays-895618:5477563"
-    compileOnly "curse.maven:spectrelib-993948:5217603"
+    compileOnly "curse.maven:spectrelib-993948:5217601"
     compileOnly group:'org.spongepowered', name: 'mixin', version: '0.8.5'
 }

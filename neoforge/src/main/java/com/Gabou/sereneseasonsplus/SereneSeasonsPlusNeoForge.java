@@ -5,10 +5,12 @@ import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.mixin.MinecraftServerInvoker;
 import com.Gabou.sereneseasonsplus.util.*;
-import net.minecraft.server.MinecraftServer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModLoadingContext;
@@ -62,6 +64,23 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
     private void clientSetup(final FMLClientSetupEvent event, ModLoadingContext modContainer) {
         LOGGER.info("Setting up Serene Seasons Plus (Client)");
         event.enqueueWork(() -> new SereneSeasonsPlusNeoForgeClient(modContainer));
+
+    }
+    @OnlyIn(Dist.CLIENT)
+    private static boolean shown = false;
+
+
+    @SubscribeEvent @OnlyIn(Dist.CLIENT)
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) {
+            if (!shown && !PerfChecker.hasPerfMod()) {
+                Minecraft mc = Minecraft.getInstance();
+                if (mc.screen == null) { // wait until no other screen is open
+                    mc.setScreen(new PerformanceWarning());
+                    shown = true;
+                }
+            }
+        }
     }
 
     @SubscribeEvent
@@ -85,6 +104,7 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
     public void onWorldTick(TickEvent.LevelTickEvent event) {
         if (event.side.isClient() || event.phase != TickEvent.Phase.END || !event.haveTime())return;
         ServerLevel level = (ServerLevel) event.level;
+        if( level.dimension() != Level.OVERWORLD) return;
         this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
         CommonSnowBlockFeature.handleServerTick((MinecraftServerInvoker) level.getServer(), level);
 

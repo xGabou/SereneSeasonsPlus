@@ -7,5 +7,5 @@ import sereneseasons.api.season.Season;
 
 public interface SnowEnvironmentHandler {
     int getBlocksToReplace(ServerLevel level, BlockPos playerPos);
-     CommonSnowBlockFeature.WeatherDecision decideWeatherAction(ServerLevel level, Season.SubSeason sub, float temperature);
+     CommonSnowBlockFeature.WeatherDecision decideWeatherAction(ServerLevel level, Season.SubSeason sub, float temperature, boolean coldEnoughForSnow);
 }

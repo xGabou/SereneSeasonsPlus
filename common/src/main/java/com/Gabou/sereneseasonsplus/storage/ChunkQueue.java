@@ -70,6 +70,15 @@ public class ChunkQueue {
         currentTickChunks.add(entry.withLastSkipped(newLastSkipped));
     }
 
+
+    public static boolean areEmpty(){
+        return currentTickChunks.isEmpty() && nextTickChunks.isEmpty();
+    }
+
+    public static boolean isFull() {
+        return currentTickChunks.size()>= MemoryHandler.getMaxSize();
+    }
+
     public record Entry(ChunkPos pos, int sittingFor, int workLeft,long lastSkipped) {
         public Entry withLastSkipped(long newLastSkipped) {
             return new Entry(pos, sittingFor, workLeft, newLastSkipped);

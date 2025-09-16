@@ -20,21 +20,26 @@ public class ConfigHacks {
         try {
             Field commonField = ConfigHandler.class.getDeclaredField("COMMON");
             commonField.setAccessible(true);
-            Object commonInstance = commonField.get(null);
-
-            Field dayField = commonInstance.getClass().getDeclaredField("daySpeed");
-            dayField.setAccessible(true);
-            var dayValue = (SpectreConfigSpec.DoubleValue) dayField.get(commonInstance);
-            dayValue.set(day);
-
-            Field nightField = commonInstance.getClass().getDeclaredField("nightSpeed");
-            nightField.setAccessible(true);
-            var nightValue = (SpectreConfigSpec.DoubleValue) nightField.get(commonInstance);
+            var nightValue = getDoubleValue(day, commonField);
             nightValue.set(night);
 
             LOGGER.info("Updated daySpeed = {}, nightSpeed = {}", day, night);
         } catch (Exception e) {
             LOGGER.error("Failed to set time speeds dynamically", e);
         }
+    }
+
+    private static SpectreConfigSpec.DoubleValue getDoubleValue(double day, Field commonField) throws IllegalAccessException, NoSuchFieldException {
+        Object commonInstance = commonField.get(null);
+
+        Field dayField = commonInstance.getClass().getDeclaredField("daySpeed");
+        dayField.setAccessible(true);
+        var dayValue = (SpectreConfigSpec.DoubleValue) dayField.get(commonInstance);
+        dayValue.set(day);
+
+        Field nightField = commonInstance.getClass().getDeclaredField("nightSpeed");
+        nightField.setAccessible(true);
+        var nightValue = (SpectreConfigSpec.DoubleValue) nightField.get(commonInstance);
+        return nightValue;
     }
 }
