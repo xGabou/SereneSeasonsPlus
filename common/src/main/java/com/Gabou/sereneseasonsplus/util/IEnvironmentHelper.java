@@ -9,4 +9,5 @@ public interface IEnvironmentHelper {
     boolean isHotSeason();
     Season.SubSeason getCurrentSeason();
     void onSeasonChange(ServerLevel serverLevel);
+    boolean isRainning(ServerLevel level);
 }

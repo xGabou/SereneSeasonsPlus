@@ -67,9 +67,8 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         if (level == null) return;
         if (!(chunkAccess instanceof net.minecraft.world.level.chunk.LevelChunk chunk)) return;
         if (level.isClientSide()) return;
-        if (!level.dimensionType().natural()) return;
-
-        CommonSnowBlockFeature.handleOnChunkLoad(chunk.getPos());
+        if (level.dimension() != Level.OVERWORLD) return;
+        CommonSnowBlockFeature.handleOnChunkLoad(chunk,level);
     }
 
 

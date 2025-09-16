@@ -14,6 +14,7 @@ public class SereneSeasonPlusCommon {
     public static final String MODID = "sereneseasonsplus";
     protected static final Logger LOGGER = LoggerFactory.getLogger(MODID);
 
+
     /**
      * Logs the active sub-season and the computed day/night speed multipliers.
      *

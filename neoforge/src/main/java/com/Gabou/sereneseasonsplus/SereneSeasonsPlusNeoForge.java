@@ -97,8 +97,8 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
         if (!(event.getChunk() instanceof net.minecraft.world.level.chunk.LevelChunk chunk)) return;
         var level = chunk.getLevel();
         if (level == null || level.isClientSide()) return;
-        if (!level.dimensionType().natural()) return;
-        CommonSnowBlockFeature.handleOnChunkLoad(chunk.getPos());
+        if (level.dimension() != Level.OVERWORLD) return;
+        CommonSnowBlockFeature.handleOnChunkLoad(chunk, (ServerLevel) level);
     }
 
 

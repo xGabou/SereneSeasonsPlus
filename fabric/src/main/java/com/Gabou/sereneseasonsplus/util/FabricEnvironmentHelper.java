@@ -32,10 +32,19 @@ public class FabricEnvironmentHelper implements IEnvironmentHelper {
         return season;
     }
 
+
+
+
+
     @Override
     public void onSeasonChange(ServerLevel serverLevel) {
         season = SeasonHelper.getSeasonState(serverLevel).getSubSeason();
         LOGGER.info("Season changed to: {}", season);
         isHotSeason = HotSeason.isHotSeason(season);
+    }
+
+    @Override
+    public boolean isRainning(ServerLevel level) {
+       return level.isRaining();
     }
 }
