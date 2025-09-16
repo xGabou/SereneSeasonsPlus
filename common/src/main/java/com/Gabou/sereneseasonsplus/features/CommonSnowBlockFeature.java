@@ -68,9 +68,10 @@ public class CommonSnowBlockFeature {
         long t0All = System.nanoTime();
         ++tickCounter;
         if (level != null && !level.isClientSide()) {
+
             if (tickCounter % tickThresholdSnowReplacer == 0 || (tickCounter % tickThresholdSnowReplacerForHotSeasons == 0) && EnvironmentHelper.isHotSeason()) {
-                updatePlayerPositions(level.players());
                 replaceSnowBlocks(level);
+                updatePlayerPositions(level.players());
             }
             if (ChunkQueue.isEmpty()) {
                 ChunkQueue.shuffle();
@@ -116,8 +117,25 @@ public class CommonSnowBlockFeature {
                 LOGGER.info("Processed chunk {} in {} ms; queue size={}", chunkPos, dt, ChunkQueue.size());
             }
 
+             for (ServerPlayer player : level.players()) {
+                ChunkPos center = player.chunkPosition();
+                int viewDist = Math.min(level.getServer().getPlayerList().getViewDistance(),16);
+
+                for (int dx = -viewDist; dx <= viewDist; dx++) {
+                    for (int dz = -viewDist; dz <= viewDist; dz++) {
+                        int cx = center.x + dx;
+                        int cz = center.z + dz;
+
+                        if (!level.hasChunk(cx, cz)) continue;
+                        ChunkQueue.tryAdd(new ChunkPos(cx, cz), false);
+
+                    }
+                }
+            }
             long dtAll = (System.nanoTime() - t0All) / 1_000_000L;
             LOGGER.info("Processed up to {} chunks in {} ms; queue size={}", MemoryHandler.getMaxChunksToProcessPerTick(), dtAll, ChunkQueue.size());
+
+
         }
     }
 
@@ -339,12 +357,7 @@ public class CommonSnowBlockFeature {
         iterateChunkColumns(level, chunkPos, (pos, state) -> {
             if (processed[0] >= budget) return;
 
-            boolean canStackSnow =
-                    state.is(Blocks.SNOW)
-                            && state.hasProperty(SnowLayerBlock.LAYERS)
-                            && state.getValue(SnowLayerBlock.LAYERS) < 8;
-
-            if (!(level.isEmptyBlock(pos) || canStackSnow)) return;
+            if (level.isEmptyBlock(pos.below())) return;
             if (level.getBlockState(pos.below()).is(Blocks.WATER)) return;
             if (!level.getBiome(pos).value().coldEnoughToSnow(pos)) return;
 

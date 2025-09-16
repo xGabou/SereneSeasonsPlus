@@ -53,6 +53,12 @@ public class NeoForgeEnvironmentHelper implements IEnvironmentHelper{
         return FMLEnvironment.dist.isClient();
     }
 
+
+    @Override
+    public boolean isRainning(ServerLevel level) {
+        return level.isRaining();
+    }
+
     /**
      * Updates cached season information based on the given server level.
      *
