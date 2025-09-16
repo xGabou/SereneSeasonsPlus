@@ -8,10 +8,17 @@ package com.Gabou.sereneseasonsplus;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
 import com.Gabou.sereneseasonsplus.features.*;
+import com.Gabou.sereneseasonsplus.mixin.MinecraftServerInvoker;
 import com.Gabou.sereneseasonsplus.util.*;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -43,19 +50,12 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
     public SereneSeasonsPlusForge(FMLJavaModLoadingContext context) {
         isProjectAtmosphereLoaded = ModList.get().isLoaded("projectatmosphere");
         MinecraftForge.EVENT_BUS.register(this);
-        CommonSnowBlockReplacer.HANDLER = new ForgeSnowEnvironmentHandler();
+        CommonSnowBlockFeature.HANDLER = new ForgeSnowEnvironmentHandler();
         EnvironmentHelper.init(new ForgeEnvironmentHelper());
         context.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
         if(!isProjectAtmosphereLoaded) {
             SeasonChangeEvent.register();
-            CommonSnowPiller.init(new VanillaSnowHandler());
         }
-        else{
-            CommonSnowPiller.init(new AtmosphereSnowHandler());
-        }
-
-
-
         context.getModEventBus().addListener((FMLClientSetupEvent event) -> {
             LOGGER.info("Setting up Serene Season Plus (Common)");
             clientSetup(event,context);
@@ -72,32 +72,9 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("Serene Seasons Extended is loading!");
         SereneService.HANDLER = new ForgeAsyncExecutorHandler();
-        CommonSnowBlockReplacer.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get());
-        CommonSnowPiller.onServerStarting(SereneExtendedConfig.TICK_SNOW_PILLER.get());
+        event.getServer().getGameRules().getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT).set(100, event.getServer());
+        CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
     }
-
-//    /**
-//     * Handles snow and ice in chunks when they are loaded based on temperature.
-//     * Extremely warm chunks have all snow removed immediately. Borderline warm
-//     * chunks have their snow layers reduced and are queued for gradual melting.
-//     *
-//     * @param event chunk load event
-//     */
-//    @SubscribeEvent
-//    public void onChunkLoad(ChunkEvent.Load event) {
-//        if (!(event.getChunk() instanceof LevelChunk chunk)) {
-//            if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: non-LevelChunk, skipping");
-//            return;
-//        }
-//
-//        Level level = (Level) event.getLevel();
-//        if (level.isClientSide()) {
-//            if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: client side, skipping");
-//            return;
-//        }
-//
-//        CommonSnowBlockReplacer.handleOnChunkLoad(chunk);
-//    }
 
     /**
      * Client-only setup. Enqueues registration of client UI such as the
@@ -114,8 +91,22 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
 
     }
 
+    @OnlyIn(Dist.CLIENT)
+    private static boolean shown = false;
 
 
+    @SubscribeEvent @OnlyIn(Dist.CLIENT)
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) {
+            if (!shown && !PerfChecker.hasPerfMod()) {
+                Minecraft mc = Minecraft.getInstance();
+                if (mc.screen == null) { // wait until no other screen is open
+                    mc.setScreen(new PerformanceWarning());
+                    shown = true;
+                }
+            }
+        }
+    }
 
     /**
      * Fired when the server is stopping. Shuts down background services.
@@ -126,27 +117,22 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
     public void onServerStopping(ServerStoppingEvent event) {
         SereneService.HANDLER.shutdown();
         SereneService.HANDLER = null;
+        CommonSnowBlockFeature.onServerStopping();
     }
 
+
     /**
-     * Server tick hook. At phase END we evaluate whether to run the periodic
-     * seasonal update (handled by {@link #onTick(Level)}).
+     * Handles server post-tick to periodically update daylight cycle speeds.
      *
-     * @param event server tick event
+     * @param event server post-tick event
      */
     @SubscribeEvent
-    public void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase == Phase.END) {
-            MinecraftServer server = event.getServer();
-            if (server != null) {
-                Level level = server.getLevel(Level.OVERWORLD);
-                if (level != null) {
-                    this.onTick(level);
-                    CommonSnowBlockReplacer.handleServerTick(event.getServer());
-                    CommonSnowPiller.handleServerTick(level);
-                }
-            }
-        }
+    public void onWorldTick(TickEvent.LevelTickEvent event) {
+        if (event.side.isClient() || event.phase != TickEvent.Phase.END || !event.haveTime())return;
+        ServerLevel level = (ServerLevel) event.level;
+        if( level.dimension() != Level.OVERWORLD) return;
+        this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
+        CommonSnowBlockFeature.handleServerTick((MinecraftServerInvoker) level.getServer(), level);
 
     }
 
@@ -158,45 +144,22 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
      */
     @SubscribeEvent
     public void onConfigReload(TickEvent.ServerTickEvent event) {
-        CommonSnowBlockReplacer.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get());
-        CommonSnowPiller.onConfigReload(SereneExtendedConfig.TICK_SNOW_PILLER.get());
+        CommonSnowBlockFeature.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
         SereneService.reloadConfig();
     }
 
+
     /**
-     * Runs every 400 ticks. If the sub-season changed, updates time-of-day
-     * speeds according to configuration (seasonal or custom) and logs the
-     * applied values.
-     *
-     * @param level overworld level reference
+     * Queues chunk processing when chunks load (e.g., as players move),
+     * so snow/ice are cleared or accelerated-melted immediately without rejoining.
      */
-    private void onTick(Level level) {
-        if (++this.ticker >= 400) {
-            this.ticker = 0;
-            if (EnvironmentHelper.shouldRunMod()) {
-                Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
-                if (currentSubSeason != this.lastSubSeason ) {
-                    this.lastSubSeason = currentSubSeason;
-                    if (SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get()) {
-                        double daySpeed = this.getDaySpeedForSeason(currentSubSeason);
-                        double nightSpeed = this.getNightSpeedForSeason(currentSubSeason);
-                        ConfigHacks.setTimeSpeeds(daySpeed, nightSpeed);
-                        LogInfo(currentSubSeason, daySpeed, nightSpeed);
-                    }
-                    else if(SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get()) {
-                        double daySpeed = SereneExtendedConfig.CUSTOM_DAY_LENGTH.get();
-                        double nightSpeed = SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get();
-                        ConfigHacks.setTimeSpeeds(daySpeed, nightSpeed);
-                        LogInfo(currentSubSeason, daySpeed, nightSpeed);
-                    }
-                    else {
-                        LOGGER.info(currentSubSeason.toString()+" is active, but both seasonal and custom daylight cycle are disabled.");
-                    }
-                }
-
-
-            }
-        }
+    @SubscribeEvent
+    public void onChunkLoad(ChunkEvent.Load event) {
+        if (!(event.getChunk() instanceof net.minecraft.world.level.chunk.LevelChunk chunk)) return;
+        var level = chunk.getLevel();
+        if (level.isClientSide()) return;
+        if (level.dimension() != Level.OVERWORLD) return;
+        CommonSnowBlockFeature.handleOnChunkLoad(chunk, (ServerLevel) level);
     }
 
 

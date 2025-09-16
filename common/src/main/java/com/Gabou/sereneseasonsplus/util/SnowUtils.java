@@ -89,17 +89,32 @@ public class SnowUtils {
      * @param pos   target position
      */
     public static void breakOrDecrementLayer(Level level, BlockPos pos) {
+        if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            serverLevel.getServer().execute(() -> doBreakOrDecrementLayer(serverLevel, pos));
+        } else {
+            doBreakOrDecrementLayer(level, pos);
+        }
+    }
+
+    private static void doBreakOrDecrementLayer(Level level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
         if (state.hasProperty(BlockStateProperties.LAYERS)) {
             int layers = state.getValue(BlockStateProperties.LAYERS);
             if (layers > 1) {
-                level.setBlock(pos, state.setValue(BlockStateProperties.LAYERS, layers - 1),
-                        Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
+                level.setBlock(
+                        pos,
+                        state.setValue(BlockStateProperties.LAYERS, layers - 1),
+                        Block.UPDATE_ALL | Block.UPDATE_SUPPRESS_DROPS
+                );
                 return;
             }
         }
-        level.setBlock(pos, Blocks.AIR.defaultBlockState(),
-                Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
+        level.setBlock(
+                pos,
+                Blocks.AIR.defaultBlockState(),
+                Block.UPDATE_ALL | Block.UPDATE_SUPPRESS_DROPS
+        );
     }
+
 
 }

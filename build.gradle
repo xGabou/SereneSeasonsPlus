@@ -15,6 +15,7 @@ buildscript {
 
 apply plugin: 'org.jetbrains.gradle.plugin.idea-ext'
 apply plugin: 'net.minecraftforge.gradleutils'
+apply plugin: 'idea'
 
 changelog {
     fromTag '9.2.0'
@@ -67,6 +68,7 @@ subprojects {
         maven { url "https://www.cursemaven.com"; content { includeGroup "curse.maven" } }
         maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
         maven { url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1" }
+        flatDir { dir 'libs' }
     }
 
     tasks.withType(JavaCompile).configureEach {

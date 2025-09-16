@@ -1,6 +1,9 @@
 package com.Gabou.sereneseasonsplus.features;
 import com.Gabou.sereneseasonsplus.SereneSeasonsPlusForge;
+import com.Gabou.sereneseasonsplus.storage.Priority;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
+import net.Gabou.projectatmosphere.ProjectAtmosphere;
+import net.Gabou.projectatmosphere.api.AtmoApi;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -10,9 +13,9 @@ import sereneseasons.api.season.SeasonHelper;
 import net.Gabou.projectatmosphere.manager.ForecastOrchestrator;
 import net.Gabou.projectatmosphere.util.BiomeInstanceKey;
 
-import static com.Gabou.sereneseasonsplus.features.CommonSnowBlockReplacer.*;
+import static com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.*;
 
-public class ForgeSnowEnvironmentHandler implements SnowEnvironmentHandler {
+public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
     @Override
     public int getBlocksToReplace(ServerLevel level, BlockPos playerPos) {
         if (!SereneSeasonsPlusForge.isProjectAtmosphereLoaded) {
@@ -20,7 +23,7 @@ public class ForgeSnowEnvironmentHandler implements SnowEnvironmentHandler {
             float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
 
             if (temperature >= 0.15F) {
-                return CommonSnowBlockReplacer.calculateBlocksToReplace(temperature);
+                return CommonSnowBlockFeature.calculateBlocksToReplace(temperature);
             }
         } else {
             float temperature = ForecastOrchestrator.getCurrentTemperature(
@@ -29,45 +32,68 @@ public class ForgeSnowEnvironmentHandler implements SnowEnvironmentHandler {
             );
 
             if (temperature >= 0.5F) {
-                return CommonSnowBlockReplacer.calculateBlocksToReplace1(temperature);
+                return CommonSnowBlockFeature.calculateBlocksToReplace1(temperature);
             }
         }
         return 0;
     }
 
     @Override
-    public void processChunks(Level level, BlockPos worldPos, Season.SubSeason currentSubSeason, ChunkPos chunkPos) {
-        float temperature;
-        if (!SereneSeasonsPlusForge.isProjectAtmosphereLoaded) {
-            temperature = SnowUtils.getCachedBiomeTemperature(level, worldPos, currentSubSeason);
-            if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: {} temp={} (SS scale)", chunkPos, temperature);
-            if (temperature >= 0.5F) {
-                chunksToClear.add(chunkPos);
-                if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: queued clear {} (queue={})", chunkPos, chunksToClear.size());
-            } else if (temperature >= 0.15F) {
-                long t0 = System.nanoTime();
-                accelerateMelt(level, chunkPos);
-                meltingChunks.add(chunkPos);
-                if (LOGGER.isDebugEnabled()) {
-                    long dt = (System.nanoTime() - t0) / 1_000_000L;
-                    LOGGER.debug("onChunkLoad: accelerated melt {} in {} ms; queued gradual melt (size={})", chunkPos, dt, meltingChunks.size());
+    public WeatherDecision decideWeatherAction(ServerLevel level, Season.SubSeason sub, float temperature, boolean coldEnoughToSnow, BlockPos pos) {
+        if(!SereneSeasonsPlusForge.isProjectAtmosphereLoaded)
+        {
+            return super.decideWeatherAction(level, sub, temperature, coldEnoughToSnow, pos);
+        }
+        temperature =ForecastOrchestrator.getCurrentTemperature(
+                new BiomeInstanceKey(level.getBiome(pos).unwrapKey().get().location(), pos),
+                level.getDayTime()
+        );
+
+        final boolean isPrecip = AtmoApi.getInstance().isRainningAt(level, pos);
+        final boolean wantsSnow = isPrecip && temperature < 0.1F;
+
+        Action action = Action.NONE;
+        Priority priority = Priority.GRADUAL;
+
+        // Snowfall always overrides melting logic
+        if (wantsSnow) {
+            return new WeatherDecision(Action.SNOW, Priority.GRADUAL);
+        }
+
+        // Celsius thresholds
+        // ≥ 10 °C: completely clear snow
+        // ≥ 0.5 °C: melt (accelerated in warm seasons, gradual otherwise)
+        // < 0.5 °C: do nothing unless snowing
+        switch (sub) {
+            case MID_SPRING, MID_AUTUMN, LATE_SPRING, EARLY_AUTUMN, EARLY_SUMMER, MID_SUMMER, LATE_SUMMER -> {
+                if (temperature >= 10.0F) {
+                    action = Action.CLEAR;
+                    priority = Priority.URGENT;
+                } else if (temperature >= 0.5F) {
+                    action = Action.MELT;
+                    priority = Priority.ACCELERATED;
                 }
             }
-        } else {
-            temperature = ForecastOrchestrator.getCurrentTemperature(new BiomeInstanceKey(level.getBiome(worldPos).unwrapKey().get().location(), worldPos), level.getDayTime());
-            if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: {} temp={} (PA scale)", chunkPos, temperature);
-            if (temperature >= 10.0F) {
-                chunksToClear.add(chunkPos);
-                if (LOGGER.isDebugEnabled()) LOGGER.debug("onChunkLoad: queued clear {} (queue={})", chunkPos, chunksToClear.size());
-            } else if (temperature >= 0.5F) {
-                long t0 = System.nanoTime();
-                accelerateMelt(level, chunkPos);
-                meltingChunks.add(chunkPos);
-                if (LOGGER.isDebugEnabled()) {
-                    long dt = (System.nanoTime() - t0) / 1_000_000L;
-                    LOGGER.debug("onChunkLoad: accelerated melt {} in {} ms; queued gradual melt (size={})", chunkPos, dt, meltingChunks.size());
+            case EARLY_SPRING, LATE_AUTUMN -> {
+                if (temperature >= 0.5F) {
+                    action = Action.MELT;
+                    priority = Priority.GRADUAL;
+                }
+            }
+            default -> {
+                if (temperature >= 10.0F) {
+                    action = Action.CLEAR;
+                    priority = Priority.URGENT;
+                } else if (temperature >= 0.5F) {
+                    action = Action.MELT;
+                    priority = Priority.GRADUAL;
                 }
             }
         }
+
+        return new WeatherDecision(action, priority);
     }
+
+
+
 }

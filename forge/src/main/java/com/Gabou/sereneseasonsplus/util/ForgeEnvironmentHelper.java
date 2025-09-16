@@ -1,6 +1,10 @@
 package com.Gabou.sereneseasonsplus.util;
 
+import com.Gabou.sereneseasonsplus.SereneSeasonsPlusForge;
+import net.Gabou.projectatmosphere.ProjectAtmosphere;
+import net.Gabou.projectatmosphere.api.AtmoApi;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
@@ -39,5 +43,12 @@ public class ForgeEnvironmentHelper implements IEnvironmentHelper {
         season = SeasonHelper.getSeasonState(serverLevel).getSubSeason();
         LOGGER.info("Season changed to: {}", season);
         isHotSeason = HotSeason.isHotSeason(season);
+    }
+
+    @Override
+    public boolean isRainning(ServerLevel level, BlockPos pos) {
+        if(SereneSeasonsPlusForge.isProjectAtmosphereLoaded)
+            return AtmoApi.getInstance().isRainningAt(level, pos);
+        return level.isRaining();
     }
 }

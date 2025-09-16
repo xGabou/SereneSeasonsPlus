@@ -1,8 +1,12 @@
 package com.Gabou.sereneseasonsplus;
 
+import com.Gabou.sereneseasonsplus.util.ConfigHacks;
+import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
+import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sereneseasons.api.season.Season;
+import sereneseasons.api.season.SeasonHelper;
 
 public class SereneSeasonPlusCommon {
     protected int ticker = 0;
@@ -67,5 +71,34 @@ public class SereneSeasonPlusCommon {
             case MID_WINTER -> 0.62;
             case LATE_WINTER -> 0.78;
         };
+    }
+
+    /**
+     * Internal tick handler running every few seconds to adjust time speeds
+     * according to the current sub-season and configuration.
+     *
+     * @param level the overworld level
+     */
+    protected void onTick(Level level, boolean ENABLE_SEASONAL_DAYLIGHT_CYCLE, boolean CUSTOM_CYCLE_LENGTH, double CUSTOM_DAY_LENGTH, double CUSTOM_NIGHT_LENGTH) {
+        if (++this.ticker >= 400) {
+            this.ticker = 0;
+            if (EnvironmentHelper.shouldRunMod()) {
+                Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
+                if (currentSubSeason != this.lastSubSeason) {
+                    this.lastSubSeason = currentSubSeason;
+                    if (ENABLE_SEASONAL_DAYLIGHT_CYCLE) {
+                        double daySpeed = this.getDaySpeedForSeason(currentSubSeason);
+                        double nightSpeed = this.getNightSpeedForSeason(currentSubSeason);
+                        ConfigHacks.setTimeSpeeds(daySpeed, nightSpeed);
+                        LogInfo(currentSubSeason, daySpeed, nightSpeed);
+                    } else if (CUSTOM_CYCLE_LENGTH) {
+                        ConfigHacks.setTimeSpeeds(CUSTOM_DAY_LENGTH, CUSTOM_NIGHT_LENGTH);
+                        LogInfo(currentSubSeason, CUSTOM_DAY_LENGTH, CUSTOM_NIGHT_LENGTH);
+                    } else {
+                        LOGGER.info(currentSubSeason + " is active, but both seasonal and custom daylight cycle are disabled.");
+                    }
+                }
+            }
+        }
     }
 }

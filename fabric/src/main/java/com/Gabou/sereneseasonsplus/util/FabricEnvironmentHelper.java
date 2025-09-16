@@ -1,6 +1,7 @@
 package com.Gabou.sereneseasonsplus.util;
 
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,5 +38,10 @@ public class FabricEnvironmentHelper implements IEnvironmentHelper {
         season = SeasonHelper.getSeasonState(serverLevel).getSubSeason();
         LOGGER.info("Season changed to: {}", season);
         isHotSeason = HotSeason.isHotSeason(season);
+    }
+
+    @Override
+    public boolean isRainning(ServerLevel level, BlockPos pos) {
+        return level.isRaining();
     }
 }

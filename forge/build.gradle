@@ -78,10 +78,12 @@ dependencies {
     compileOnly project(":Common")
     // tes dépendances Forge spécifiques
     implementation fg.deobf("curse.maven:betterdays-895618:5877548")
-    compileOnly fg.deobf("curse.maven:project-atmosphere-1258344:6994348")
+    //compileOnly fg.deobf("curse.maven:project-atmosphere-1258344:6994348")
     implementation fg.deobf("curse.maven:serene-seasons-291874:6398227")
     implementation fg.deobf("curse.maven:glitchcore-955399:5787839")
     implementation fg.deobf("curse.maven:spectrelib-993948:5217603")
     runtimeOnly("me.djtheredstoner:DevAuth-forge-latest:1.2.1")
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    runtimeOnly "curse.maven:embeddium-908741:5681725"
+    compileOnly files("../libs/projectatmosphere-0.3.9.3-ALPHA.jar")
 }

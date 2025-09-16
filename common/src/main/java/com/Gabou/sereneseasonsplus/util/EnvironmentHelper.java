@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus.util;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import sereneseasons.api.season.Season;
 
@@ -16,6 +17,10 @@ public class EnvironmentHelper {
 
     public static boolean isClient() {
         return delegate.isClient();
+    }
+
+    public static boolean isRainning(ServerLevel level, BlockPos pos) {
+        return delegate.isRainning(level,pos);
     }
 
     public static boolean shouldRunMod() {
