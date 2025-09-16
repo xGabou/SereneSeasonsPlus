@@ -17,6 +17,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Blocks;
@@ -64,22 +65,65 @@ public class CommonSnowBlockFeature {
         return tickCounter;
     }
 
+
+    public static final class NeedRefilling {
+        private static boolean value;
+        private static int counter;
+
+        public static int getCounter() {
+            return counter;
+        }
+
+        public static void set(boolean newValue, int newCounter) {
+            value = newValue;
+            counter = newCounter;
+        }
+
+        public static boolean doesNeedRefilling() {
+            return value && counter > 5;
+        }
+    }
+
+
     public static void handleServerTick(MinecraftServerInvoker server, ServerLevel level) {
         long t0All = System.nanoTime();
         ++tickCounter;
+
         if (level != null && !level.isClientSide()) {
 
-            if (tickCounter % tickThresholdSnowReplacer == 0 || (tickCounter % tickThresholdSnowReplacerForHotSeasons == 0) && EnvironmentHelper.isHotSeason()) {
+            int viewDist = Math.min(level.getServer().getPlayerList().getViewDistance(), 16);
+            if (tickCounter % tickThresholdSnowReplacer == 0&&tickCounter>500) {
                 replaceSnowBlocks(level);
                 updatePlayerPositions(level.players());
+                if(NeedRefilling.doesNeedRefilling()){
+                    NeedRefilling.set(false,0);
+                    if (ChunkQueue.isEmpty()) {
+                        Memory.erase();
+                        for (ServerPlayer player : playerPositions.keySet()) {
+                            ChunkPos center = player.chunkPosition();
+                            for (int dx = -viewDist; dx <= viewDist; dx++) {
+                                for (int dz = -viewDist; dz <= viewDist; dz++) {
+                                    int cx = center.x + dx;
+                                    int cz = center.z + dz;
+
+                                    if (!level.hasChunk(cx, cz)) continue;
+                                    ChunkQueue.tryAdd(new ChunkPos(cx, cz), false);
+                                }
+                            }
+                        }
+                    }
+                }
             }
             if (ChunkQueue.isEmpty()) {
                 ChunkQueue.shuffle();
                 long dtAll = (System.nanoTime() - t0All) / 1_000_000L;
                 LOGGER.info("Processed up to {} chunks in {} ms; queue size={}", MemoryHandler.getMaxChunksToProcessPerTick(), dtAll, ChunkQueue.size());
+                NeedRefilling.set(true,NeedRefilling.getCounter()+1);
                 return;
             }
-
+            NeedRefilling.set(false,0);
+            LOGGER.info("Will try to process {} chunks", ChunkQueue.size());
+            int oldSize = ChunkQueue.size();
             for (int i = 0; i < Mth.clamp(ChunkQueue.size(), 0, MemoryHandler.getMaxChunksToProcessPerTick()); i++) {
                 long t0 = System.nanoTime();
                 ChunkQueue.Entry entry = ChunkQueue.pop();
@@ -88,61 +132,66 @@ public class CommonSnowBlockFeature {
                 int sittingFor = entry.sittingFor();
                 int workLeft = entry.workLeft();
 
+                long lastSkipped = entry.lastSkipped();
+
                 // Check that not only the chunk is loaded, but its neighbors too. This is because, when sending block
                 // updates that cross a chunk boundary, it will block until that chunk is loaded, which will cause
                 // immense delay. The advantage of doing it all in a massive if-statement is that we immediately break if
                 // one of the chunks isn't loaded, instead of waiting to check them all.
+                long now = level.getGameTime();
                 if (!level.hasChunk(chunkPos.x, chunkPos.z)
                         || !level.hasChunk(chunkPos.x - 1, chunkPos.z - 1)
                         || !level.hasChunk(chunkPos.x + 1, chunkPos.z - 1)
                         || !level.hasChunk(chunkPos.x - 1, chunkPos.z + 1)
                         || !level.hasChunk(chunkPos.x + 1, chunkPos.z + 1)) {
+
+
                     if (sittingFor < 100) {
-                        ChunkQueue.add(new ChunkQueue.Entry(chunkPos, sittingFor + 1, workLeft), false);
+                        ChunkQueue.add(new ChunkQueue.Entry(chunkPos, sittingFor + 1, workLeft,now), false);
                         i--; // Act as if we never began processing this chunk, to make sure we at least process something.
                     } else {
                         // It's been sitting for a while, and it's still not loaded. Let's just forget it -- it'll make its
                         // way back into the queue eventually.
-                        Memory.forget(chunkPos);
+                        Memory.remember(chunkPos);
                     }
+                    continue;
+                }
+                if (now - lastSkipped < MemoryHandler.getForgetTime()) {
+                    i--;
                     continue;
                 }
 
                 processChunk(level,
-                        SeasonHelper.getSeasonState(level).getSubSeason(), SnowUtils.getCachedBiomeTemperature(level, chunkPos.getWorldPosition(), SeasonHelper.getSeasonState(level).getSubSeason()), workLeft, sittingFor, chunkPos);
+                        SeasonHelper.getSeasonState(level).getSubSeason(), SnowUtils.getCachedBiomeTemperature(level, chunkPos.getWorldPosition(), SeasonHelper.getSeasonState(level).getSubSeason()), entry);
+                if (playerPositions.keySet().stream().anyMatch(serverPlayer ->
+                        serverPlayer.position().closerThan(chunkPos.getWorldPosition().getCenter(), viewDist*8))) {
+                    Memory.forget(chunkPos);
+                    ChunkQueue.tryAdd(chunkPos,false);
+                }
                 if (!server.tempsEcoule() && i >= MemoryHandler.getMinChunksToProcessPerTick()) {
                     break;
                 }
+
                 long dt = (System.nanoTime() - t0) / 1_000_000L;
                 LOGGER.info("Processed chunk {} in {} ms; queue size={}", chunkPos, dt, ChunkQueue.size());
             }
 
-             for (ServerPlayer player : level.players()) {
-                ChunkPos center = player.chunkPosition();
-                int viewDist = Math.min(level.getServer().getPlayerList().getViewDistance(),16);
 
-                for (int dx = -viewDist; dx <= viewDist; dx++) {
-                    for (int dz = -viewDist; dz <= viewDist; dz++) {
-                        int cx = center.x + dx;
-                        int cz = center.z + dz;
-
-                        if (!level.hasChunk(cx, cz)) continue;
-                        ChunkQueue.tryAdd(new ChunkPos(cx, cz), false);
-
-                    }
-                }
-            }
             long dtAll = (System.nanoTime() - t0All) / 1_000_000L;
-            LOGGER.info("Processed up to {} chunks in {} ms; queue size={}", MemoryHandler.getMaxChunksToProcessPerTick(), dtAll, ChunkQueue.size());
-
+            LOGGER.info("Processed up to {} chunks in {} ms; queue size={}; old queue size ={}", MemoryHandler.getMaxChunksToProcessPerTick(), dtAll, ChunkQueue.size(), oldSize);
 
         }
     }
 
 
-    public static void processChunk(ServerLevel level, Season.SubSeason sub, float temperature, int workLeft, int sittingFor, ChunkPos chunkPos) {
+    public static void processChunk(ServerLevel level, Season.SubSeason sub, float temperature, ChunkQueue.Entry entry) {
 
         WeatherDecision decision = HANDLER.decideWeatherAction(level, sub, temperature);
+        int workLeft = entry.workLeft();
+        int sittingFor = entry.sittingFor();
+        ChunkPos chunkPos = entry.pos();
+        long lastSkipped = entry.lastSkipped();
+        long now = level.getGameTime();
 
         int budget = switch (decision.priority()) {
             case URGENT -> 256;       // full wipe
@@ -165,16 +214,14 @@ public class CommonSnowBlockFeature {
             case CLEAR -> clearSnowAndIce(level, chunkPos); // full wipe, no budget
 
             case NONE -> {
+                Memory.remember(chunkPos);
                 return;
             } // skip
         }
 
         // requeue if still work left
         if (workLeft > budget) {
-            ChunkQueue.add(
-                    new ChunkQueue.Entry(chunkPos, sittingFor, workLeft - budget),
-                    false
-            );
+            ChunkQueue.add(entry,false);
         }
     }
 
@@ -310,33 +357,34 @@ public class CommonSnowBlockFeature {
 
         for (int worldX = baseX; worldX <= maxX; ++worldX) {
             for (int worldZ = baseZ; worldZ <= maxZ; ++worldZ) {
-                int topY = level.getHeight(Heightmap.Types.MOTION_BLOCKING, worldX, worldZ);
-                int startY = topY + 1;
-                int endY = Math.max(minY, topY - 8);
-
-                for (int y = startY; y >= endY; --y) {
-                    mutable.set(worldX, y, worldZ);
-                    BlockState state = level.getBlockState(mutable);
-                    action.accept(mutable, state);
-                }
-
-                // Handle snow under trees as well
-                BlockPos noLeavesPos = level.getHeightmapPos(
-                        Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                        new BlockPos(worldX, 0, worldZ)
-                );
-                if (noLeavesPos.getY() != topY) {
-                    int nlTopY = noLeavesPos.getY();
-                    int nlStart = nlTopY + 1;
-                    int nlEnd = Math.max(minY, nlTopY - 8);
-
-                    for (int y = nlStart; y >= nlEnd; --y) {
-                        mutable.set(worldX, y, worldZ);
-                        BlockState state = level.getBlockState(mutable);
-                        action.accept(mutable, state);
-                    }
-                }
+                columnsLogic(level, action, worldX, worldZ, minY, mutable);
             }
+        }
+    }
+
+    private static void columnsLogic(ServerLevel level, BiConsumer<BlockPos.MutableBlockPos, BlockState> action, int worldX, int worldZ, int minY, BlockPos.MutableBlockPos mutable) {
+        int topY = level.getHeight(Heightmap.Types.MOTION_BLOCKING, worldX, worldZ);
+        checkHeight(level, action, worldX, worldZ, minY, mutable, topY);
+
+        // Handle snow under trees as well
+        BlockPos noLeavesPos = level.getHeightmapPos(
+                Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                new BlockPos(worldX, 0, worldZ)
+        );
+        if (noLeavesPos.getY() != topY) {
+            int nlTopY = noLeavesPos.getY();
+            checkHeight(level, action, worldX, worldZ, minY, mutable, nlTopY);
+        }
+    }
+
+    private static void checkHeight(ServerLevel level, BiConsumer<BlockPos.MutableBlockPos, BlockState> action, int worldX, int worldZ, int minY, BlockPos.MutableBlockPos mutable, int nlTopY) {
+        int nlStart = nlTopY + 1;
+        int nlEnd = Math.max(minY, nlTopY - 8);
+
+        for (int y = nlStart; y >= nlEnd; --y) {
+            mutable.set(worldX, y, worldZ);
+            BlockState state = level.getBlockState(mutable);
+            action.accept(mutable, state);
         }
     }
 
@@ -354,7 +402,7 @@ public class CommonSnowBlockFeature {
         }
 
         // Normal snowfall
-        iterateChunkColumns(level, chunkPos, (pos, state) -> {
+        sampleRandomChunkColumns(level, chunkPos,4, (pos, state) -> {
             if (processed[0] >= budget) return;
 
             if (level.isEmptyBlock(pos.below())) return;
@@ -366,6 +414,22 @@ public class CommonSnowBlockFeature {
         });
     }
 
+    private static void sampleRandomChunkColumns(ServerLevel level, ChunkPos chunkPos,int attempts, BiConsumer<BlockPos.MutableBlockPos, BlockState> action) {
+        int minY = level.getMinBuildHeight();
+        int baseX = chunkPos.getMinBlockX();
+        int baseZ = chunkPos.getMinBlockZ();
+        BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
+        RandomSource random = level.random;
+        for (int i = 0; i < attempts; i++) {
+            int worldX = baseX + random.nextInt(16);
+            int worldZ = baseZ + random.nextInt(16);
+
+            // get top surface height
+            columnsLogic(level, action, worldX, worldZ, minY, mutable);
+        }
+    }
+
+
     protected static void doSnowStormPiling(ServerLevel level, ChunkPos chunkPos,
                                             int maxLayers, int budget) {
         final int[] processed = {0};
@@ -373,7 +437,7 @@ public class CommonSnowBlockFeature {
 
         int cap = Mth.clamp(maxLayers, 1, 8);
 
-        iterateChunkColumns(level, chunkPos, (pos, state) -> {
+        sampleRandomChunkColumns(level, chunkPos,16, (pos, state) -> {
             if (processed[0] >= budget) return;
 
             int step = (cap <= 2) ? 1 : rng.nextInt(1, cap); // inclusive 1..cap-1
@@ -561,6 +625,7 @@ public class CommonSnowBlockFeature {
         snowStormEnabled = snowStorm;
         Memory.erase();
         ChunkQueue.clear();
+
     }
 
     public static void onServerStopping() {
@@ -600,32 +665,46 @@ public class CommonSnowBlockFeature {
      * layer to an existing snow block that is below max height.
      */
     public static void placeSnowAt(ServerLevel level, BlockPos pos) {
-        BlockState current = level.getBlockState(pos);
-
         // case 1: already snow with <8 layers → increment
-        if (current.is(Blocks.SNOW) && current.hasProperty(SnowLayerBlock.LAYERS)) {
-            int layers = current.getValue(SnowLayerBlock.LAYERS);
-            if (layers < 8) {
-                level.setBlock(
-                        pos,
-                        current.setValue(SnowLayerBlock.LAYERS, layers + 1),
-                        Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE
-                );
+        BlockPos.MutableBlockPos cursor = pos.mutable();
+        BlockState current = level.getBlockState(cursor);
+
+        while (true) {
+            if (current.is(Blocks.SNOW) && current.hasProperty(SnowLayerBlock.LAYERS)) {
+                int layers = current.getValue(SnowLayerBlock.LAYERS);
+                if (layers < 8) {
+                    // stack one more layer
+                    level.setBlock(
+                            cursor,
+                            current.setValue(SnowLayerBlock.LAYERS, layers + 1),
+                            Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE
+                    );
+                    return; // stop after success
+                }
+
+                // full block, check above
+                cursor.move(0, 1, 0);
+                current = level.getBlockState(cursor);
+                continue;
             }
+
+            // empty block → place fresh snow with 1 layer
+            if (level.isEmptyBlock(cursor)) {
+                BlockState snow = Blocks.SNOW.defaultBlockState();
+                if (snow.canSurvive(level, cursor)) {
+                    level.setBlock(
+                            cursor,
+                            snow.setValue(SnowLayerBlock.LAYERS, 1),
+                            Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE
+                    );
+                }
+                return; // stop after success
+            }
+
+            // hit a solid block, stop
             return;
         }
 
-        // case 2: empty block that can hold snow → place new snow
-        if (level.isEmptyBlock(pos)) {
-            BlockState snow = Blocks.SNOW.defaultBlockState();
-            if (snow.canSurvive(level, pos)) {
-                level.setBlock(
-                        pos,
-                        snow,
-                        Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE
-                );
-            }
-        }
     }
 
     public record WeatherDecision(Action action, Priority priority) {

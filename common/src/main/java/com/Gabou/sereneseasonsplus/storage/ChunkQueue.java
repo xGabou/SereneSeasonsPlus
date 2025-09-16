@@ -16,14 +16,17 @@ public class ChunkQueue {
         if (Memory.hasForgotten(chunkPos)) {
             Memory.remember(chunkPos);
             // Each chunk has 256 surface columns
-            add(new Entry(chunkPos, 0, 256), currentTick);
+            add(new Entry(chunkPos, 0, 256,0), currentTick);
         }
     }
+
+
+
 
     public static void tryAdd(ChunkPos chunkPos, boolean currentTick, int workLeft) {
         if (Memory.hasForgotten(chunkPos)) {
             Memory.remember(chunkPos);
-            add(new Entry(chunkPos, 0, workLeft), currentTick);
+            add(new Entry(chunkPos, 0, workLeft,0), currentTick);
         }
     }
 
@@ -61,7 +64,17 @@ public class ChunkQueue {
         nextTickChunks.clear();
     }
 
-    public record Entry(ChunkPos pos, int sittingFor, int workLeft) {}
+
+    public static void lastSkipped(Entry entry, long newLastSkipped) {
+        currentTickChunks.remove(entry);
+        currentTickChunks.add(entry.withLastSkipped(newLastSkipped));
+    }
+
+    public record Entry(ChunkPos pos, int sittingFor, int workLeft,long lastSkipped) {
+        public Entry withLastSkipped(long newLastSkipped) {
+            return new Entry(pos, sittingFor, workLeft, newLastSkipped);
+        }
+    }
 
 
 }

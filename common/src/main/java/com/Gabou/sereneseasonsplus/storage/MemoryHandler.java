@@ -10,7 +10,7 @@ public class MemoryHandler {
     // Default values (will be overwritten by config)
     private static long forgetTime = 600;
     private static int maxChunksToProcessPerTick =10;
-    private static int minChunksToProcessPerTick = 1;
+    private static int minChunksToProcessPerTick = 3;
 
     // Private constructor prevents instantiation
     private MemoryHandler() {}
