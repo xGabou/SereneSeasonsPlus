@@ -88,25 +88,12 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
         event.enqueueWork(() -> {
             SereneSeasonsPlusClientForge.init(context);
         });
+        MinecraftForge.EVENT_BUS.register(SereneSeasonsPlusClientForge.class);
+
 
     }
 
-    @OnlyIn(Dist.CLIENT)
-    private static boolean shown = false;
 
-
-    @SubscribeEvent @OnlyIn(Dist.CLIENT)
-    public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase == TickEvent.Phase.END) {
-            if (!shown && !PerfChecker.hasPerfMod()) {
-                Minecraft mc = Minecraft.getInstance();
-                if (mc.screen == null) { // wait until no other screen is open
-                    mc.setScreen(new PerformanceWarning());
-                    shown = true;
-                }
-            }
-        }
-    }
 
     /**
      * Fired when the server is stopping. Shuts down background services.

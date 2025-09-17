@@ -24,8 +24,7 @@ public class ServerLevelMixin {
                     target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V",
                     shift = At.Shift.AFTER,
                     ordinal = 0
-            ),
-            remap = false
+            )
     )
     private void snow$addToQueue(LevelChunk chunk, int randomTickSpeed, CallbackInfo ci) {
         if(CommonSnowBlockFeature.getTickCounter()<500)
