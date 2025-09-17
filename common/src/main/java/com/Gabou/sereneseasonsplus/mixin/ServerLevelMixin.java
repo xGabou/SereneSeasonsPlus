@@ -18,7 +18,7 @@ import sereneseasons.api.season.SeasonHelper;
 @Mixin(ServerLevel.class)
 public class ServerLevelMixin {
     @Inject(
-            method = "tickChunk(Lnet/minecraft/world/level/chunk/LevelChunk;I)V",
+            method = "tickChunk",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V",
