@@ -1,0 +1,88 @@
+plugins {
+    id 'net.neoforged.gradle.userdev' version '7.0.192'
+    id "net.neoforged.gradle.mixin" version "7.+"
+    id "com.matthewprenger.cursegradle" version "1.4.0"
+}
+
+base.archivesName.set("${mod_name}-neoforge")
+
+mixin {
+    config "${mod_id}.mixins.json"
+    config "${mod_id}.neoforge.mixins.json"
+}
+
+minecraft {
+    mappings {
+        channel = official()
+        version.put "minecraft", minecraft_version
+    }
+
+    runs {
+        configureEach {
+            modSource project.sourceSets.main
+        }
+
+        client {
+            workingDirectory.set(project.file("run"))
+            systemProperty "neoforge.enabledGameTestNamespaces", mod_id
+            jvmArguments.add("-Ddevauth.enabled=true")
+            jvmArguments.add("-Ddevauth.account=main")
+            jvmArguments.add("-Dlog4j2.level=DEBUG")
+        }
+
+        server {
+            workingDirectory.set(project.file("run"))
+            systemProperty "neoforge.enabledGameTestNamespaces", mod_id
+            jvmArguments.add("-Dlog4j2.level=DEBUG")
+        }
+        data {
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', project(':Common').file('src/generated/resources/').getAbsolutePath(), '--existing', project(':Common').file('src/main/resources/').getAbsolutePath()
+        }
+    }
+}
+configurations.all {
+    // Keep NeoForge's ASM 9.8
+    resolutionStrategy.force "org.ow2.asm:asm:9.8",
+            "org.ow2.asm:asm-commons:9.8",
+            "org.ow2.asm:asm-tree:9.8",
+            "org.ow2.asm:asm-util:9.8",
+            "org.ow2.asm:asm-analysis:9.8"
+
+    // Prevent older ASM from leaking in
+    exclude group: "org.ow2.asm", module: "asm-all"
+    exclude group: "org.ow2.asm", module: "asm-debug-all"
+}
+
+dependencies {
+    implementation "net.neoforged:neoforge:${neo_version}"
+    implementation project(":Common") // gives you sources & resources
+    implementation "curse.maven:serene-seasons-291874:5420644"
+    implementation "curse.maven:glitchcore-955399:5352264"
+    implementation "curse.maven:betterdays-895618:5477588"
+    compileOnly "curse.maven:spectrelib-993948:5217603"
+    runtimeOnly "me.djtheredstoner:DevAuth-neoforge:1.2.1"
+    //runtimeOnly "curse.maven:rubidium-extra-654373:5176872"
+    //runtimeOnly "curse.maven:embeddium-908741:5521869"
+}
+TaskCollection.metaClass.excludingNeoTasks = { ->
+    delegate.matching { !it.name.startsWith("neo") }
+}
+tasks.withType(JavaCompile).excludingNeoTasks().configureEach {
+    source(project(":Common").sourceSets.main.allSource)
+}
+
+tasks.withType(Javadoc).excludingNeoTasks().configureEach {
+    source(project(":Common").sourceSets.main.allJava)
+}
+tasks.named("sourcesJar", Jar) {
+    from(project(":Common").sourceSets.main.allSource)
+}
+tasks.withType(ProcessResources).excludingNeoTasks().configureEach {
+    from project(":Common").sourceSets.main.resources
+    filesMatching("${mod_id}.mixins.json") {
+        expand "refmap_target": "${mod_id}."
+    }
+}
+
+
+

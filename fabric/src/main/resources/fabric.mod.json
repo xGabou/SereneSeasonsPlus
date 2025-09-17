@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${mod_version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
+  "authors": [
+    "Gabou"
+  ],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "logo.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.Gabou.sereneseasonsplus.SereneSeasonsPlusFabric"
+    ],
+    "client": [
+      "net.Gabou.sereneseasonsplus.client.SereneSeasonsPlusClientFabric"
+    ],
+    "modmenu": [
+      "net.Gabou.sereneseasonsplus.client.SereneSeasonsPlusModMenu"
+    ]
+  },
+  "mixins": [
+    "sereneseasonsplus.mixins.json",
+    "sereneseasonsplus.fabric.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.0",
+    "fabric": "*",
+    "modmenu": ">=7.0.0",
+    "minecraft": "1.20.4",
+    "betterdays": "*",
+    "sereneseasons": "*"
+  },
+
+  "suggests": {
+  }
+}
