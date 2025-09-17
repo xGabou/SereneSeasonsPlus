@@ -63,25 +63,11 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
      */
     private void clientSetup(final FMLClientSetupEvent event, ModLoadingContext modContainer) {
         LOGGER.info("Setting up Serene Seasons Plus (Client)");
-        event.enqueueWork(() -> new SereneSeasonsPlusNeoForgeClient(modContainer));
+        event.enqueueWork(() -> SereneSeasonsPlusNeoForgeClient.init(modContainer));
+        NeoForge.EVENT_BUS.register(SereneSeasonsPlusNeoForgeClient.class);
 
     }
-    @OnlyIn(Dist.CLIENT)
-    private static boolean shown = false;
 
-
-    @SubscribeEvent @OnlyIn(Dist.CLIENT)
-    public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase == TickEvent.Phase.END) {
-            if (!shown && !PerfChecker.hasPerfMod()) {
-                Minecraft mc = Minecraft.getInstance();
-                if (mc.screen == null) { // wait until no other screen is open
-                    mc.setScreen(new PerformanceWarning());
-                    shown = true;
-                }
-            }
-        }
-    }
 
     @SubscribeEvent
     /**

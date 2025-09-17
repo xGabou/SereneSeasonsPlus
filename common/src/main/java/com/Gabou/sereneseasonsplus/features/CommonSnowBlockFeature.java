@@ -215,8 +215,6 @@ public class CommonSnowBlockFeature {
             case ACCELERATED -> level.getRandom().nextInt(48) + 1;   // faster
            case GRADUAL -> level.getRandom().nextInt(5) + 1; // 1–5
         };
-
-        LOGGER.info(decision.priority() + "" + decision.action());
         switch (decision.action()) {
             case SNOW -> doSnowFall(level, entry, budget);
 
