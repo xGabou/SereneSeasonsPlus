@@ -16,4 +16,5 @@ dependencies {
     compileOnly "curse.maven:betterdays-895618:5477563"
     compileOnly "com.illusivesoulworks.spectrelib:spectrelib-common:0.16.1+1.20.6"
     compileOnly group:'org.spongepowered', name: 'mixin', version: '0.8.5'
+    implementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-common", version: "${whitenoise_version}"
 }

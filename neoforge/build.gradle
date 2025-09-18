@@ -59,7 +59,7 @@ dependencies {
     implementation "curse.maven:serene-seasons-291874:5420644"
     implementation "curse.maven:glitchcore-955399:5352264"
     implementation "curse.maven:betterdays-895618:5477588"
-    implementation "com.illusivesoulworks.spectrelib:spectrelib-neoforge:0.16.1+1.20.6"
+    implementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-neoforge", version: "${whitenoise_version}"
     runtimeOnly "me.djtheredstoner:DevAuth-neoforge:1.2.1"
     //runtimeOnly "curse.maven:rubidium-extra-654373:5176872"
     //runtimeOnly "curse.maven:embeddium-908741:5521869"
