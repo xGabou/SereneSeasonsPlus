@@ -27,7 +27,7 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
     }
 
     @Override
-    public WeatherDecision decideWeatherAction(ServerLevel level, Season.SubSeason sub, float temperature, boolean coldEnoughToSnow) {
+    public WeatherDecision decideWeatherAction(ServerLevel level, Season.SubSeason sub, float temperature, boolean coldEnoughToSnow, BlockPos pos) {
         // Treat snow as the highest priority outcome
         // Suggest using 0.15F to match vanilla coldEnoughToSnow threshold
         final boolean isPrecip = level.isRaining();

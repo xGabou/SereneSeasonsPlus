@@ -26,7 +26,6 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
      */
     public SereneExtendedList(Minecraft mc, int width, int height, int top, int itemHeight) {
         super(mc, width, height, top, itemHeight);
-        this.setRenderBackground(false);
     }
 
     /**

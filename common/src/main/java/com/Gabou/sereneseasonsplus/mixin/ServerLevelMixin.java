@@ -45,7 +45,7 @@ public class ServerLevelMixin {
         }
 
         // Rain change (or PA override)
-        boolean isRaining = EnvironmentHelper.isRainning(level); // or level.isSnowStormAt(chunkPos) if PA present
+        boolean isRaining = EnvironmentHelper.isRainning(level,chunk.getPos().getMiddleBlockPosition(65)); // or level.isSnowStormAt(chunkPos) if PA present
         if (isRaining != tracked.sereneseasonsplus$wasRaining()) {
             tracked.sereneseasonsplus$setWasRaining(isRaining);
             tracked.sereneseasonsplus$setNeedsSnowUpdate(true);

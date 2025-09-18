@@ -17,9 +17,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SnowLayerBlock;
@@ -31,11 +29,9 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 
-import javax.swing.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
@@ -209,14 +205,13 @@ public class CommonSnowBlockFeature {
         ChunkPos chunkPos = entry.pos();
 //        if(entry.pos().equals(new ChunkPos(341, -97)))
 //            //LOGGER.info("Processing chunk 341,-97");
-        WeatherDecision decision = HANDLER.decideWeatherAction(level, sub, temperature,level.getBiome(chunkPos.getMiddleBlockPosition(65)).value().coldEnoughToSnow(chunkPos.getMiddleBlockPosition(65)));
+        BlockPos pos = chunkPos.getMiddleBlockPosition(65);
+        WeatherDecision decision = HANDLER.decideWeatherAction(level, sub, temperature,level.getBiome(pos).value().coldEnoughToSnow(pos),pos);
         int budget = switch (decision.priority()) {
             case URGENT -> 256;       // full wipe
             case ACCELERATED -> level.getRandom().nextInt(48) + 1;   // faster
-           case GRADUAL -> level.getRandom().nextInt(5) + 1; // 1–5
+            case GRADUAL -> level.getRandom().nextInt(5) + 1; // 1–5
         };
-
-        LOGGER.info(decision.priority() + "" + decision.action());
         switch (decision.action()) {
             case SNOW -> doSnowFall(level, entry, budget);
 
@@ -568,7 +563,7 @@ public class CommonSnowBlockFeature {
         }
 
         // Rain change (or PA override)
-        boolean isRaining = EnvironmentHelper.isRainning(level); // or level.isSnowStormAt(chunkPos) if PA present
+        boolean isRaining = EnvironmentHelper.isRainning(level,chunkPos.getMiddleBlockPosition(65)); // or level.isSnowStormAt(chunkPos) if PA present
         if (isRaining != tracked.sereneseasonsplus$wasRaining()) {
             tracked.sereneseasonsplus$setWasRaining(isRaining);
             tracked.sereneseasonsplus$setNeedsSnowUpdate(true);

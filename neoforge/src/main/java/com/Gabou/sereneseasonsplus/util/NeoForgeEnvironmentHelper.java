@@ -2,6 +2,7 @@ package com.Gabou.sereneseasonsplus.util;
 
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
@@ -55,7 +56,7 @@ public class NeoForgeEnvironmentHelper implements IEnvironmentHelper{
 
 
     @Override
-    public boolean isRainning(ServerLevel level) {
+    public boolean isRainning(ServerLevel level, BlockPos pos) {
         return level.isRaining();
     }
 

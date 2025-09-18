@@ -59,7 +59,7 @@ dependencies {
     implementation "curse.maven:serene-seasons-291874:5420644"
     implementation "curse.maven:glitchcore-955399:5352264"
     implementation "curse.maven:betterdays-895618:5477588"
-    compileOnly "curse.maven:spectrelib-993948:5217603"
+    implementation "com.illusivesoulworks.spectrelib:spectrelib-neoforge:0.16.1+1.20.6"
     runtimeOnly "me.djtheredstoner:DevAuth-neoforge:1.2.1"
     //runtimeOnly "curse.maven:rubidium-extra-654373:5176872"
     //runtimeOnly "curse.maven:embeddium-908741:5521869"
@@ -80,7 +80,7 @@ tasks.named("sourcesJar", Jar) {
 tasks.withType(ProcessResources).excludingNeoTasks().configureEach {
     from project(":Common").sourceSets.main.resources
     filesMatching("${mod_id}.mixins.json") {
-        expand "refmap_target": "${mod_id}."
+        expand "refmap_target": "sereneseasonplus."
     }
 }
 
