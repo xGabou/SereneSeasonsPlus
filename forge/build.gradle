@@ -77,11 +77,15 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     compileOnly project(":Common")
     // tes dépendances Forge spécifiques
-    implementation fg.deobf("curse.maven:betterdays-895618:5877548")
+    implementation fg.deobf("curse.maven:betterdays-895618:6998167")
     //compileOnly fg.deobf("curse.maven:project-atmosphere-1258344:6994348")
     implementation fg.deobf("curse.maven:serene-seasons-291874:6398227")
     implementation fg.deobf("curse.maven:glitchcore-955399:5787839")
-    implementation fg.deobf("curse.maven:spectrelib-993948:5217603")
+    implementation fg.deobf(group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-forge", version: "${whitenoise_version}")
+    jarJar fg.deobf(group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-forge", version: "${whitenoise_version}") {
+        jarJar.pin(it, "${whitenoise_version}")
+        jarJar.ranged(it, "${whitenoise_range}")
+    }
     runtimeOnly("me.djtheredstoner:DevAuth-forge-latest:1.2.1")
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     //runtimeOnly "curse.maven:embeddium-908741:5681725"

@@ -25,6 +25,7 @@ public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
             if (temperature >= 0.15F) {
                 return CommonSnowBlockFeature.calculateBlocksToReplace(temperature);
             }
+
         } else {
             float temperature = ForecastOrchestrator.getCurrentTemperature(
                     new BiomeInstanceKey(level.getBiome(playerPos).unwrapKey().get().location(), playerPos),
@@ -35,7 +36,7 @@ public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
                 return CommonSnowBlockFeature.calculateBlocksToReplace1(temperature);
             }
         }
-        return 0;
+        return -level.random.nextInt(2,6);
     }
 
     @Override

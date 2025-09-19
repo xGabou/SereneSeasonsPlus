@@ -69,6 +69,10 @@ subprojects {
         maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
         maven { url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1" }
         flatDir { dir 'libs' }
+        maven {
+            name = 'WhiteNoise' // Library for wendall911 mods
+            url = 'https://raw.githubusercontent.com/wendall911/maven/main/'
+        }
     }
 
     tasks.withType(JavaCompile).configureEach {

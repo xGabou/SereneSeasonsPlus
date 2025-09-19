@@ -52,13 +52,14 @@ dependencies {
     implementation project(":Common")
 
     // tes dépendances Fabric spécifiques
-    modImplementation "curse.maven:betterdays-895618:6915866"
+    modImplementation "curse.maven:betterdays-895618:6998166"
     modImplementation "curse.maven:serene-seasons-291874:6398228"
     modImplementation "curse.maven:glitchcore-955399:5787838"
     modImplementation "curse.maven:modmenu-308702:5162837"
-    modImplementation "curse.maven:spectrelib-993948:5217601"
     include implementation("com.electronwill.night-config:toml:${nightconfig_version}")
     include implementation("com.electronwill.night-config:core:${nightconfig_version}")
     include implementation("net.jodah:typetools:0.6.3")
     runtimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.1")
+    modImplementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_range}"
+    include group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_version}"
 }
