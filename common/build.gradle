@@ -13,7 +13,7 @@ dependencies {
     // Common-only compile-time deps used by shared utilities
     compileOnly "curse.maven:serene-seasons-291874:5206533"
     compileOnly "curse.maven:glitchcore-955399:5088442"
-    compileOnly "curse.maven:betterdays-895618:5477563"
-    compileOnly "com.illusivesoulworks.spectrelib:spectrelib-common:0.17.2+1.21"
+    compileOnly "curse.maven:betterdays-895618:6999804"
     compileOnly group:'org.spongepowered', name: 'mixin', version: '0.8.5'
+    implementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-common", version: "${whitenoise_version}"
 }

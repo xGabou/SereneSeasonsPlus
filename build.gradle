@@ -76,6 +76,11 @@ subprojects {
         maven { url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1" }
         maven { url "https://maven.theillusivec4.top/" }
 
+        maven {
+            name = 'WhiteNoise' // Library for wendall911 mods
+            url = 'https://raw.githubusercontent.com/wendall911/maven/main/'
+        }
+
     }
 
     tasks.withType(JavaCompile).configureEach {
