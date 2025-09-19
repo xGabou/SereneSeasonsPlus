@@ -44,10 +44,14 @@ public class ServerLevelMixin {
         }
 
         // Rain change (or PA override)
-        boolean isRaining = EnvironmentHelper.isRainning(level,chunk.getPos().getMiddleBlockPosition(65)); // or level.isSnowStormAt(chunkPos) if PA present
+        boolean isRaining = EnvironmentHelper.isRainning(level,chunk.getPos().getMiddleBlockPosition(65)); // or PA override inside platform handler
         if (isRaining != tracked.sereneseasonsplus$wasRaining()) {
             tracked.sereneseasonsplus$setWasRaining(isRaining);
             tracked.sereneseasonsplus$setNeedsSnowUpdate(true);
+            // Reset per-storm piling memory when precipitation stops
+            if (!isRaining) {
+                tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(false);
+            }
         }
 
         if (tracked.sereneseasonsplus$needsSnowUpdate()) {

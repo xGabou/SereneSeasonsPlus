@@ -51,7 +51,8 @@ public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
         );
 
         final boolean isPrecip = AtmoApi.getInstance().isRainningAt(level, pos);
-        final boolean wantsSnow = isPrecip && temperature < 0.1F;
+        // In PA, require temps below 0.4°C for piling
+        final boolean wantsSnow = isPrecip && temperature < 0.4F;
 
         Action action = Action.NONE;
         Priority priority = Priority.GRADUAL;

@@ -14,6 +14,8 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     private Season.SubSeason sereneseasonsplus$lastSeason = null;
     @Unique
     private boolean sereneseasonsplus$wasRaining = false;
+    @Unique
+    private boolean sereneseasonsplus$hasReceivedSnowLayerThisStorm = false;
 
     @Override
     public boolean sereneseasonsplus$needsSnowUpdate() {
@@ -43,6 +45,16 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     @Override
     public void sereneseasonsplus$setWasRaining(boolean raining) {
         this.sereneseasonsplus$wasRaining = raining;
+    }
+
+    @Override
+    public boolean sereneseasonsplus$hasReceivedSnowLayerThisStorm() {
+        return sereneseasonsplus$hasReceivedSnowLayerThisStorm;
+    }
+
+    @Override
+    public void sereneseasonsplus$setHasReceivedSnowLayerThisStorm(boolean value) {
+        this.sereneseasonsplus$hasReceivedSnowLayerThisStorm = value;
     }
 }
 

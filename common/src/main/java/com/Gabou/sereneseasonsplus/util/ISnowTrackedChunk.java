@@ -11,5 +11,9 @@ public interface ISnowTrackedChunk {
 
     boolean sereneseasonsplus$wasRaining();
     void sereneseasonsplus$setWasRaining(boolean raining);
+
+    // Tracks whether this chunk already received its single noisy layer for the current storm
+    boolean sereneseasonsplus$hasReceivedSnowLayerThisStorm();
+    void sereneseasonsplus$setHasReceivedSnowLayerThisStorm(boolean value);
 }
 
