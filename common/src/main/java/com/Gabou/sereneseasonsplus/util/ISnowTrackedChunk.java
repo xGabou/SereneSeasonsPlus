@@ -15,5 +15,13 @@ public interface ISnowTrackedChunk {
     // Tracks whether this chunk already received its single noisy layer for the current storm
     boolean sereneseasonsplus$hasReceivedSnowLayerThisStorm();
     void sereneseasonsplus$setHasReceivedSnowLayerThisStorm(boolean value);
+
+    // Tracks whether the chunk should receive deep-winter initialization snow
+    boolean sereneseasonsplus$shouldApplyInitialSnow();
+    void sereneseasonsplus$setShouldApplyInitialSnow(boolean value);
+
+    // Remembers if deep-winter initialization snow has already been applied
+    boolean sereneseasonsplus$hasAppliedInitialSnow();
+    void sereneseasonsplus$setHasAppliedInitialSnow(boolean value);
 }
 

@@ -41,6 +41,8 @@
         protected static final Random RANDOM = new Random();
         protected static final Map<ServerPlayer, BlockPos> playerPositions = new ConcurrentHashMap<>();
         public static final int MAX_MEMORY = 10000;
+        private static final String INITIAL_SNOW_PERSISTENCE_KEY = "sereneseasonsplus.initial_snow";
+        private static final int INITIAL_SNOW_SCAN_DEPTH = 8;
 
         protected static boolean snowStormEnabled = false;
         protected static int tickThresholdSnowReplacer;
@@ -203,8 +205,27 @@
         public static void processChunk(ServerLevel level, Season.SubSeason sub, float temperature, ChunkQueue.Entry entry) {
             int workLeft = entry.workLeft();
             ChunkPos chunkPos = entry.pos();
-    //        if(entry.pos().equals(new ChunkPos(341, -97)))
-    //            //LOGGER.info("Processing chunk 341,-97");
+            //        if(entry.pos().equals(new ChunkPos(341, -97)))
+            //            //LOGGER.info("Processing chunk 341,-97");
+            LevelChunk levelChunk = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
+            if (levelChunk != null) {
+                ISnowTrackedChunk trackedChunk = (ISnowTrackedChunk) levelChunk;
+                if (trackedChunk.sereneseasonsplus$shouldApplyInitialSnow()
+                        && !trackedChunk.sereneseasonsplus$hasAppliedInitialSnow()) {
+                    LayerBounds deepWinterBounds = getDeepWinterLayerBounds(sub, SeasonHelper.getSeasonState(level).getDay());
+                    if (deepWinterBounds != null) {
+                        boolean placed = applyDeepWinterInitialSnow(level, chunkPos, deepWinterBounds);
+                        if (placed) {
+                            markChunkWithInitialSnow(levelChunk);
+                            trackedChunk.sereneseasonsplus$setHasAppliedInitialSnow(true);
+                        }
+                        trackedChunk.sereneseasonsplus$setShouldApplyInitialSnow(false);
+                        Memory.remember(chunkPos);
+                        return;
+                    }
+                    trackedChunk.sereneseasonsplus$setShouldApplyInitialSnow(false);
+                }
+            }
             BlockPos pos = chunkPos.getMiddleBlockPosition(65);
             WeatherDecision decision = HANDLER.decideWeatherAction(level, sub, temperature, level.getBiome(pos).value().coldEnoughToSnow(pos), pos);
             int budget = switch (decision.priority()) {
@@ -689,11 +710,25 @@
 
 
         public static void handleOnChunkLoad(LevelChunk chunk, ServerLevel level) {
-            if (tickCounter <= 500) return;
-            ChunkPos chunkPos = chunk.getPos();
-            //LOGGER.info("Loading " + chunkPos.getMiddleBlockPosition(65));
             ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
-            Season.SubSeason currentSeason = SeasonHelper.getSeasonState(level).getSubSeason();
+            if (!tracked.sereneseasonsplus$hasAppliedInitialSnow()
+                    && chunk.getPersistentData().getBoolean(INITIAL_SNOW_PERSISTENCE_KEY)) {
+                tracked.sereneseasonsplus$setHasAppliedInitialSnow(true);
+            }
+
+            ChunkPos chunkPos = chunk.getPos();
+            var seasonState = SeasonHelper.getSeasonState(level);
+            Season.SubSeason currentSeason = seasonState.getSubSeason();
+
+            // Queue deep-winter initialization if needed
+            LayerBounds deepWinterBounds = getDeepWinterLayerBounds(currentSeason, seasonState.getDay());
+            if (deepWinterBounds != null && !tracked.sereneseasonsplus$hasAppliedInitialSnow()
+                    && !chunkHasNaturalSnow(level, chunkPos)) {
+                tracked.sereneseasonsplus$setShouldApplyInitialSnow(true);
+                tracked.sereneseasonsplus$setNeedsSnowUpdate(true);
+            }
+
+            if (tickCounter <= 500) return;
 
             // First load or season changed
             if (tracked.sereneseasonsplus$getLastSeason() != currentSeason) {
@@ -715,6 +750,96 @@
                 ChunkQueue.tryAdd(chunkPos, true);
                 tracked.sereneseasonsplus$setNeedsSnowUpdate(false);
             }
+        }
+
+        private static boolean chunkHasNaturalSnow(ServerLevel level, ChunkPos chunkPos) {
+            BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+            int baseX = chunkPos.getMinBlockX();
+            int baseZ = chunkPos.getMinBlockZ();
+            int minHeight = level.getMinBuildHeight();
+
+            for (int dx = 0; dx < 16; ++dx) {
+                for (int dz = 0; dz < 16; ++dz) {
+                    int worldX = baseX + dx;
+                    int worldZ = baseZ + dz;
+                    int topY = level.getHeight(Heightmap.Types.MOTION_BLOCKING, worldX, worldZ);
+                    int startY = topY + 1;
+                    int endY = Math.max(minHeight, topY - INITIAL_SNOW_SCAN_DEPTH);
+
+                    for (int y = startY; y >= endY; --y) {
+                        cursor.set(worldX, y, worldZ);
+                        BlockState state = level.getBlockState(cursor);
+                        if (state.is(Blocks.SNOW) || state.is(Blocks.SNOW_BLOCK) || state.is(Blocks.POWDER_SNOW)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static boolean applyDeepWinterInitialSnow(ServerLevel level, ChunkPos chunkPos, LayerBounds bounds) {
+            BlockPos.MutableBlockPos placePos = new BlockPos.MutableBlockPos();
+            BlockPos.MutableBlockPos belowPos = new BlockPos.MutableBlockPos();
+            int baseX = chunkPos.getMinBlockX();
+            int baseZ = chunkPos.getMinBlockZ();
+            int minHeight = level.getMinBuildHeight();
+
+            int minLayers = Mth.clamp(bounds.minLayers(), 1, 8);
+            int maxLayers = Mth.clamp(bounds.maxLayers(), minLayers, 8);
+            RandomSource random = level.random;
+            boolean placedAny = false;
+
+            for (int dx = 0; dx < 16; ++dx) {
+                for (int dz = 0; dz < 16; ++dz) {
+                    int worldX = baseX + dx;
+                    int worldZ = baseZ + dz;
+                    int topY = level.getHeight(Heightmap.Types.MOTION_BLOCKING, worldX, worldZ);
+                    if (topY <= minHeight) continue;
+
+                    placePos.set(worldX, topY, worldZ);
+                    belowPos.set(worldX, topY - 1, worldZ);
+
+                    BlockState belowState = level.getBlockState(belowPos);
+                    if (belowState.isAir()) continue;
+                    if (!belowState.getFluidState().isEmpty()) continue;
+                    if (!level.getBiome(placePos).value().coldEnoughToSnow(placePos)) continue;
+
+                    BlockState current = level.getBlockState(placePos);
+                    if (!(current.isAir() || current.getMaterial().isReplaceable())) continue;
+                    if (current.is(Blocks.SNOW) || current.is(Blocks.SNOW_BLOCK)) continue;
+
+                    BlockState snow = Blocks.SNOW.defaultBlockState();
+                    if (!snow.canSurvive(level, placePos)) continue;
+
+                    int layers = (maxLayers == minLayers)
+                            ? minLayers
+                            : random.nextInt(minLayers, maxLayers + 1);
+                    layers = Mth.clamp(layers, minLayers, 8);
+
+                    level.setBlock(placePos, snow.setValue(SnowLayerBlock.LAYERS, layers),
+                            Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+                    placedAny = true;
+                }
+            }
+
+            return placedAny;
+        }
+
+        private static void markChunkWithInitialSnow(LevelChunk chunk) {
+            chunk.getPersistentData().putBoolean(INITIAL_SNOW_PERSISTENCE_KEY, true);
+            chunk.setUnsaved(true);
+        }
+
+        private static LayerBounds getDeepWinterLayerBounds(Season.SubSeason subSeason, int day) {
+            return switch (subSeason) {
+                case EARLY_WINTER -> (day >= 6) ? new LayerBounds(1, 3) : null;
+                case MID_WINTER -> new LayerBounds(3, 5);
+                case LATE_WINTER -> new LayerBounds(5, 7);
+                case EARLY_SPRING -> (day < 4) ? new LayerBounds(1, Math.max(1, 5 - day)) : null;
+                default -> null;
+            };
         }
 
         /**
@@ -914,6 +1039,9 @@
                             Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
                 }
             }
+        }
+
+        private record LayerBounds(int minLayers, int maxLayers) {
         }
 
         public record WeatherDecision(Action action, Priority priority) {
