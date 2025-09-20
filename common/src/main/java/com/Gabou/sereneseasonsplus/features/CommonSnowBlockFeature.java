@@ -710,6 +710,7 @@
 
 
         public static void handleOnChunkLoad(LevelChunk chunk, ServerLevel level) {
+            if (tickCounter <= 500) return;
             ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
             // Persistence is handled via natural snow detection below; avoid platform-specific chunk data in common.
 
@@ -724,9 +725,6 @@
                 tracked.sereneseasonsplus$setShouldApplyInitialSnow(true);
                 tracked.sereneseasonsplus$setNeedsSnowUpdate(true);
             }
-
-            if (tickCounter <= 500) return;
-
             // First load or season changed
             if (tracked.sereneseasonsplus$getLastSeason() != currentSeason) {
                 tracked.sereneseasonsplus$setLastSeason(currentSeason);
