@@ -3,7 +3,7 @@ package com.Gabou.sereneseasonsplus;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
-import com.Gabou.sereneseasonsplus.mixin.MinecraftServerInvoker;
+import com.Gabou.sereneseasonsplus.mixin.MinecraftServerMixin;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.FabricAsyncExecutorHandler;
 import com.Gabou.sereneseasonsplus.util.FabricEnvironmentHelper;
@@ -62,7 +62,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
     private void onWorldTick(ServerLevel level) {
         if( level.dimension() != Level.OVERWORLD) return;
         this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
-        CommonSnowBlockFeature.handleServerTick((MinecraftServerInvoker) level.getServer(), level);
+        CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
 
     }
 

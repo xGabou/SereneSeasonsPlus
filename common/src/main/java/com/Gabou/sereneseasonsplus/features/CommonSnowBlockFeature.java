@@ -1,8 +1,7 @@
     package com.Gabou.sereneseasonsplus.features;
 
     import com.Gabou.sereneseasonsplus.features.snowstorm.ISnowStormLevel;
-    import com.Gabou.sereneseasonsplus.mixin.ChunkMapInvoker;
-    import com.Gabou.sereneseasonsplus.mixin.MinecraftServerInvoker;
+    import com.Gabou.sereneseasonsplus.mixin.ChunkMapMixin;
     import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
     import com.Gabou.sereneseasonsplus.storage.Memory;
     import com.Gabou.sereneseasonsplus.storage.MemoryHandler;
@@ -86,7 +85,7 @@
 
         protected static int coolDown = 0;
 
-        public static void handleServerTick(MinecraftServerInvoker server, ServerLevel level) {
+        public static void handleServerTick(MinecraftServer server, ServerLevel level) {
             long t0All = System.nanoTime();
             ++tickCounter;
 
@@ -160,7 +159,7 @@
 
                     processChunk(level,
                             SeasonHelper.getSeasonState(level).getSubSeason(), SnowUtils.getCachedBiomeTemperature(level, chunkPos.getMiddleBlockPosition(65), SeasonHelper.getSeasonState(level).getSubSeason()), entry);
-                    if (!server.tempsEcoule() && i >= MemoryHandler.getMinChunksToProcessPerTick()) {
+                    if (!((MinecraftServerAccess)server).sereneseasonsplus$tempsEcoule() && i >= MemoryHandler.getMinChunksToProcessPerTick()) {
                         break;
 
                     }
@@ -179,11 +178,10 @@
         private static void doLogicForRefilling(ServerLevel level) {
             NeedRefilling.set(false, 0);
             Memory.erase();
-            ChunkMapInvoker chunkMap = (ChunkMapInvoker) level.getChunkSource().chunkMap;
+            ChunkMapInterfaceAccess chunkMap = (ChunkMapInterfaceAccess) level.getChunkSource().chunkMap;
 
             int viewDist = Math.min(level.getServer().getPlayerList().getViewDistance(), 8);
-
-            for (ChunkHolder chunk : chunkMap.snow$getChunks()) {
+            for (ChunkHolder chunk : chunkMap.snow$getChunksSafe() ) {
                 ChunkPos chunkPos = chunk.getPos();
 
                 boolean nearPlayer = playerPositions.values().stream().anyMatch(playerPos -> {
@@ -200,6 +198,8 @@
 
             coolDown = 0;
         }
+
+
 
 
         public static void processChunk(ServerLevel level, Season.SubSeason sub, float temperature, ChunkQueue.Entry entry) {
@@ -711,10 +711,7 @@
 
         public static void handleOnChunkLoad(LevelChunk chunk, ServerLevel level) {
             ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
-            if (!tracked.sereneseasonsplus$hasAppliedInitialSnow()
-                    && chunk.getPersistentData().getBoolean(INITIAL_SNOW_PERSISTENCE_KEY)) {
-                tracked.sereneseasonsplus$setHasAppliedInitialSnow(true);
-            }
+            // Persistence is handled via natural snow detection below; avoid platform-specific chunk data in common.
 
             ChunkPos chunkPos = chunk.getPos();
             var seasonState = SeasonHelper.getSeasonState(level);
@@ -807,7 +804,7 @@
                     if (!level.getBiome(placePos).value().coldEnoughToSnow(placePos)) continue;
 
                     BlockState current = level.getBlockState(placePos);
-                    if (!(current.isAir() || current.getMaterial().isReplaceable())) continue;
+                    if (!(current.isAir() || current.canBeReplaced())) continue;
                     if (current.is(Blocks.SNOW) || current.is(Blocks.SNOW_BLOCK)) continue;
 
                     BlockState snow = Blocks.SNOW.defaultBlockState();
@@ -828,7 +825,7 @@
         }
 
         private static void markChunkWithInitialSnow(LevelChunk chunk) {
-            chunk.getPersistentData().putBoolean(INITIAL_SNOW_PERSISTENCE_KEY, true);
+            // Avoid platform-specific persistent data in common; mark chunk dirty only.
             chunk.setUnsaved(true);
         }
 
@@ -938,12 +935,11 @@
             if (players.isEmpty()) return;
             ChunkQueue.clear();
             Memory.erase();
-            ChunkMapInvoker chunkMap = (ChunkMapInvoker) level.getChunkSource().chunkMap;
-            for (ChunkHolder chunk : chunkMap.snow$getChunks()) {
+            ChunkMapInterfaceAccess chunkMap = (ChunkMapInterfaceAccess) level.getChunkSource().chunkMap;
+            for (ChunkHolder chunk : chunkMap.snow$getChunksSafe()) {
                 ChunkQueue.tryAdd(chunk.getPos(), false);
             }
         }
-
         /**
          * Places a snow layer at the given position if empty and valid, or adds a
          * layer to an existing snow block that is below max height.
