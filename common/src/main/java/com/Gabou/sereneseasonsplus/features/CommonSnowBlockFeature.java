@@ -455,6 +455,9 @@
         public static void doSnowFall(ServerLevel level, ChunkQueue.Entry entry, int budget) {
             ChunkPos chunkPos = entry.pos();
 
+
+
+
             // Determine storm state (optional integration); do not gate by temperature here
             boolean stormActive = CommonSnowBlockFeature.isSnowStormAt(level, chunkPos);
             int stormIntensity = CommonSnowBlockFeature.getSnowStormIntensity(level, chunkPos);
@@ -463,8 +466,12 @@
             var access = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
             ISnowTrackedChunk tracked = null;
             if (access instanceof LevelChunk) {
-                tracked = (ISnowTrackedChunk) ((LevelChunk) access);
+                tracked = (ISnowTrackedChunk) access;
+                tracked.sereneseasonsplus$incrementSnowCount();
+
             }
+
+
 
             // Nearby players?
             boolean nearPlayers = isChunkNearAnyPlayer(level, chunkPos);
@@ -748,31 +755,13 @@
         }
 
         private static boolean chunkHasNaturalSnow(ServerLevel level, ChunkPos chunkPos) {
-            BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
-            int baseX = chunkPos.getMinBlockX();
-            int baseZ = chunkPos.getMinBlockZ();
-            int minHeight = level.getMinBuildHeight();
-
-            for (int dx = 0; dx < 16; ++dx) {
-                for (int dz = 0; dz < 16; ++dz) {
-                    int worldX = baseX + dx;
-                    int worldZ = baseZ + dz;
-                    int topY = level.getHeight(Heightmap.Types.MOTION_BLOCKING, worldX, worldZ);
-                    int startY = topY + 1;
-                    int endY = Math.max(minHeight, topY - INITIAL_SNOW_SCAN_DEPTH);
-
-                    for (int y = startY; y >= endY; --y) {
-                        cursor.set(worldX, y, worldZ);
-                        BlockState state = level.getBlockState(cursor);
-                        if (state.is(Blocks.SNOW) || state.is(Blocks.SNOW_BLOCK) || state.is(Blocks.POWDER_SNOW)) {
-                            return true;
-                        }
-                    }
-                }
+            LevelChunk chunk = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
+            if (chunk instanceof ISnowTrackedChunk tracked) {
+                return tracked.sereneseasonsplus$getSnowCount() > 0;
             }
-
             return false;
         }
+
 
         private static boolean applyDeepWinterInitialSnow(ServerLevel level, ChunkPos chunkPos, LayerBounds bounds) {
             BlockPos.MutableBlockPos placePos = new BlockPos.MutableBlockPos();
@@ -817,6 +806,10 @@
                             Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
                     placedAny = true;
                 }
+            }
+            if (placedAny) {
+                LevelChunk targetChunk = level.getChunk(chunkPos.x, chunkPos.z);
+                ((ISnowTrackedChunk) targetChunk).sereneseasonsplus$incrementSnowCount();
             }
 
             return placedAny;

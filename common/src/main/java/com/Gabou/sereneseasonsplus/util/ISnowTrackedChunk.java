@@ -23,5 +23,10 @@ public interface ISnowTrackedChunk {
     // Remembers if deep-winter initialization snow has already been applied
     boolean sereneseasonsplus$hasAppliedInitialSnow();
     void sereneseasonsplus$setHasAppliedInitialSnow(boolean value);
+    int sereneseasonsplus$getSnowCount();
+    void sereneseasonsplus$incrementSnowCount();
+
+    void sereneseasonsplus$setSnowCount(int value);
+
 }
 
