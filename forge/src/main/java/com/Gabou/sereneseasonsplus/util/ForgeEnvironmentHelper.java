@@ -43,6 +43,7 @@ public class ForgeEnvironmentHelper implements IEnvironmentHelper {
         season = SeasonHelper.getSeasonState(serverLevel).getSubSeason();
         LOGGER.info("Season changed to: {}", season);
         isHotSeason = HotSeason.isHotSeason(season);
+
     }
 
     @Override

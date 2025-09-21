@@ -83,7 +83,7 @@ public class SereneSeasonPlusCommon {
         if (++this.ticker >= 400) {
             this.ticker = 0;
             if (EnvironmentHelper.shouldRunMod()) {
-                Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
+                Season.SubSeason currentSubSeason = EnvironmentHelper.getCurrentSeason();
                 if (currentSubSeason != this.lastSubSeason) {
                     this.lastSubSeason = currentSubSeason;
                     if (ENABLE_SEASONAL_DAYLIGHT_CYCLE) {

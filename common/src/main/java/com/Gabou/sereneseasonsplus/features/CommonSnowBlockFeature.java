@@ -55,31 +55,33 @@ public class CommonSnowBlockFeature {
     }
 
     public static void handleServerTick(MinecraftServer server, ServerLevel level) {
-        ++tickCounter;
-
         if (level != null && !level.isClientSide()) {
-            if (tickCounter % tickThresholdSnowReplacer == 0 && tickCounter > 500) {
+            ++tickCounter;
+            if (level.random.nextInt(16)==0) {
                 updatePlayerPositions(level.players());
                 passifSnowBlocks(level);
             }
-
+            if(tickCounter % 5 !=0 && tickCounter > 100) return;
             ChunkQueue.Entry entry;
             while ((entry = ChunkQueue.poll()) != null) {
+                if (!((MinecraftServerAccess) server).sereneseasonsplus$tempsEcoule()) {
+                    break;
+                }
                 ChunkPos chunkPos = entry.pos();
                 if (!level.hasChunk(chunkPos.x, chunkPos.z)) {
                     continue;
                 }
-
                 switch (entry.type()) {
                     case APPLY_SNOW -> {
                         Season.SubSeason subSeason = entry.subSeason();
                         if (subSeason == null) {
-                            subSeason = SeasonHelper.getSeasonState(level).getSubSeason();
+                            subSeason = EnvironmentHelper.getCurrentSeason();
                         }
                         applySnowToChunk(level, chunkPos, subSeason, level.getRandom());
                     }
                     case MELT_SNOW -> meltSnowInChunk(level, chunkPos, entry.fullClear());
                 }
+
             }
         }
     }
@@ -229,10 +231,13 @@ public class CommonSnowBlockFeature {
             int radius = Mth.clamp(simulationDistance * 16, 16, 64);
 
             int blocksToReplace = HANDLER.getBlocksToReplace(level, playerPos);
-            final RandomSource random = level.random;
-            final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-            final BlockPos.MutableBlockPos below = new BlockPos.MutableBlockPos();
             if (blocksToReplace < 0) {
+
+                if(!EnvironmentHelper.isRainning(level, playerPos))return;
+
+                final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+                final BlockPos.MutableBlockPos below = new BlockPos.MutableBlockPos();
+                final RandomSource random = level.random;
                 for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
                     final int dx = random.nextInt(radius * 2 + 1) - radius;
                     final int dz = random.nextInt(radius * 2 + 1) - radius;
@@ -393,43 +398,6 @@ public class CommonSnowBlockFeature {
         }
     }
 
-    public static void doSnowFall(ServerLevel level, ChunkPos chunkPos, int budget) {
-        // Determine storm state (optional integration); do not gate by temperature here
-        boolean stormActive = CommonSnowBlockFeature.isSnowStormAt(level, chunkPos);
-        int stormIntensity = CommonSnowBlockFeature.getSnowStormIntensity(level, chunkPos);
-
-        // Access per-chunk tracked state
-        var access = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
-        ISnowTrackedChunk tracked = null;
-        if (access instanceof LevelChunk) {
-            tracked = (ISnowTrackedChunk) access;
-            tracked.sereneseasonsplus$incrementSnowCount();
-
-        }
-        // Nearby players?
-        boolean nearPlayers = isChunkNearAnyPlayer(level, chunkPos);
-
-        // doSnowFall is only called when handler decided SNOW action; avoid extra gating here
-
-        // Player-based piling for natural randomness when players are nearby
-        if (nearPlayers) {
-            if (stormActive) {
-                // Player-distributed storm piling using intensity cap
-                doPlayerBasedPiling(level, chunkPos, Math.max(1, Math.min(8, stormIntensity)), budget);
-            } else {
-                // Light snowfall around players (single-layer increments)
-                doPlayerBasedPiling(level, chunkPos, 2, Math.max(1, budget));
-            }
-            return;
-        }
-
-        // No players nearby: add a noisy random 1-4 layers once per storm
-        if (tracked != null && !tracked.sereneseasonsplus$hasReceivedSnowLayerThisStorm()) {
-            applySingleNoisyLayer(level, chunkPos);
-            tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(true);
-        }
-    }
-
     private static void sampleRandomChunkColumns(ServerLevel level, ChunkPos chunkPos, int attempts, BiConsumer<BlockPos.MutableBlockPos, BlockState> action) {
         int minY = level.getMinBuildHeight();
         int baseX = chunkPos.getMinBlockX();
@@ -445,34 +413,6 @@ public class CommonSnowBlockFeature {
         }
     }
 
-
-    protected static void doSnowStormPiling(ServerLevel level, ChunkPos chunkPos,
-                                            int maxLayers, int budget) {
-        final int[] processed = {0};
-        final RandomSource rng = level.random; // reuse
-
-        int cap = Mth.clamp(maxLayers, 1, 8);
-
-        sampleRandomChunkColumns(level, chunkPos, 16, (pos, state) -> {
-            if (processed[0] >= budget) return;
-
-            int step = (cap <= 2) ? 1 : rng.nextInt(1, cap); // inclusive 1..cap-1
-
-            if (state.is(Blocks.SNOW) && state.hasProperty(SnowLayerBlock.LAYERS)) {
-                int current = state.getValue(SnowLayerBlock.LAYERS);
-                if (current >= cap) return;
-                int newLayers = Mth.clamp(current + step, 1, cap);
-                if (setSnowLayersIfChanged(level, pos, newLayers, false)) {
-                    processed[0]++;
-                }
-            } else if (level.isEmptyBlock(pos) && Blocks.SNOW.defaultBlockState().canSurvive(level, pos)) {
-                int newLayers = Math.min(step, cap);
-                if (setSnowLayersIfChanged(level, pos, newLayers, true)) {
-                    processed[0]++;
-                }
-            }
-        });
-    }
 
     // Player-centric piling to preserve natural randomness near active players
     private static void doPlayerBasedPiling(ServerLevel level, ChunkPos chunkPos, int maxLayers, int budget) {
@@ -588,41 +528,6 @@ public class CommonSnowBlockFeature {
 
 
     /**
-     * Finds a snow block in the given chunk by scanning a random column.
-     * This is more efficient than random Y sampling, since it only checks
-     * around the surface band where snow/ice can exist.
-     *
-     * @param level    the world
-     * @param chunkPos the chunk to search
-     * @return position of a snow block or null if none found
-     */
-    protected static BlockPos findRandomSnowBlockInChunk(Level level, ChunkPos chunkPos) {
-        int minY = level.getMinBuildHeight();
-
-        // pick a random column in the chunk
-        int worldX = chunkPos.getMinBlockX() + RANDOM.nextInt(16);
-        int worldZ = chunkPos.getMinBlockZ() + RANDOM.nextInt(16);
-
-        // surface height from heightmap
-        int topY = level.getHeight(Heightmap.Types.MOTION_BLOCKING, worldX, worldZ);
-        int startY = topY + 1;               // include snow above surface
-        int endY = Math.max(minY, topY - 8); // scan a band below surface
-
-        BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
-
-        for (int y = startY; y >= endY; --y) {
-            mutable.set(worldX, y, worldZ);
-            BlockState state = level.getBlockState(mutable);
-            if (state.is(Blocks.SNOW_BLOCK) || state.is(Blocks.SNOW)) {
-                return mutable.immutable();
-            }
-        }
-
-        return null;
-    }
-
-
-    /**
      * Immediately removes snow and ice in the given chunk.
      *
      * @param level    level to modify
@@ -653,7 +558,8 @@ public class CommonSnowBlockFeature {
 
         ChunkPos chunkPos = chunk.getPos();
         var seasonState = SeasonHelper.getSeasonState(level);
-        Season.SubSeason currentSeason = seasonState.getSubSeason();
+        Season.SubSeason currentSeason = EnvironmentHelper.getCurrentSeason();
+
 
         LayerBounds bounds = getSeasonalLayerBounds(currentSeason, seasonState.getDay());
         tracked.sereneseasonsplus$setLastSeason(currentSeason);
@@ -662,11 +568,11 @@ public class CommonSnowBlockFeature {
             if (tracked.sereneseasonsplus$shouldApplyInitialSnow()
                     || !tracked.sereneseasonsplus$hasAppliedInitialSnow()
                     || tracked.sereneseasonsplus$getSnowCount() == 0) {
-                applySnowToChunk(level, chunkPos, currentSeason, level.getRandom());
+                enqueueChunkForSnowApply(chunkPos, currentSeason);
             }
             tracked.sereneseasonsplus$setShouldApplyInitialSnow(false);
         } else if (tracked.sereneseasonsplus$hasAppliedInitialSnow()) {
-            meltSnowInChunk(level, chunkPos, false);
+            enqueueChunkForSnowMelt(chunkPos, false);
         }
 
         boolean isRaining = EnvironmentHelper.isRainning(level, chunkPos.getMiddleBlockPosition(65));
@@ -695,24 +601,6 @@ public class CommonSnowBlockFeature {
             case EARLY_SPRING -> (day < 4) ? new LayerBounds(1, Math.max(1, 5 - day)) : null;
             default -> null;
         };
-    }
-
-    /**
-     * Gradually melts snow in the given chunk.
-     * Uses random column scanning for efficiency and consistency.
-     *
-     * @param level    the server level
-     * @param chunkPos the chunk position to process
-     */
-    protected static void processMeltingChunk(ServerLevel level, ChunkPos chunkPos) {
-        // Try melting up to 5 random columns in this chunk
-        for (int i = 0; i < 5; ++i) {
-            BlockPos snowPos = findRandomSnowBlockInChunk(level, chunkPos);
-            if (snowPos == null) {
-                break;
-            }
-            SnowUtils.breakOrDecrementLayer(level, snowPos);
-        }
     }
 
 
@@ -751,45 +639,6 @@ public class CommonSnowBlockFeature {
      */
     public static void onSeasonChange(ServerLevel level) {
         ChunkQueue.clear();
-    }
-
-    /**
-     * Places a snow layer at the given position if empty and valid, or adds a
-     * layer to an existing snow block that is below max height.
-     */
-    public static void placeSnowAt(ServerLevel level, BlockPos pos) {
-        // case 1: already snow with <8 layers → increment
-        BlockPos.MutableBlockPos cursor = pos.mutable();
-        BlockState current = level.getBlockState(cursor);
-        int attempts = level.random.nextInt(2, MAX_ATTEMPTS);
-        while (attempts-- > 0) {
-            if (current.is(Blocks.SNOW) && current.hasProperty(SnowLayerBlock.LAYERS)) {
-                int layers = current.getValue(SnowLayerBlock.LAYERS);
-                if (layers < 8) {
-                    // stack one more layer
-                    if (setSnowLayersIfChanged(level, cursor, layers + 1, false)) {
-                        return; // stop after success
-                    }
-                }
-
-                // full block, check above
-                cursor.move(0, 1, 0);
-                current = level.getBlockState(cursor);
-                continue;
-            }
-
-            // empty block → place fresh snow with 1 layer
-            else if (level.isEmptyBlock(cursor)) {
-                BlockState snow = Blocks.SNOW.defaultBlockState();
-                if (snow.canSurvive(level, cursor)) {
-                    setSnowLayersIfChanged(level, cursor, 1, true);
-                }
-                return; // stop after success
-            } else {
-                cursor.move(0, 1, 0);
-                current = level.getBlockState(cursor);
-            }
-        }
 
     }
 

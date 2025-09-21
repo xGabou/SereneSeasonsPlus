@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus.util;
 
+import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import sereneseasons.api.season.Season;
@@ -35,7 +36,14 @@ public class EnvironmentHelper {
         return delegate.getCurrentSeason();
     }
 
-    public static void onSeasonChange(ServerLevel serverLevel) {
+    public static void onServerStarted(ServerLevel level)
+    {
+        onSeasonChange(level,false);
+    }
+
+    public static void onSeasonChange(ServerLevel serverLevel,boolean forced) {
         delegate.onSeasonChange(serverLevel);
+        if(forced)
+            CommonSnowBlockFeature.onSeasonChange(serverLevel);
     }
 }

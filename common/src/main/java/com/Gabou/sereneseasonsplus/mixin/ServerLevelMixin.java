@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -16,6 +17,10 @@ import sereneseasons.api.season.SeasonHelper;
 
 @Mixin(ServerLevel.class)
 public class ServerLevelMixin {
+
+    @Unique
+    private static final int MIN_TICKS_INTERVALLES = 10;
+
     @Inject(
             method = "tickChunk",
             at = @At(
@@ -26,15 +31,15 @@ public class ServerLevelMixin {
             )
     )
     private void snow$addToQueue(LevelChunk chunk, int randomTickSpeed, CallbackInfo ci) {
-        if(CommonSnowBlockFeature.getTickCounter()<500)
-            return;
+        if(CommonSnowBlockFeature.getTickCounter()% MIN_TICKS_INTERVALLES !=0) return;
+
         if(!(chunk.getLevel() instanceof ServerLevel level)){
             return;
         }
         if (level.dimension() != Level.OVERWORLD) return;
 
         ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
-        Season.SubSeason currentSeason = SeasonHelper.getSeasonState(level).getSubSeason();
+        Season.SubSeason currentSeason = EnvironmentHelper.getCurrentSeason();
 
         if (tracked.sereneseasonsplus$getLastSeason() != currentSeason) {
             tracked.sereneseasonsplus$setLastSeason(currentSeason);
