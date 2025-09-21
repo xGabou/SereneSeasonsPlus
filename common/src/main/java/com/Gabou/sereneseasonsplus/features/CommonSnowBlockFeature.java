@@ -61,7 +61,9 @@ public class CommonSnowBlockFeature {
                 updatePlayerPositions(level.players());
                 passifSnowBlocks(level);
             }
+
             if(tickCounter % 5 !=0 && tickCounter > 100) return;
+            LOGGER.info("ChunkQueue size: {}",ChunkQueue.size());
             ChunkQueue.Entry entry;
             while ((entry = ChunkQueue.poll()) != null) {
                 if (!((MinecraftServerAccess) server).sereneseasonsplus$tempsEcoule()) {
