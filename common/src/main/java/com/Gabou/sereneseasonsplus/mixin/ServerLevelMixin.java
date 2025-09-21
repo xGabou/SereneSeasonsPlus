@@ -1,7 +1,6 @@
 package com.Gabou.sereneseasonsplus.mixin;
 
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
-import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import net.minecraft.server.level.ServerLevel;
@@ -37,26 +36,16 @@ public class ServerLevelMixin {
         ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
         Season.SubSeason currentSeason = SeasonHelper.getSeasonState(level).getSubSeason();
 
-        // First load or season changed
         if (tracked.sereneseasonsplus$getLastSeason() != currentSeason) {
             tracked.sereneseasonsplus$setLastSeason(currentSeason);
-            tracked.sereneseasonsplus$setNeedsSnowUpdate(true);
         }
 
-        // Rain change (or PA override)
-        boolean isRaining = EnvironmentHelper.isRainning(level,chunk.getPos().getMiddleBlockPosition(65)); // or PA override inside platform handler
+        boolean isRaining = EnvironmentHelper.isRainning(level,chunk.getPos().getMiddleBlockPosition(65));
         if (isRaining != tracked.sereneseasonsplus$wasRaining()) {
             tracked.sereneseasonsplus$setWasRaining(isRaining);
-            tracked.sereneseasonsplus$setNeedsSnowUpdate(true);
-            // Reset per-storm piling memory when precipitation stops
             if (!isRaining) {
                 tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(false);
             }
-        }
-
-        if (tracked.sereneseasonsplus$needsSnowUpdate()) {
-            ChunkQueue.tryAdd(chunk.getPos(), true);
-            tracked.sereneseasonsplus$setNeedsSnowUpdate(false);
         }
     }
 

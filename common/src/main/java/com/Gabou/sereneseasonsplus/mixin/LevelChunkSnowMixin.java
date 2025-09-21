@@ -18,8 +18,6 @@ import javax.annotation.Nullable;
 @Mixin(LevelChunk.class)
 public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     @Unique
-    private boolean sereneseasonsplus$snowNeedsUpdate = true;
-    @Unique
     private Season.SubSeason sereneseasonsplus$lastSeason = null;
     @Unique
     private boolean sereneseasonsplus$wasRaining = false;
@@ -33,16 +31,6 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     // NEW: track how many times this chunk has snowed
     @Unique
     private int sereneseasonsplus$snowCount = 0;
-
-    @Override
-    public boolean sereneseasonsplus$needsSnowUpdate() {
-        return sereneseasonsplus$snowNeedsUpdate;
-    }
-
-    @Override
-    public void sereneseasonsplus$setNeedsSnowUpdate(boolean needsUpdate) {
-        this.sereneseasonsplus$snowNeedsUpdate = needsUpdate;
-    }
 
     @Override
     public Season.SubSeason sereneseasonsplus$getLastSeason() {

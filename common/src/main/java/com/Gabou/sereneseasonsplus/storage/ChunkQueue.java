@@ -1,89 +1,70 @@
 package com.Gabou.sereneseasonsplus.storage;
 
 import net.minecraft.world.level.ChunkPos;
+import sereneseasons.api.season.Season;
 
-import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.HashSet;
+import java.util.Queue;
+import java.util.Set;
 
-public class ChunkQueue {
-    /** Queue for chunks to be processed in the current tick. */
-    private static final ArrayList<Entry> currentTickChunks = new ArrayList<>();
+/**
+ * Central queue for one-shot chunk wide snow operations.
+ * Tasks are enqueued when a chunk needs an initial snow pass or when
+ * a season skip forces a resynchronisation. Entries are removed after
+ * a single processing step; there is no incremental work management.
+ */
+public final class ChunkQueue {
+    private static final Queue<Entry> TASKS = new ArrayDeque<>();
+    private static final Set<EntryKey> SCHEDULED = new HashSet<>();
 
-    /** Queue for chunks to be processed in the next tick. */
-    private static final ArrayList<Entry> nextTickChunks = new ArrayList<>();
+    private ChunkQueue() {
+    }
 
-    /** Tries to add a chunk to the queue, only if it has been forgotten. */
-    public static void tryAdd(ChunkPos chunkPos, boolean currentTick) {
-        if (Memory.hasForgotten(chunkPos)) {
-            Memory.remember(chunkPos);
-            // Each chunk has 256 surface columns
-            add(new Entry(chunkPos, 0, 256,0), currentTick);
+    public static void enqueueApply(ChunkPos chunkPos, Season.SubSeason subSeason) {
+        EntryKey key = new EntryKey(ChunkPos.asLong(chunkPos.x, chunkPos.z), TaskType.APPLY_SNOW, false);
+        if (SCHEDULED.add(key)) {
+            TASKS.add(new Entry(chunkPos, TaskType.APPLY_SNOW, subSeason, false));
         }
     }
 
-
-
-
-    public static void tryAdd(ChunkPos chunkPos, boolean currentTick, int workLeft) {
-        if (Memory.hasForgotten(chunkPos)) {
-            Memory.remember(chunkPos);
-            add(new Entry(chunkPos, 0, workLeft,0), currentTick);
+    public static void enqueueMelt(ChunkPos chunkPos, boolean fullClear) {
+        EntryKey key = new EntryKey(ChunkPos.asLong(chunkPos.x, chunkPos.z), TaskType.MELT_SNOW, fullClear);
+        if (SCHEDULED.add(key)) {
+            TASKS.add(new Entry(chunkPos, TaskType.MELT_SNOW, null, fullClear));
         }
     }
 
-    /** Immediately adds an entry to the queue. */
-    public static void add(Entry entry, boolean currentTick) {
-        if (currentTick) currentTickChunks.add(entry);
-        else nextTickChunks.add(entry);
+    public static Entry poll() {
+        Entry entry = TASKS.poll();
+        if (entry != null) {
+            EntryKey key = new EntryKey(ChunkPos.asLong(entry.pos().x, entry.pos().z), entry.type(), entry.fullClear());
+            SCHEDULED.remove(key);
+        }
+        return entry;
     }
 
-
-    /** Returns the size of the current-tick queue. */
-    public static int size() {
-        return currentTickChunks.size();
-    }
-
-    /** Returns true if the current-tick queue is empty. */
     public static boolean isEmpty() {
-        return currentTickChunks.isEmpty();
+        return TASKS.isEmpty();
     }
 
-    /** Removes the element at the front of the current-tick queue and returns it. */
-    public static Entry pop() {
-        return currentTickChunks.remove(0);
+    public static int size() {
+        return TASKS.size();
     }
 
-    /** Shuffles items from the next-tick queue to the end of the current-tick queue. */
-    public static void shuffle() {
-        currentTickChunks.addAll(nextTickChunks);
-        nextTickChunks.clear();
-    }
-
-    /** Clears all items in both the current-tick and next-tick queues. */
     public static void clear() {
-        currentTickChunks.clear();
-        nextTickChunks.clear();
+        TASKS.clear();
+        SCHEDULED.clear();
     }
 
-
-    public static void lastSkipped(Entry entry, long newLastSkipped) {
-        currentTickChunks.remove(entry);
-        currentTickChunks.add(entry.withLastSkipped(newLastSkipped));
+    public record Entry(ChunkPos pos, TaskType type, Season.SubSeason subSeason, boolean fullClear) {
     }
 
-
-    public static boolean areEmpty(){
-        return currentTickChunks.isEmpty() && nextTickChunks.isEmpty();
+    public enum TaskType {
+        APPLY_SNOW,
+        MELT_SNOW
     }
 
-    public static boolean isFull() {
-        return currentTickChunks.size()>= MemoryHandler.getMaxSize();
+    private record EntryKey(long chunkKey, TaskType type, boolean fullClear) {
     }
-
-    public record Entry(ChunkPos pos, int sittingFor, int workLeft,long lastSkipped) {
-        public Entry withLastSkipped(long newLastSkipped) {
-            return new Entry(pos, sittingFor, workLeft, newLastSkipped);
-        }
-    }
-
-
 }
