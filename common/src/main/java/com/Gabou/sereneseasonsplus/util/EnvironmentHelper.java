@@ -32,6 +32,10 @@ public class EnvironmentHelper {
         return delegate.isHotSeason();
     }
 
+    public static boolean isSnowySeason() {
+        return delegate.isSnowySeason();
+    }
+
     public static Season.SubSeason getCurrentSeason() {
         return delegate.getCurrentSeason();
     }

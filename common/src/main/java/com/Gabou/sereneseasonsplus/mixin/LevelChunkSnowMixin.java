@@ -28,9 +28,13 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     @Unique
     private boolean sereneseasonsplus$hasAppliedInitialSnow = false;
 
+
+    @Unique
+    private boolean sereneseasonsplus$willReceiveSnow = false;
+
     // NEW: track how many times this chunk has snowed
     @Unique
-    private int sereneseasonsplus$snowCount = 0;
+    private int sereneseasonsplus$snowCount = -1;
 
     @Override
     public Season.SubSeason sereneseasonsplus$getLastSeason() {
@@ -56,6 +60,18 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     public boolean sereneseasonsplus$hasReceivedSnowLayerThisStorm() {
         return sereneseasonsplus$hasReceivedSnowLayerThisStorm;
     }
+
+
+    @Override
+    public void sereneseasonsplus$willReceiveSnow(boolean b) {
+        this.sereneseasonsplus$willReceiveSnow = b;
+    }
+
+    @Override
+    public boolean sereneseasonsplus$shouldReceiveSnow() {
+        return this.sereneseasonsplus$willReceiveSnow;
+    }
+
 
     @Override
     public void sereneseasonsplus$setHasReceivedSnowLayerThisStorm(boolean value) {
@@ -90,6 +106,9 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
 
     @Override
     public void sereneseasonsplus$incrementSnowCount() {
+        if(sereneseasonsplus$snowCount < 0) {
+            sereneseasonsplus$snowCount = 0;
+        }
         sereneseasonsplus$snowCount++;
     }
 

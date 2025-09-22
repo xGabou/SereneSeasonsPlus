@@ -17,6 +17,8 @@ public class ForgeEnvironmentHelper implements IEnvironmentHelper {
     private Season.SubSeason season;
     private boolean isHotSeason;
 
+    private boolean isSnowySeason;
+
     @Override
     public boolean isClient() {
         return FMLEnvironment.dist.isClient();
@@ -34,6 +36,11 @@ public class ForgeEnvironmentHelper implements IEnvironmentHelper {
     }
 
     @Override
+    public boolean isSnowySeason() {
+       return isSnowySeason;
+    }
+
+    @Override
     public Season.SubSeason getCurrentSeason() {
         return season;
     }
@@ -43,6 +50,7 @@ public class ForgeEnvironmentHelper implements IEnvironmentHelper {
         season = SeasonHelper.getSeasonState(serverLevel).getSubSeason();
         LOGGER.info("Season changed to: {}", season);
         isHotSeason = HotSeason.isHotSeason(season);
+        isSnowySeason = SnowySeason.isSnowySeason(season);
 
     }
 

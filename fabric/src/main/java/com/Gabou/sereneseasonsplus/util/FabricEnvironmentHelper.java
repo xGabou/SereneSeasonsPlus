@@ -12,6 +12,7 @@ public class FabricEnvironmentHelper implements IEnvironmentHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger("FabricEnvironmentHelper");
     private Season.SubSeason season;
     private boolean isHotSeason;
+    private boolean isSnowySeason;
 
     @Override
     public boolean isClient() {
@@ -29,6 +30,11 @@ public class FabricEnvironmentHelper implements IEnvironmentHelper {
     }
 
     @Override
+    public boolean isSnowySeason() {
+       return isSnowySeason;
+    }
+
+    @Override
     public Season.SubSeason getCurrentSeason() {
         return season;
     }
@@ -38,6 +44,7 @@ public class FabricEnvironmentHelper implements IEnvironmentHelper {
         season = SeasonHelper.getSeasonState(serverLevel).getSubSeason();
         LOGGER.info("Season changed to: {}", season);
         isHotSeason = HotSeason.isHotSeason(season);
+        isSnowySeason = SnowySeason.isSnowySeason(season);
     }
 
     @Override

@@ -81,6 +81,7 @@ public final class ChunkQueue {
     public static void clear() {
         TASKS.clear();
         SCHEDULED.clear();
+        SCHEDULED_TASKS.clear();
     }
 
     public record Entry(ChunkPos pos, TaskType type, Season.SubSeason subSeason, boolean fullClear) {
@@ -94,4 +95,6 @@ public final class ChunkQueue {
 
     private record EntryKey(long chunkKey, TaskType type, boolean fullClear) {
     }
+
+
 }

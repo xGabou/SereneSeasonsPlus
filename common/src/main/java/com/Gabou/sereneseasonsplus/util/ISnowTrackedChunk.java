@@ -25,5 +25,8 @@ public interface ISnowTrackedChunk {
 
     void sereneseasonsplus$setSnowCount(int value);
 
+
+    void sereneseasonsplus$willReceiveSnow(boolean b);
+    boolean sereneseasonsplus$shouldReceiveSnow();
 }
 

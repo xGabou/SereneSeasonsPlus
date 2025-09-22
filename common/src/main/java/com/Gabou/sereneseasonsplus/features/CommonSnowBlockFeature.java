@@ -76,16 +76,16 @@ public class CommonSnowBlockFeature {
                 didStartupCatchUp = true;
             }
 
-            if (tickCounter % 5 != 0 && tickCounter > 100) return;
+            if (tickCounter % 5 != 0 && tickCounter > 10) return;
             LOGGER.info("ChunkQueue size: {}", ChunkQueue.size());
             ChunkQueue.Entry entry;
             int processed = 0;
             while ((entry = ChunkQueue.poll()) != null) {
-                if (!((MinecraftServerAccess) server).sereneseasonsplus$tempsEcoule() || processed >= 10) {
+                if ((!((MinecraftServerAccess) server).sereneseasonsplus$tempsEcoule() || processed >= 20) && processed >= 1) {
                     if (entry.type() == ChunkQueue.TaskType.APPLY_SNOW) {
-                        ChunkQueue.enqueueApply(entry.pos(), entry.subSeason());
+                        enqueueChunkForSnowApply(entry.pos(), entry.subSeason());
                     } else {
-                        ChunkQueue.enqueueMelt(entry.pos(), entry.fullClear());
+                        enqueueChunkForSnowMelt(entry.pos(), entry.fullClear());
                     }
                     break;
                 }
@@ -106,15 +106,39 @@ public class CommonSnowBlockFeature {
                 processed++;
 
             }
-            if(!ChunkQueue.isScheduledEmpty())
-            {
+            if (!ChunkQueue.isScheduledEmpty() && tickCounter > 20) {
 
-                while((entry = ChunkQueue.pollScheduled()) != null)
-                {
-                    logicChunks(level, EnvironmentHelper.getCurrentSeason(), SeasonHelper.getSeasonState(level), (ISnowTrackedChunk) level.getChunkSource().getChunk(entry.pos().x, entry.pos().z, false), entry.pos());
+                while ((entry = ChunkQueue.pollScheduled()) != null) {
+                    LevelChunk chunk = level.getChunkSource().getChunk(entry.pos().x, entry.pos().z, false);
+                    if (chunk == null) {
+
+                        return;
+                    }
+                    logicChunks(level, EnvironmentHelper.getCurrentSeason(), SeasonHelper.getSeasonState(level), (ISnowTrackedChunk) chunk, entry.pos());
+
                 }
             }
         }
+    }
+
+    public static void handleOnChunkLoad(LevelChunk chunk, ServerLevel level) {
+        // Enqueue immediately on load so every loaded chunk gets processed.
+        counterTime++;
+        ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
+
+        if (tracked == null) return;
+
+        // Persistence is handled via natural snow detection below; avoid platform-specific chunk data in common.
+
+        ChunkPos chunkPos = chunk.getPos();
+        var seasonState = SeasonHelper.getSeasonState(level);
+        Season.SubSeason currentSeason = EnvironmentHelper.getCurrentSeason();
+
+        if (seasonState == null || currentSeason == null) {
+            ChunkQueue.enqueueScheduled(chunkPos);
+            return;
+        }
+        logicChunks(level, currentSeason, seasonState, tracked, chunkPos);
     }
 
     public static void enqueueChunkForSnowApply(ChunkPos chunkPos, Season.SubSeason subSeason) {
@@ -208,10 +232,13 @@ public class CommonSnowBlockFeature {
         if (chunk == null) {
             return;
         }
+        ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
 
         int day = SeasonHelper.getSeasonState(level).getDay();
         LayerBounds bounds = getSeasonalLayerBounds(subSeason, day);
         if (bounds == null) {
+            // Not a snowy window: mark as handled for now to avoid churn
+            tracked.sereneseasonsplus$willReceiveSnow(false);
             return;
         }
 
@@ -243,10 +270,17 @@ public class CommonSnowBlockFeature {
         }
         if (changed) {
             chunk.setUnsaved(true);
-            ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
             tracked.sereneseasonsplus$setHasAppliedInitialSnow(true);
             tracked.sereneseasonsplus$setShouldApplyInitialSnow(false);
             tracked.sereneseasonsplus$incrementSnowCount();
+            tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(true);
+            tracked.sereneseasonsplus$willReceiveSnow(false);
+        } else {
+            // No visible change this pass: treat as handled for the current storm
+            // to prevent infinite re-enqueue. We will retry automatically when
+            // rain stops (flag reset) or on season change.
+            tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(true);
+            tracked.sereneseasonsplus$willReceiveSnow(false);
         }
     }
 
@@ -533,9 +567,6 @@ public class CommonSnowBlockFeature {
     }
 
 
-
-
-
     public static boolean isSnowStormAt(ServerLevel level, ChunkPos pos) {
         if (level instanceof ISnowStormLevel stormLevel) {
             return stormLevel.sereneseasonsplus$isSnowStormAt(pos);
@@ -573,25 +604,6 @@ public class CommonSnowBlockFeature {
 
     public static int counterTime = 0;
 
-    public static void handleOnChunkLoad(LevelChunk chunk, ServerLevel level) {
-        // Enqueue immediately on load so every loaded chunk gets processed.
-        counterTime++;
-        ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
-
-        if(tracked==null) return;
-
-        // Persistence is handled via natural snow detection below; avoid platform-specific chunk data in common.
-
-        ChunkPos chunkPos = chunk.getPos();
-        var seasonState = SeasonHelper.getSeasonState(level);
-        Season.SubSeason currentSeason = EnvironmentHelper.getCurrentSeason();
-
-        if(seasonState == null || currentSeason == null) {
-            ChunkQueue.enqueueScheduled(chunkPos);
-            return;
-        }
-        logicChunks(level, currentSeason, seasonState, tracked, chunkPos);
-    }
 
     private static void logicChunks(ServerLevel level, Season.SubSeason currentSeason, ISeasonState seasonState, ISnowTrackedChunk tracked, ChunkPos chunkPos) {
         LayerBounds bounds = getSeasonalLayerBounds(currentSeason, seasonState.getDay());
@@ -600,12 +612,18 @@ public class CommonSnowBlockFeature {
         if (bounds != null) {
             if (tracked.sereneseasonsplus$shouldApplyInitialSnow()
                     || !tracked.sereneseasonsplus$hasAppliedInitialSnow()
-                    || tracked.sereneseasonsplus$getSnowCount() == 0) {
+                    || tracked.sereneseasonsplus$getSnowCount() <= 0) {
                 enqueueChunkForSnowApply(chunkPos, currentSeason);
+                tracked.sereneseasonsplus$willReceiveSnow(true);
             }
             tracked.sereneseasonsplus$setShouldApplyInitialSnow(false);
-        } else if (tracked.sereneseasonsplus$hasAppliedInitialSnow()) {
-            enqueueChunkForSnowMelt(chunkPos, false);
+        } else {
+            Season.SubSeason oldSeason;
+            if ((oldSeason = tracked.sereneseasonsplus$getLastSeason()) != null) {
+                enqueueChunkForSnowMelt(chunkPos, Math.abs(currentSeason.ordinal() - oldSeason.ordinal()) != 1 || EnvironmentHelper.isHotSeason());
+            }
+
+            enqueueChunkForSnowMelt(chunkPos, true);
         }
 
         boolean isRaining = EnvironmentHelper.isRainning(level, chunkPos.getMiddleBlockPosition(65));
@@ -614,17 +632,6 @@ public class CommonSnowBlockFeature {
             if (!isRaining) {
                 tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(false);
             }
-        }
-
-        if (chunkPos.equals(new ChunkPos(-267, 220))) {
-            LOGGER.info("Processed chunk load at tick {} (counter {}) for {}, season {}, applied {}, should {}, count {}, raining {}, received {}",
-                    tickCounter, counterTime, chunkPos, currentSeason,
-                    tracked.sereneseasonsplus$hasAppliedInitialSnow(), tracked.sereneseasonsplus$shouldApplyInitialSnow(),
-                    tracked.sereneseasonsplus$getSnowCount(),
-                    tracked.sereneseasonsplus$wasRaining(),
-                    tracked.sereneseasonsplus$hasReceivedSnowLayerThisStorm()
-
-            );
         }
     }
 
@@ -636,7 +643,6 @@ public class CommonSnowBlockFeature {
         Season.SubSeason currentSeason = EnvironmentHelper.getCurrentSeason();
         int day = SeasonHelper.getSeasonState(level).getDay();
         LayerBounds bounds = getSeasonalLayerBounds(currentSeason, day);
-        if (bounds == null) return; // only relevant when we should have snow
 
         ChunkSource chunkSource = level.getChunkSource();
 
@@ -653,10 +659,16 @@ public class CommonSnowBlockFeature {
                     ChunkAccess access = chunkSource.getChunk(cx, cz, false);
                     if (!(access instanceof LevelChunk lc)) continue;
                     ISnowTrackedChunk tracked = (ISnowTrackedChunk) lc;
-                    if (tracked.sereneseasonsplus$hasAppliedInitialSnow() && tracked.sereneseasonsplus$getSnowCount() > 0) {
-                        continue; // already processed
+                    if (bounds != null) {
+                        if (tracked.sereneseasonsplus$hasAppliedInitialSnow() && tracked.sereneseasonsplus$getSnowCount() > 0) {
+                            continue; // already processed
+                        }
+                        enqueueChunkForSnowApply(lc.getPos(), currentSeason);
+                    } else {
+                        enqueueChunkForSnowMelt(lc.getPos(), true);
+
                     }
-                    enqueueChunkForSnowApply(lc.getPos(), currentSeason);
+
                 }
             }
         }
@@ -717,6 +729,23 @@ public class CommonSnowBlockFeature {
      */
     public static void onSeasonChange(ServerLevel level) {
         ChunkQueue.clear();
+        // Reset pending flags on loaded chunks so tick hook can re-enqueue
+        ChunkSource source = level.getChunkSource();
+        for (ServerPlayer player : level.players()) {
+            int view = getSimulationDistance(player);
+            ChunkPos pc = new ChunkPos(player.blockPosition());
+            for (int dx = -view; dx <= view; dx++) {
+                for (int dz = -view; dz <= view; dz++) {
+                    LevelChunk access = source.getChunk(pc.x + dx, pc.z + dz, false);
+                    if (access == null) continue;
+                    ISnowTrackedChunk tracked = (ISnowTrackedChunk) access;
+                    tracked.sereneseasonsplus$willReceiveSnow(false);
+                    tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(false);
+
+                }
+            }
+        }
+        performStartupCatchUp(level);
 
     }
 
