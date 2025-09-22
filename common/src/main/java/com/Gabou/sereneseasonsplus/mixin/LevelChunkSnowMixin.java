@@ -1,11 +1,9 @@
 package com.Gabou.sereneseasonsplus.mixin;
 
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.ProtoChunk;
-import net.minecraft.world.level.levelgen.blending.BlendingData;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -36,6 +34,20 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     @Unique
     private int sereneseasonsplus$snowCount = -1;
 
+    @Unique
+    private int sereneseasonsplus$lastWinterId = -1; // -1 means never had a winter
+
+    @Override
+    public int sereneseasonsplus$getLastWinterId() {
+        return sereneseasonsplus$lastWinterId;
+    }
+
+    @Override
+    public void sereneseasonsplus$setLastWinterId(int id) {
+        this.sereneseasonsplus$lastWinterId = id;
+    }
+
+
     @Override
     public Season.SubSeason sereneseasonsplus$getLastSeason() {
         return sereneseasonsplus$lastSeason;
@@ -52,7 +64,7 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     }
 
     @Override
-    public void sereneseasonsplus$setWasRaining(boolean raining) {
+    public void sereneseasonsplus$incrementWasRaining(boolean raining) {
         this.sereneseasonsplus$wasRaining = raining;
     }
 
@@ -129,7 +141,7 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
             target.sereneseasonsplus$setSnowCount(src.sereneseasonsplus$getSnowCount());
             target.sereneseasonsplus$setHasAppliedInitialSnow(src.sereneseasonsplus$hasAppliedInitialSnow());
             target.sereneseasonsplus$setShouldApplyInitialSnow(src.sereneseasonsplus$shouldApplyInitialSnow());
-            target.sereneseasonsplus$setWasRaining(src.sereneseasonsplus$wasRaining());
+            target.sereneseasonsplus$incrementWasRaining(src.sereneseasonsplus$wasRaining());
             target.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(src.sereneseasonsplus$hasReceivedSnowLayerThisStorm());
             if (src.sereneseasonsplus$getLastSeason() != null) {
                 target.sereneseasonsplus$setLastSeason(src.sereneseasonsplus$getLastSeason());

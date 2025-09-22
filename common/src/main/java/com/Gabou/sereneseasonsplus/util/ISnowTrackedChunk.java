@@ -7,7 +7,7 @@ public interface ISnowTrackedChunk {
     void sereneseasonsplus$setLastSeason(Season.SubSeason season);
 
     boolean sereneseasonsplus$wasRaining();
-    void sereneseasonsplus$setWasRaining(boolean raining);
+    void sereneseasonsplus$incrementWasRaining(boolean raining);
 
     // Tracks whether this chunk already received its single noisy layer for the current storm
     boolean sereneseasonsplus$hasReceivedSnowLayerThisStorm();
@@ -28,5 +28,8 @@ public interface ISnowTrackedChunk {
 
     void sereneseasonsplus$willReceiveSnow(boolean b);
     boolean sereneseasonsplus$shouldReceiveSnow();
+    int sereneseasonsplus$getLastWinterId();
+    void sereneseasonsplus$setLastWinterId(int id);
+
 }
 

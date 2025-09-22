@@ -97,6 +97,7 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
         SereneService.HANDLER.shutdown();
         SereneService.HANDLER = null;
         CommonSnowBlockFeature.onServerStopping();
+        EnvironmentHelper.onServerStopping(event.getServer().getLevel(Level.OVERWORLD));
     }
 
 

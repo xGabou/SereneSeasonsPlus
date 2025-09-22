@@ -15,9 +15,9 @@ public class SeasonChangeEvent {
     public static void register() {
         EventManager.addListener((SeasonChangedEvent.Standard event) -> {
             if (event.getLevel() instanceof ServerLevel serverLevel) {
-                Season.SubSeason oldSeason = event.getPrevSeason();
+                       Season.SubSeason oldSeason = event.getPrevSeason();
                 Season.SubSeason newSeason = event.getNewSeason();
-                if (newSeason.getSeason() != oldSeason.getSeason()) {
+                if (newSeason != oldSeason) {
                     EnvironmentHelper.onSeasonChange(serverLevel,Math.abs(newSeason.ordinal() - oldSeason.ordinal()) != 1);
                 }
 

@@ -64,24 +64,46 @@ public class ServerLevelMixin {
 
         boolean isRaining = EnvironmentHelper.isRainning(level, chunk.getPos().getMiddleBlockPosition(65));
         if (isRaining != tracked.sereneseasonsplus$wasRaining()) {
-            tracked.sereneseasonsplus$setWasRaining(isRaining);
+            tracked.sereneseasonsplus$incrementWasRaining(isRaining);
             if (!isRaining) {
                 tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(false);
             }
         }
 
-        if (tracked.sereneseasonsplus$getSnowCount() <= 0 && EnvironmentHelper.isSnowySeason() && !tracked.sereneseasonsplus$hasReceivedSnowLayerThisStorm() && !tracked.sereneseasonsplus$shouldReceiveSnow())
-        {
-            ChunkQueue.enqueueApply(chunk.getPos(), currentSeason);
-            tracked.sereneseasonsplus$willReceiveSnow(true);
-            return;
+        if (EnvironmentHelper.isSnowySeason()) {
+            // Virgin or reset chunk, not yet snowed this storm
+            if(tracked.sereneseasonsplus$getLastWinterId() != EnvironmentHelper.getCurrentWinterId())
+            {
+                tracked.sereneseasonsplus$setLastWinterId(EnvironmentHelper.getCurrentWinterId());
+                tracked.sereneseasonsplus$setSnowCount(-1);
+                tracked.sereneseasonsplus$setHasAppliedInitialSnow(false);
+                tracked.sereneseasonsplus$setShouldApplyInitialSnow(false);
+                tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(true);
+                tracked.sereneseasonsplus$willReceiveSnow(false);
+                return;
+            }
+            if (tracked.sereneseasonsplus$getSnowCount() <= 0
+                    && !tracked.sereneseasonsplus$hasReceivedSnowLayerThisStorm()) {
 
-        } else if (EnvironmentHelper.isHotSeason() &&
-                (tracked.sereneseasonsplus$getSnowCount() > 0 || tracked.sereneseasonsplus$getSnowCount() == -1)) {
-            ChunkQueue.enqueueMelt(chunk.getPos(), true);
-            tracked.sereneseasonsplus$setSnowCount(0);
-            return;
+                ChunkQueue.enqueueApply(chunk.getPos(), currentSeason);
+                tracked.sereneseasonsplus$willReceiveSnow(true);
+                return;
+            }
+
+            // Already flagged to receive → retry until success
+            if (tracked.sereneseasonsplus$shouldReceiveSnow()) {
+                ChunkQueue.enqueueApply(chunk.getPos(), currentSeason);
+                return;
+            }
         }
+        else if (EnvironmentHelper.isHotSeason() || tracked.sereneseasonsplus$getSnowCount() <= 0 ) {
+            if (tracked.sereneseasonsplus$getSnowCount() > 0 || tracked.sereneseasonsplus$getSnowCount() == -1) {
+                ChunkQueue.enqueueMelt(chunk.getPos(), true);
+                tracked.sereneseasonsplus$setSnowCount(0);
+                return;
+            }
+        }
+
         //if(tracked.sereneseasonsplus$getSnowCount() <= 0)
             //LOGGER.info("Ticking chunk at pos: {}", chunk.getPos());
 

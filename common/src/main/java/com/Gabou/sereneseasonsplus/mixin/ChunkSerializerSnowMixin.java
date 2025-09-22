@@ -18,7 +18,7 @@ import sereneseasons.api.season.Season;
 public abstract class ChunkSerializerSnowMixin {
     private static final String SSP = "SereneSeasonsPlus";
 
-    // save
+    // Save
     @Inject(method = "write", at = @At("RETURN"), cancellable = true)
     private static void ssp$write(ServerLevel level, ChunkAccess access, CallbackInfoReturnable<CompoundTag> cir) {
         CompoundTag root = cir.getReturnValue();
@@ -29,15 +29,20 @@ public abstract class ChunkSerializerSnowMixin {
             tag.putBoolean("ShouldApplyInitialSnow", tracked.sereneseasonsplus$shouldApplyInitialSnow());
             tag.putBoolean("WasRaining", tracked.sereneseasonsplus$wasRaining());
             tag.putBoolean("HasReceivedSnowLayerThisStorm", tracked.sereneseasonsplus$hasReceivedSnowLayerThisStorm());
+            tag.putBoolean("WillReceiveSnow", tracked.sereneseasonsplus$shouldReceiveSnow());
             if (tracked.sereneseasonsplus$getLastSeason() != null) {
                 tag.putString("LastSeason", tracked.sereneseasonsplus$getLastSeason().name());
             }
+            if (tag.contains("LastWinterId")) {
+                tracked.sereneseasonsplus$setLastWinterId(tag.getInt("LastWinterId"));
+            }
+
             root.put(SSP, tag);
             cir.setReturnValue(root);
         }
     }
 
-    // load
+    // Load
     @Inject(method = "read", at = @At("RETURN"))
     private static void ssp$read(ServerLevel level, PoiManager poi, ChunkPos pos, CompoundTag nbt, CallbackInfoReturnable<ProtoChunk> cir) {
         ChunkAccess access = cir.getReturnValue();
@@ -47,8 +52,10 @@ public abstract class ChunkSerializerSnowMixin {
                 tracked.sereneseasonsplus$setSnowCount(tag.getInt("SnowCount"));
                 tracked.sereneseasonsplus$setHasAppliedInitialSnow(tag.getBoolean("HasAppliedInitialSnow"));
                 tracked.sereneseasonsplus$setShouldApplyInitialSnow(tag.getBoolean("ShouldApplyInitialSnow"));
-                tracked.sereneseasonsplus$setWasRaining(tag.getBoolean("WasRaining"));
+                tracked.sereneseasonsplus$incrementWasRaining(tag.getBoolean("WasRaining"));
                 tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(tag.getBoolean("HasReceivedSnowLayerThisStorm"));
+                tracked.sereneseasonsplus$willReceiveSnow(tag.getBoolean("WillReceiveSnow"));
+                tag.putInt("LastWinterId", tracked.sereneseasonsplus$getLastWinterId());
                 if (tag.contains("LastSeason")) {
                     try {
                         tracked.sereneseasonsplus$setLastSeason(Season.SubSeason.valueOf(tag.getString("LastSeason")));

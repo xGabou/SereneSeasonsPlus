@@ -58,6 +58,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         SereneService.shutdown();
         SereneService.HANDLER = null;
         CommonSnowBlockFeature.onServerStopping();
+        EnvironmentHelper.onServerStopping(server.getLevel(Level.OVERWORLD));
     }
 
     private void onWorldTick(ServerLevel level) {
