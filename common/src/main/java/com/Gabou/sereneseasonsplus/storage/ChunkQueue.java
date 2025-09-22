@@ -18,7 +18,19 @@ public final class ChunkQueue {
     private static final Queue<Entry> TASKS = new ArrayDeque<>();
     private static final Set<EntryKey> SCHEDULED = new HashSet<>();
 
+
+    private static final Queue<Entry> SCHEDULED_TASKS = new ArrayDeque<>();
+
     private ChunkQueue() {
+    }
+
+
+
+    public static void enqueueScheduled(ChunkPos chunkPos) {
+        EntryKey key = new EntryKey(ChunkPos.asLong(chunkPos.x, chunkPos.z), TaskType.APPLY_SNOW, true);
+        if (SCHEDULED.add(key)) {
+            SCHEDULED_TASKS.add(new Entry(chunkPos, TaskType.RETRY, null, true));
+        }
     }
 
     public static void enqueueApply(ChunkPos chunkPos, Season.SubSeason subSeason) {
@@ -48,6 +60,20 @@ public final class ChunkQueue {
         return TASKS.isEmpty();
     }
 
+    public static  boolean isScheduledEmpty() {
+        return SCHEDULED_TASKS.isEmpty();
+    }
+
+
+    public static Entry pollScheduled() {
+        Entry entry = SCHEDULED_TASKS.poll();
+        if (entry != null) {
+            EntryKey key = new EntryKey(ChunkPos.asLong(entry.pos().x, entry.pos().z), entry.type(), entry.fullClear());
+            SCHEDULED.remove(key);
+        }
+        return entry;
+    }
+
     public static int size() {
         return TASKS.size();
     }
@@ -62,7 +88,8 @@ public final class ChunkQueue {
 
     public enum TaskType {
         APPLY_SNOW,
-        MELT_SNOW
+        MELT_SNOW,
+        RETRY
     }
 
     private record EntryKey(long chunkKey, TaskType type, boolean fullClear) {
