@@ -76,7 +76,12 @@ public final class SnowLogic {
             boolean needsInitial = !tracked.sereneseasonsplus$hasAppliedInitialSnow()
                     || tracked.sereneseasonsplus$getSnowCount() <= 0;
 
-            if (pendingSnow || (needsInitial && hasSnowHistory) || tracked.sereneseasonsplus$shouldReceiveSnow()) {
+            // Piling guard: allow piling only if
+            // snowCount > 1 OR (snowCount == 1 AND it's not snowing).
+            int sc = tracked.sereneseasonsplus$getSnowCount();
+            boolean allowPile = (sc < 1) || (sc > 1) || (sc == 1 && !isRaining);
+
+            if (allowPile && (pendingSnow || (needsInitial && hasSnowHistory) || tracked.sereneseasonsplus$shouldReceiveSnow())) {
                 ChunkQueue.enqueueApply(chunkPos, currentSeason);
                 tracked.sereneseasonsplus$willReceiveSnow(true);
             }

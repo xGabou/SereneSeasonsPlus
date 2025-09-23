@@ -114,6 +114,15 @@ public class CommonSnowBlockFeature {
                             tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(true);
                             continue;
                         }
+                        // Guard extra piling during active first snowfall
+                        boolean isRainingNow = EnvironmentHelper.isRainning(level, chunkPos.getMiddleBlockPosition(65));
+                        int sc = tracked.sereneseasonsplus$getSnowCount();
+                        boolean allowPile = (sc < 1) || (sc > 1) || (sc == 1 && !isRainingNow);
+                        if (!allowPile) {
+                            enqueueChunkForSnowApplyWithSitting(chunkPos, subSeason, entry.sittingTicks());
+                            tracked.sereneseasonsplus$willReceiveSnow(true);
+                            break;
+                        }
 
                         changed = applySnowToChunk(level, chunkPos, subSeason, level.getRandom());
                         if (changed) {
@@ -596,7 +605,13 @@ public class CommonSnowBlockFeature {
             boolean needsInitialApplication = !tracked.sereneseasonsplus$hasAppliedInitialSnow()
                     || tracked.sereneseasonsplus$getSnowCount() <= 0;
 
-            if (pendingSnow || (needsInitialApplication && hasSnowHistory)) {
+            // Apply piling guard: allow only if snowCount > 1
+            // or (snowCount == 1 and it's not currently snowing).
+            boolean isRainingNow = EnvironmentHelper.isRainning(level, chunkPos.getMiddleBlockPosition(65));
+            int sc = tracked.sereneseasonsplus$getSnowCount();
+            boolean allowPile = (sc < 1) || (sc > 1) || (sc == 1 && !isRainingNow);
+
+            if (allowPile && (pendingSnow || (needsInitialApplication && hasSnowHistory))) {
                 enqueueChunkForSnowApply(chunkPos, currentSeason);
                 tracked.sereneseasonsplus$willReceiveSnow(true);
             }
@@ -661,7 +676,12 @@ public class CommonSnowBlockFeature {
                             tracked.sereneseasonsplus$setShouldApplyInitialSnow(true);
                             tracked.sereneseasonsplus$willReceiveSnow(true);
                         }
-                        enqueueChunkForSnowApply(lc.getPos(), currentSeason);
+                        boolean isRainingHere = EnvironmentHelper.isRainning(level, lc.getPos().getMiddleBlockPosition(65));
+                        int sc = tracked.sereneseasonsplus$getSnowCount();
+                        boolean allowPile = (sc < 1) || (sc > 1) || (sc == 1 && !isRainingHere);
+                        if (allowPile) {
+                            enqueueChunkForSnowApply(lc.getPos(), currentSeason);
+                        }
                     } else {
                         enqueueChunkForSnowMelt(lc.getPos(), true);
 
