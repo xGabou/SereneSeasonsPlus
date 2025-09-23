@@ -1,0 +1,61 @@
+package com.Gabou.sereneseasonsplus.storage;
+
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.saveddata.SavedData;
+
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * Persists per-level snow environment state across world reloads.
+ */
+public class SnowSavedData extends SavedData {
+    public int winterId = -1;
+    public int stormCount = 0;
+    public boolean stormActive = false;
+    public final Set<Long> pendingChunks = new HashSet<>();
+    public final Set<Long> observedChunks = new HashSet<>();
+
+    public SnowSavedData() {}
+
+    public static SnowSavedData load(CompoundTag tag) {
+        SnowSavedData data = new SnowSavedData();
+        if (tag == null) return data;
+
+        data.winterId = tag.getInt("WinterId");
+        data.stormCount = tag.getInt("StormCount");
+        data.stormActive = tag.getBoolean("StormActive");
+
+        long[] pending = tag.getLongArray("PendingChunks");
+        for (long v : pending) data.pendingChunks.add(v);
+
+        long[] observed = tag.getLongArray("ObservedChunks");
+        for (long v : observed) data.observedChunks.add(v);
+
+        return data;
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag tag) {
+        tag.putInt("WinterId", winterId);
+        tag.putInt("StormCount", stormCount);
+        tag.putBoolean("StormActive", stormActive);
+
+        long[] pending = new long[pendingChunks.size()];
+        int i = 0;
+        for (Long v : pendingChunks) pending[i++] = v;
+        tag.putLongArray("PendingChunks", pending);
+
+        long[] observed = new long[observedChunks.size()];
+        i = 0;
+        for (Long v : observedChunks) observed[i++] = v;
+        tag.putLongArray("ObservedChunks", observed);
+        return tag;
+    }
+
+    public static SnowSavedData get(ServerLevel level) {
+        return level.getDataStorage().computeIfAbsent(SnowSavedData::load, SnowSavedData::new, "ssp_snow_data");
+    }
+}
+

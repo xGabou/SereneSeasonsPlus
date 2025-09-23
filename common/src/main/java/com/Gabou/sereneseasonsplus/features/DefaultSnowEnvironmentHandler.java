@@ -1,13 +1,14 @@
 package com.Gabou.sereneseasonsplus.features;
 
 import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
+import com.Gabou.sereneseasonsplus.storage.SnowSavedData;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import sereneseasons.api.season.Season;
@@ -30,7 +31,29 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
     private final Map<ResourceKey<Level>, SnowData> perLevelData = new HashMap<>();
 
     private SnowData data(ServerLevel level) {
-        return perLevelData.computeIfAbsent(level.dimension(), k -> new SnowData());
+        return perLevelData.computeIfAbsent(level.dimension(), k -> {
+            SnowData d = new SnowData();
+            // Restore from persisted storage if present
+            SnowSavedData store = SnowSavedData.get(level);
+            d.winterId = store.winterId;
+            d.stormCount = store.stormCount;
+            d.stormActive = store.stormActive;
+            d.pendingChunks.addAll(store.pendingChunks);
+            d.observedChunks.addAll(store.observedChunks);
+            return d;
+        });
+    }
+
+    private void persist(ServerLevel level, SnowData d) {
+        SnowSavedData store = SnowSavedData.get(level);
+        store.winterId = d.winterId;
+        store.stormCount = d.stormCount;
+        store.stormActive = d.stormActive;
+        store.pendingChunks.clear();
+        store.pendingChunks.addAll(d.pendingChunks);
+        store.observedChunks.clear();
+        store.observedChunks.addAll(d.observedChunks);
+        store.setDirty();
     }
 
     @Override
@@ -55,6 +78,7 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
         data.stormActive = false;
         data.pendingChunks.clear();
         data.observedChunks.clear();
+        persist(level, data);
     }
 
     @Override
@@ -82,9 +106,11 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
                 }
                 ChunkQueue.enqueueScheduled(chunkPos);
             }
-        } else if (!level.isRaining()) {
+        } else if (!EnvironmentHelper.isRainning(level, chunkPos.getMiddleBlockPosition(65))) {
             data.stormActive = false;
         }
+        // Persist any changes in storm state / pending observations
+        persist(level, data);
     }
 
     @Override
@@ -100,6 +126,7 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
             data.pendingChunks.remove(key);
         }
         data.observedChunks.add(key);
+        persist(level, data);
     }
 
     @Override
@@ -114,6 +141,9 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
 
     @Override
     public void clear(ServerLevel level) {
-        perLevelData.remove(level.dimension());
+        SnowData d = perLevelData.remove(level.dimension());
+        if (d != null) {
+            persist(level, d);
+        }
     }
 }

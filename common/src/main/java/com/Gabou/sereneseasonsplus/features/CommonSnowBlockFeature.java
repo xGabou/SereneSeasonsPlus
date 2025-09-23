@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus.features;
 
+import com.Gabou.sereneseasonsplus.features.logic.SnowLogic;
 import com.Gabou.sereneseasonsplus.features.snowstorm.ISnowStormLevel;
 import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
 import com.Gabou.sereneseasonsplus.tags.SSPTags;
@@ -169,13 +170,9 @@ public class CommonSnowBlockFeature {
     }
 
     public static void handleOnChunkLoad(LevelChunk chunk, ServerLevel level) {
-        // Enqueue immediately on load so every loaded chunk gets processed.
         counterTime++;
         ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
-
         if (tracked == null) return;
-
-        // Persistence is handled via natural snow detection below; avoid platform-specific chunk data in common.
 
         ChunkPos chunkPos = chunk.getPos();
         var seasonState = SeasonHelper.getSeasonState(level);
@@ -185,8 +182,10 @@ public class CommonSnowBlockFeature {
             ChunkQueue.enqueueScheduled(chunkPos);
             return;
         }
-        logicChunks(level, currentSeason, seasonState, tracked, chunkPos);
+
+        SnowLogic.evaluate(level, currentSeason, seasonState, tracked, chunkPos, true);
     }
+
 
     public static void enqueueChunkForSnowApply(ChunkPos chunkPos, Season.SubSeason subSeason) {
         ChunkQueue.enqueueApply(chunkPos, subSeason);
@@ -682,7 +681,7 @@ public class CommonSnowBlockFeature {
 //        }
 
 
-    private static LayerBounds getSeasonalLayerBounds(Season.SubSeason subSeason, int day) {
+    public static LayerBounds getSeasonalLayerBounds(Season.SubSeason subSeason, int day) {
         return switch (subSeason) {
             case EARLY_WINTER -> (day >= 6) ? new LayerBounds(1, 3) : null;
             case MID_WINTER -> new LayerBounds(3, 5);
@@ -795,7 +794,7 @@ public class CommonSnowBlockFeature {
         }
     }
 
-    private record LayerBounds(int minLayers, int maxLayers) {
+    public record LayerBounds(int minLayers, int maxLayers) {
     }
 
     /**
