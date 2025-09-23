@@ -62,8 +62,10 @@ public class ServerLevelMixin {
 
         }
 
+        boolean wasRaining = tracked.sereneseasonsplus$wasRaining();
         boolean isRaining = EnvironmentHelper.isRainning(level, chunk.getPos().getMiddleBlockPosition(65));
-        if (isRaining != tracked.sereneseasonsplus$wasRaining()) {
+        if (isRaining != wasRaining) {
+            CommonSnowBlockFeature.HANDLER.onRainChanged(level, chunk.getPos(), isRaining);
             tracked.sereneseasonsplus$incrementWasRaining(isRaining);
             if (!isRaining) {
                 tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(false);
@@ -82,7 +84,8 @@ public class ServerLevelMixin {
                 tracked.sereneseasonsplus$willReceiveSnow(false);
                 return;
             }
-            if (tracked.sereneseasonsplus$getSnowCount() <= 0
+            boolean shouldSnow = CommonSnowBlockFeature.HANDLER.shouldApplySnow(level, chunk.getPos());
+            if (shouldSnow && tracked.sereneseasonsplus$getSnowCount() <= 0
                     && !tracked.sereneseasonsplus$hasReceivedSnowLayerThisStorm()) {
 
                 ChunkQueue.enqueueApply(chunk.getPos(), currentSeason);

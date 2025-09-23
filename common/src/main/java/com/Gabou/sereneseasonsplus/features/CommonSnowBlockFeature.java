@@ -135,6 +135,8 @@ public class CommonSnowBlockFeature {
                             }
 
                         }
+
+                        HANDLER.onSnowApplied(level, chunkPos, changed);
                     }
                     case MELT_SNOW -> {
                         changed=meltSnowInChunk(level, chunkPos, entry.fullClear());
@@ -577,14 +579,25 @@ public class CommonSnowBlockFeature {
                 tracked.sereneseasonsplus$setLastWinterId(globalWinterId);
                 tracked.sereneseasonsplus$setSnowCount(-1); // back to virgin state
                 tracked.sereneseasonsplus$setHasAppliedInitialSnow(false);
-                tracked.sereneseasonsplus$setShouldApplyInitialSnow(true);
+                tracked.sereneseasonsplus$setShouldApplyInitialSnow(false);
                 tracked.sereneseasonsplus$willReceiveSnow(false);
                 tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(true);
             }
 
-            if (tracked.sereneseasonsplus$shouldApplyInitialSnow()
-                    || !tracked.sereneseasonsplus$hasAppliedInitialSnow()
-                    || tracked.sereneseasonsplus$getSnowCount() <= 0) {
+            boolean pendingSnow = HANDLER.shouldApplySnow(level, chunkPos);
+            boolean hasSnowHistory = pendingSnow
+                    || HANDLER.hasChunkSeenSnow(level, chunkPos)
+                    || tracked.sereneseasonsplus$getSnowCount() > 0;
+
+            if (pendingSnow) {
+                tracked.sereneseasonsplus$setShouldApplyInitialSnow(true);
+                tracked.sereneseasonsplus$willReceiveSnow(true);
+            }
+
+            boolean needsInitialApplication = !tracked.sereneseasonsplus$hasAppliedInitialSnow()
+                    || tracked.sereneseasonsplus$getSnowCount() <= 0;
+
+            if (pendingSnow || (needsInitialApplication && hasSnowHistory)) {
                 enqueueChunkForSnowApply(chunkPos, currentSeason);
                 tracked.sereneseasonsplus$willReceiveSnow(true);
             }
@@ -600,8 +613,10 @@ public class CommonSnowBlockFeature {
         }
 
         // 🌧 rainfall tracking
+        boolean wasRaining = tracked.sereneseasonsplus$wasRaining();
         boolean isRaining = EnvironmentHelper.isRainning(level, chunkPos.getMiddleBlockPosition(65));
-        if (isRaining != tracked.sereneseasonsplus$wasRaining()) {
+        if (isRaining != wasRaining) {
+            HANDLER.onRainChanged(level, chunkPos, isRaining);
             tracked.sereneseasonsplus$incrementWasRaining(isRaining);
             if (!isRaining) {
                 tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(false);
@@ -635,8 +650,17 @@ public class CommonSnowBlockFeature {
                     if (!(access instanceof LevelChunk lc)) continue;
                     ISnowTrackedChunk tracked = (ISnowTrackedChunk) lc;
                     if (bounds != null) {
-                        if ((tracked.sereneseasonsplus$hasAppliedInitialSnow() && tracked.sereneseasonsplus$getSnowCount() > 0) && tracked.sereneseasonsplus$hasReceivedSnowLayerThisStorm()) {
-                            continue; // already processed
+                        boolean pending = HANDLER.shouldApplySnow(level, lc.getPos());
+                        boolean hasSnow = tracked.sereneseasonsplus$getSnowCount() > 0;
+                        if (!pending && !hasSnow) {
+                            continue;
+                        }
+                        if (hasSnow && tracked.sereneseasonsplus$hasReceivedSnowLayerThisStorm()) {
+                            continue; // already processed for this storm
+                        }
+                        if (pending) {
+                            tracked.sereneseasonsplus$setShouldApplyInitialSnow(true);
+                            tracked.sereneseasonsplus$willReceiveSnow(true);
                         }
                         enqueueChunkForSnowApply(lc.getPos(), currentSeason);
                     } else {

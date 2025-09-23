@@ -108,6 +108,7 @@ public class EnvironmentHelper {
     {
         onWorldLoad(level);
         onSeasonChange(level,false);
+        CommonSnowBlockFeature.HANDLER.resetWinterState(level, currentWinterId);
     }
 
 
@@ -124,6 +125,7 @@ public class EnvironmentHelper {
         Season.SubSeason current = getCurrentSeason();
         if (current == Season.SubSeason.EARLY_WINTER && lastSubSeason != Season.SubSeason.EARLY_WINTER) {
             currentWinterId++; // new winter!
+            CommonSnowBlockFeature.HANDLER.resetWinterState(serverLevel, currentWinterId);
         }
         lastSubSeason = current;
 
@@ -134,6 +136,7 @@ public class EnvironmentHelper {
 
     public static void onServerStopping(ServerLevel level) {
         onWorldSave(level);
+        CommonSnowBlockFeature.HANDLER.clear(level);
     }
 
 }
