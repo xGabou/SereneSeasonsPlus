@@ -8,6 +8,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.storage.ChunkSerializer;
+import net.minecraft.world.level.chunk.storage.RegionStorageInfo;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -44,7 +45,13 @@ public abstract class ChunkSerializerSnowMixin {
 
     // Load
     @Inject(method = "read", at = @At("RETURN"))
-    private static void ssp$read(ServerLevel level, PoiManager poi, ChunkPos pos, CompoundTag nbt, CallbackInfoReturnable<ProtoChunk> cir) {
+    private static void ssp$read(ServerLevel level,
+                                 PoiManager poi,
+                                 RegionStorageInfo storageInfo,
+                                 ChunkPos pos,
+                                 CompoundTag nbt,
+                                 CallbackInfoReturnable<ProtoChunk> cir) {
+
         ChunkAccess access = cir.getReturnValue();
         if (access instanceof ISnowTrackedChunk tracked) {
             CompoundTag tag = nbt.getCompound(SSP);
@@ -59,7 +66,8 @@ public abstract class ChunkSerializerSnowMixin {
                 if (tag.contains("LastSeason")) {
                     try {
                         tracked.sereneseasonsplus$setLastSeason(Season.SubSeason.valueOf(tag.getString("LastSeason")));
-                    } catch (IllegalArgumentException ignored) {}
+                    } catch (IllegalArgumentException ignored) {
+                    }
                 }
             }
         }

@@ -1,6 +1,5 @@
 package net.Gabou.sereneseasonsplus.client;
 
-import com.Gabou.sereneseasonsplus.util.PerformanceWarning;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 

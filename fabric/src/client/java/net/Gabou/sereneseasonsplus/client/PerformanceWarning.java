@@ -1,4 +1,4 @@
-package com.Gabou.sereneseasonsplus.util;
+package net.Gabou.sereneseasonsplus.client;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -27,7 +27,7 @@ public class PerformanceWarning extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(graphics);
+        this.renderBackground(graphics, mouseX, mouseY, partialTick);
         graphics.drawCenteredString(this.font,
                 "This mod is optimized to work on the Sodium or Embeddium renderer",
                 this.width / 2, this.height / 2 - 50, 0xFFFFFF);

@@ -8,6 +8,6 @@ import net.minecraft.client.gui.screens.Screen;
 public class SereneSeasonsPlusModMenu implements ModMenuApi {
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return (Screen parent) -> new SereneExtendedScreen(parent);
+        return SereneExtendedScreen::new;
     }
 }

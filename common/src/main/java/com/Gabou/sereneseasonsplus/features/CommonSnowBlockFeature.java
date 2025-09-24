@@ -86,7 +86,7 @@ public class CommonSnowBlockFeature {
                 ChunkQueue.shuffle();
 
             while ((entry = ChunkQueue.poll()) != null) {
-                if ((!((MinecraftServerAccess) server).sereneseasonsplus$tempsEcoule() || processed >= 40) && processed >= 5) {
+                if ((!((MinecraftServerAccess) server).sereneseasonsplus$tempsEcoule() || processed >= 100) && processed >= 8) {
                     if (entry.type() == ChunkQueue.TaskType.APPLY_SNOW) {
                         enqueueChunkForSnowApply(entry.pos(), entry.subSeason());
                     } else {
@@ -149,8 +149,8 @@ public class CommonSnowBlockFeature {
                         HANDLER.onSnowApplied(level, chunkPos, changed);
                     }
                     case MELT_SNOW -> {
-                        changed=meltSnowInChunk(level, chunkPos, entry.fullClear());
-                        if(changed) {
+                        changed = meltSnowInChunk(level, chunkPos, entry.fullClear());
+                        if (changed) {
                             chunk.setUnsaved(true);
                             tracked.sereneseasonsplus$setHasAppliedInitialSnow(false);
                             tracked.sereneseasonsplus$setShouldApplyInitialSnow(false);
@@ -236,7 +236,6 @@ public class CommonSnowBlockFeature {
 
         return changed[0];
     }
-
 
 
     private static boolean tryPlaceSnow(ServerLevel level,
@@ -565,6 +564,8 @@ public class CommonSnowBlockFeature {
      */
     private static void performStartupCatchUp(ServerLevel level) {
         Season.SubSeason currentSeason = EnvironmentHelper.getCurrentSeason();
+        if (currentSeason == null)
+            currentSeason = SeasonHelper.getSeasonState(level).getSubSeason();
         int day = SeasonHelper.getSeasonState(level).getDay();
         LayerBounds bounds = getSeasonalLayerBounds(currentSeason, day);
 

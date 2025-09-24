@@ -22,6 +22,10 @@
       "net.Gabou.sereneseasonsplus.client.SereneSeasonsPlusModMenu"
     ]
   },
+  "mixins": [
+    "sereneseasonsplus.mixins.json",
+    "sereneseasonsplus.fabric.mixins.json"
+  ],
   "depends": {
     "fabricloader": ">=0.17.2",
     "fabric": "*",
