@@ -4,8 +4,10 @@ import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.features.NeoForgeSnowEnvironmentHandler;
-import com.Gabou.sereneseasonsplus.mixin.MinecraftServerInvoker;
-import com.Gabou.sereneseasonsplus.util.*;
+import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
+import com.Gabou.sereneseasonsplus.util.NeoForgeAsyncExecutorHandler;
+import com.Gabou.sereneseasonsplus.util.NeoForgeEnvironmentHelper;
+import com.Gabou.sereneseasonsplus.util.SereneService;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
@@ -94,7 +96,7 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
         ServerLevel level = (ServerLevel) event.getLevel();
         if( level.dimension() != Level.OVERWORLD) return;
         this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
-        CommonSnowBlockFeature.handleServerTick((MinecraftServerInvoker) level.getServer(), level);
+        CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
 
     }
 

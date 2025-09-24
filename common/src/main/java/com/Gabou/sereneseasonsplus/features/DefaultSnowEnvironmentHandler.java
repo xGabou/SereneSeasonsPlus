@@ -1,20 +1,64 @@
 package com.Gabou.sereneseasonsplus.features;
 
-import com.Gabou.sereneseasonsplus.features.snowstorm.IWeatherChunk;
-import com.Gabou.sereneseasonsplus.features.snowstorm.WeatherState;
-import com.Gabou.sereneseasonsplus.storage.Priority;
-import com.Gabou.sereneseasonsplus.util.SereneService;
+import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
+import com.Gabou.sereneseasonsplus.storage.SnowSavedData;
+import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
+import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.LevelChunk;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 
-import static com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
+    private static final class SnowData {
+        int winterId = -1;
+        int stormCount = 0;
+        boolean stormActive = false;
+        final Set<Long> pendingChunks = new HashSet<>();
+        final Set<Long> observedChunks = new HashSet<>();
+        int lastBlanketStormCount = 0; // last stormCount when a blanket apply sweep was triggered
+    }
+
+    private final Map<ResourceKey<Level>, SnowData> perLevelData = new HashMap<>();
+
+    private SnowData data(ServerLevel level) {
+        return perLevelData.computeIfAbsent(level.dimension(), k -> {
+            SnowData d = new SnowData();
+            // Restore from persisted storage if present
+            SnowSavedData store = SnowSavedData.get(level);
+            d.winterId = store.winterId;
+            d.stormCount = store.stormCount;
+            d.stormActive = store.stormActive;
+            d.pendingChunks.addAll(store.pendingChunks);
+            d.observedChunks.addAll(store.observedChunks);
+            d.lastBlanketStormCount = store.lastBlanketStormCount;
+            return d;
+        });
+    }
+
+    private void persist(ServerLevel level, SnowData d) {
+        SnowSavedData store = SnowSavedData.get(level);
+        store.winterId = d.winterId;
+        store.stormCount = d.stormCount;
+        store.stormActive = d.stormActive;
+        store.pendingChunks.clear();
+        store.pendingChunks.addAll(d.pendingChunks);
+        store.observedChunks.clear();
+        store.observedChunks.addAll(d.observedChunks);
+        store.lastBlanketStormCount = d.lastBlanketStormCount;
+        store.setDirty();
+    }
+
     @Override
     public int getBlocksToReplace(ServerLevel level, BlockPos playerPos) {
         Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
@@ -27,49 +71,110 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
     }
 
     @Override
-    public WeatherDecision decideWeatherAction(ServerLevel level, Season.SubSeason sub, float temperature, boolean coldEnoughToSnow, BlockPos pos) {
-        // Treat snow as the highest priority outcome
-        // Suggest using 0.15F to match vanilla coldEnoughToSnow threshold
-        final boolean isPrecip = level.isRaining();
-        final boolean wantsSnow = isPrecip && coldEnoughToSnow;
-
-        Action action = Action.NONE;
-        Priority priority = Priority.GRADUAL;
-
-        if (wantsSnow) {
-            // Do not let seasonal melt rules override actual snowfall
-            return new WeatherDecision(Action.SNOW, Priority.GRADUAL);
+    public void resetWinterState(ServerLevel level, int winterId) {
+        SnowData data = data(level);
+        if (data.winterId == winterId) {
+            return;
         }
-
-        switch (sub) {
-            case MID_SPRING, MID_AUTUMN -> {
-                if (temperature >= 0.5F) {
-                    action = Action.MELT;
-                    priority = Priority.ACCELERATED;
-                } else if (temperature >= 0.15F) {
-                    action = Action.MELT;
-                    priority = Priority.ACCELERATED;
-                }
-            }
-            case LATE_SPRING, EARLY_AUTUMN, EARLY_SUMMER, MID_SUMMER, LATE_SUMMER -> {
-                if (temperature >= 0.5F) {
-                    action = Action.CLEAR;
-                    priority = Priority.URGENT;
-                } else if (temperature >= 0.15F) {
-                    action = Action.MELT;
-                    priority = Priority.GRADUAL;
-                }
-            }
-            case EARLY_SPRING, LATE_AUTUMN -> {
-                if (temperature >= 0.15F) {
-                    action = Action.MELT;
-                    priority = Priority.GRADUAL;
-                }
-            }
-            default -> { /* keep NONE + GRADUAL */ }
-        }
-
-        return new WeatherDecision(action, priority);
+        data.winterId = winterId;
+        data.stormCount = 0;
+        data.stormActive = false;
+        data.pendingChunks.clear();
+        data.observedChunks.clear();
+        data.lastBlanketStormCount = 0;
+        persist(level, data);
     }
 
+    @Override
+    public void onRainChanged(ServerLevel level, ChunkPos chunkPos, boolean isRaining, ISnowTrackedChunk trackedChunk) {
+        SnowData data = data(level);
+        long key = chunkPos.toLong();
+
+        if (isRaining) {
+            boolean snowySeason = EnvironmentHelper.isSnowySeason();
+            if (snowySeason && !data.stormActive) {
+                data.stormActive = true;
+                data.stormCount++;
+            } else if (!snowySeason) {
+                data.stormActive = false;
+            }
+            if (snowySeason && data.pendingChunks.add(key)) {
+                data.observedChunks.add(key);
+            }
+
+            if (snowySeason) {
+                trackedChunk.sereneseasonsplus$setShouldApplyInitialSnow(true);
+                trackedChunk.sereneseasonsplus$willReceiveSnow(true);
+                ChunkQueue.enqueueScheduled(chunkPos);
+            }
+        } else if (!EnvironmentHelper.isRainning(level, chunkPos.getMiddleBlockPosition(65))) {
+            boolean wasActive = data.stormActive;
+            data.stormActive = false;
+            // If a storm just ended and we've had more than one storm this winter,
+            // sweep loaded chunks to ensure blanket snow application.
+            if (wasActive && data.stormCount > 1 && data.lastBlanketStormCount < data.stormCount) {
+                blanketApplyLoadedChunks(level);
+                data.lastBlanketStormCount = data.stormCount;
+            }
+        }
+        // Persist any changes in storm state / pending observations
+        persist(level, data);
+    }
+
+    @Override
+    public boolean shouldApplySnow(ServerLevel level, ChunkPos chunkPos) {
+        return data(level).pendingChunks.contains(chunkPos.toLong());
+    }
+
+    @Override
+    public void onSnowApplied(ServerLevel level, ChunkPos chunkPos, boolean success) {
+        SnowData data = data(level);
+        long key = chunkPos.toLong();
+        if (success) {
+            data.pendingChunks.remove(key);
+        }
+        data.observedChunks.add(key);
+        persist(level, data);
+    }
+
+    @Override
+    public int getSnowStormsThisWinter(ServerLevel level) {
+        return data(level).stormCount;
+    }
+
+    @Override
+    public boolean hasChunkSeenSnow(ServerLevel level, ChunkPos chunkPos) {
+        return data(level).observedChunks.contains(chunkPos.toLong());
+    }
+
+    @Override
+    public void clear(ServerLevel level) {
+        SnowData d = perLevelData.remove(level.dimension());
+        if (d != null) {
+            persist(level, d);
+        }
+    }
+
+    private void blanketApplyLoadedChunks(ServerLevel level) {
+        if (!EnvironmentHelper.isSnowySeason()) return;
+        Season.SubSeason current = EnvironmentHelper.getCurrentSeason();
+        if (current == null) return;
+
+        var chunkSource = level.getChunkSource();
+        for (net.minecraft.server.level.ServerPlayer player : level.players()) {
+            int view = level.getServer() != null ? level.getServer().getPlayerList().getViewDistance() : 10;
+            BlockPos center = player.blockPosition();
+            int pcx = center.getX() >> 4;
+            int pcz = center.getZ() >> 4;
+            for (int dx = -view; dx <= view; dx++) {
+                for (int dz = -view; dz <= view; dz++) {
+                    int cx = pcx + dx;
+                    int cz = pcz + dz;
+                    net.minecraft.world.level.chunk.ChunkAccess access = chunkSource.getChunk(cx, cz, false);
+                    if (!(access instanceof LevelChunk lc)) continue;
+                    CommonSnowBlockFeature.enqueueChunkForSnowApply(lc.getPos(), current);
+                }
+            }
+        }
+    }
 }

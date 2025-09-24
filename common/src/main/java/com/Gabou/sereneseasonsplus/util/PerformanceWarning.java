@@ -27,7 +27,7 @@ public class PerformanceWarning extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(graphics, mouseX, mouseY, partialTick); // new signature
+        this.renderBackground(graphics);
         graphics.drawCenteredString(this.font,
                 "This mod is optimized to work on the Sodium or Embeddium renderer",
                 this.width / 2, this.height / 2 - 50, 0xFFFFFF);

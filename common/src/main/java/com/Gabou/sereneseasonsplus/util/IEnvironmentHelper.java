@@ -8,6 +8,7 @@ public interface IEnvironmentHelper {
     boolean isClient();
     boolean shouldRunMod();
     boolean isHotSeason();
+    boolean isSnowySeason();
     Season.SubSeason getCurrentSeason();
     void onSeasonChange(ServerLevel serverLevel);
     boolean isRainning(ServerLevel level, BlockPos pos);

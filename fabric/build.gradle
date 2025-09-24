@@ -50,7 +50,7 @@ dependencies {
     implementation project(":Common")
 
     // tes dépendances Fabric spécifiques
-    modImplementation "curse.maven:betterdays-895618:6999803"
+    modImplementation "curse.maven:betterdays-895618:7015563"
     modImplementation "curse.maven:serene-seasons-291874:6182595"
     modImplementation "curse.maven:glitchcore-955399:5660741"
     modImplementation "curse.maven:modmenu-308702:5441532"

@@ -8,7 +8,7 @@ import net.minecraft.world.level.block.Block;
 public class SSPTags {
     public static class Blocks {
         public static final TagKey<Block> MELTABLE =
-                TagKey.create(Registries.BLOCK,  ResourceLocation.fromNamespaceAndPath("sereneseasonsplus", "meltable"));
+                TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("sereneseasonsplus", "meltable"));
     }
 }
 

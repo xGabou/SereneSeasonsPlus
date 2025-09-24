@@ -53,7 +53,7 @@ dependencies {
     implementation project(":Common") // gives you sources & resources
     implementation "curse.maven:serene-seasons-291874:6182596"
     implementation "curse.maven:glitchcore-955399:5660740"
-    implementation "curse.maven:betterdays-895618:6999804"
+    implementation "curse.maven:betterdays-895618:7015564"
     runtimeOnly "me.djtheredstoner:DevAuth-neoforge:1.2.1"
     compileOnly files("../libs/projectatmosphere-0.3.9-3.jar")
     implementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-neoforge", version: "${whitenoise_version}"

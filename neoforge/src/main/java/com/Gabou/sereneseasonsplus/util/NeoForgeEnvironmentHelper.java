@@ -20,6 +20,8 @@ public class NeoForgeEnvironmentHelper implements IEnvironmentHelper{
 
     private static boolean isHotSeason = false;
 
+    private boolean isSnowySeason;
+
     /**
      * Indicates whether the current sub-season is considered hot.
      *
@@ -28,6 +30,13 @@ public class NeoForgeEnvironmentHelper implements IEnvironmentHelper{
     @Override
     public boolean isHotSeason() {
         return isHotSeason;
+    }
+
+
+
+    @Override
+    public boolean isSnowySeason() {
+        return isSnowySeason;
     }
 
     /**
@@ -74,6 +83,7 @@ public class NeoForgeEnvironmentHelper implements IEnvironmentHelper{
         season = SeasonHelper.getSeasonState(serverLevel).getSubSeason();
         LOGGER.info("Season changed to: {}", season);
         isHotSeason = HotSeason.isHotSeason(season);
+        isSnowySeason = SnowySeason.isSnowySeason(season);
         // Proactively update snow/ice state in loaded chunks around players
         CommonSnowBlockFeature.onSeasonChange(serverLevel);
     }

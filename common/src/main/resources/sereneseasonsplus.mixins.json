@@ -4,9 +4,9 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "sereneseasonsplus.refmap.json",
   "mixins": [
-    "ChunkMapInvoker",
+    "ChunkSerializerSnowMixin",
     "LevelChunkSnowMixin",
-    "MinecraftServerInvoker",
+    "MinecraftServerMixin",
     "ServerLevelMixin"
   ],
   "client": [

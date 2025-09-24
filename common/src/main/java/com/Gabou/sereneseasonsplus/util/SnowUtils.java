@@ -101,19 +101,24 @@ public class SnowUtils {
         if (state.hasProperty(BlockStateProperties.LAYERS)) {
             int layers = state.getValue(BlockStateProperties.LAYERS);
             if (layers > 1) {
-                level.setBlock(
-                        pos,
-                        state.setValue(BlockStateProperties.LAYERS, layers - 1),
-                        Block.UPDATE_ALL | Block.UPDATE_SUPPRESS_DROPS
-                );
+                BlockState newState = state.setValue(BlockStateProperties.LAYERS, layers - 1);
+                if (!newState.equals(state)) {
+                    level.setBlock(
+                            pos,
+                            newState,
+                            Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS
+                    );
+                }
                 return;
             }
         }
-        level.setBlock(
-                pos,
-                Blocks.AIR.defaultBlockState(),
-                Block.UPDATE_ALL | Block.UPDATE_SUPPRESS_DROPS
-        );
+        if (!level.getBlockState(pos).is(Blocks.AIR)) {
+            level.setBlock(
+                    pos,
+                    Blocks.AIR.defaultBlockState(),
+                    Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS
+            );
+        }
     }
 
 
