@@ -16,6 +16,7 @@ public class SnowSavedData extends SavedData {
     public boolean stormActive = false;
     public final Set<Long> pendingChunks = new HashSet<>();
     public final Set<Long> observedChunks = new HashSet<>();
+    public int lastBlanketStormCount = 0;
 
     public SnowSavedData() {}
 
@@ -26,6 +27,7 @@ public class SnowSavedData extends SavedData {
         data.winterId = tag.getInt("WinterId");
         data.stormCount = tag.getInt("StormCount");
         data.stormActive = tag.getBoolean("StormActive");
+        data.lastBlanketStormCount = tag.getInt("LastBlanketStormCount");
 
         long[] pending = tag.getLongArray("PendingChunks");
         for (long v : pending) data.pendingChunks.add(v);
@@ -41,6 +43,7 @@ public class SnowSavedData extends SavedData {
         tag.putInt("WinterId", winterId);
         tag.putInt("StormCount", stormCount);
         tag.putBoolean("StormActive", stormActive);
+        tag.putInt("LastBlanketStormCount", lastBlanketStormCount);
 
         long[] pending = new long[pendingChunks.size()];
         int i = 0;
@@ -58,4 +61,3 @@ public class SnowSavedData extends SavedData {
         return level.getDataStorage().computeIfAbsent(SnowSavedData::load, SnowSavedData::new, "ssp_snow_data");
     }
 }
-

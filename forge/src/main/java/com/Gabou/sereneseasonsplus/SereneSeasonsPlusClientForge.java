@@ -2,7 +2,6 @@ package com.Gabou.sereneseasonsplus;
 
 import com.Gabou.sereneseasonsplus.config.SereneExtendedScreen;
 import com.Gabou.sereneseasonsplus.util.PerfChecker;
-import com.Gabou.sereneseasonsplus.util.PerformanceWarning;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;

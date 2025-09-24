@@ -1,4 +1,4 @@
-package com.Gabou.sereneseasonsplus.util;
+package net.Gabou.sereneseasonsplus.client;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;

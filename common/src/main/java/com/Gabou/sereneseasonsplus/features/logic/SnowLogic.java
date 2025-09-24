@@ -33,7 +33,7 @@ public final class SnowLogic {
         boolean wasRaining = tracked.sereneseasonsplus$wasRaining();
         boolean isRaining = EnvironmentHelper.isRainning(level, chunkPos.getMiddleBlockPosition(65));
         if (isRaining != wasRaining) {
-            CommonSnowBlockFeature.HANDLER.onRainChanged(level, chunkPos, isRaining);
+            CommonSnowBlockFeature.HANDLER.onRainChanged(level, chunkPos, isRaining,tracked);
             tracked.sereneseasonsplus$incrementWasRaining(isRaining);
 
             // storm just ended on this chunk
@@ -94,9 +94,7 @@ public final class SnowLogic {
             // 2 post storm initial spread for chunks that should be snowy but missed the storm
             // 3 previously flagged retry
             boolean applyNow =
-                    (pendingSnow && firstTimeHere)
-                            || (okForInitialSpread && needsInitial && hasSnowHistory)
-                            || tracked.sereneseasonsplus$shouldReceiveSnow();
+                    ((pendingSnow && firstTimeHere) || tracked.sereneseasonsplus$shouldReceiveSnow()) && (okForInitialSpread && needsInitial && hasSnowHistory);
 
             if (applyNow) {
                 ChunkQueue.enqueueApply(chunkPos, currentSeason);

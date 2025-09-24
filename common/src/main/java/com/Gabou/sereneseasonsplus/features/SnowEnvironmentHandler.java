@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus.features;
 
+import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -21,7 +22,7 @@ public interface SnowEnvironmentHandler {
     /**
      * Called whenever the rain/snow state for a chunk transitions.
      */
-    void onRainChanged(ServerLevel level, ChunkPos chunkPos, boolean isRaining);
+    void onRainChanged(ServerLevel level, ChunkPos chunkPos, boolean isRaining, ISnowTrackedChunk trackedChunk);
 
     /**
      * Returns {@code true} if this chunk should currently receive natural snow

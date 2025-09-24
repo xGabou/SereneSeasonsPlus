@@ -33,6 +33,10 @@ loom {
 processResources {
     from project(":Common").sourceSets.main.resources
 }
+tasks.withType(JavaCompile) {
+    source(project(":Common").sourceSets.main.allSource)
+}
+
 // Déclare ton mod avec les 2 sources : main + client
 loom {
     mods {
@@ -42,6 +46,10 @@ loom {
         }
     }
 }
+tasks.withType(Jar) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
