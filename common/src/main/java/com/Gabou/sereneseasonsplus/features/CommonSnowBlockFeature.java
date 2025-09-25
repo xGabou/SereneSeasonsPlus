@@ -79,7 +79,6 @@ public class CommonSnowBlockFeature {
             }
 
             if (tickCounter % 5 != 0 && tickCounter > 10) return;
-            LOGGER.info("ChunkQueue size: {}", ChunkQueue.size());
             ChunkQueue.Entry entry;
             int processed = 0;
             if (ChunkQueue.isEmpty())
