@@ -30,10 +30,10 @@
     "fabricloader": ">=0.17.2",
     "fabric": "*",
     "minecraft": "${minecraft_version}",
-    "modmenu": ">=7.0.0",
     "betterdays": "*",
     "sereneseasons": "*"
   },
   "suggests": {
+        "modmenu": ">=7.0.0"
   }
 }
