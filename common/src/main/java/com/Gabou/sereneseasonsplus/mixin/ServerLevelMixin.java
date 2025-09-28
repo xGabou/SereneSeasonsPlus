@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.levelgen.Heightmap;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -49,7 +50,8 @@ public class ServerLevelMixin {
         var seasonState = SeasonHelper.getSeasonState(level);
         if (seasonState == null || currentSeason == null) return;
 
-        SnowLogic.evaluate(level, currentSeason, seasonState, tracked, chunk.getPos(), false);
+
+        SnowLogic.evaluate(level, currentSeason, seasonState, tracked, chunk.getPos(), false,chunk.getHeight());
     }
 
 

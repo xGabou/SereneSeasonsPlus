@@ -46,9 +46,4 @@ public class FabricEnvironmentHelper implements IEnvironmentHelper {
         isHotSeason = HotSeason.isHotSeason(season);
         isSnowySeason = SnowySeason.isSnowySeason(season);
     }
-
-    @Override
-    public boolean isRainning(ServerLevel level, BlockPos pos) {
-        return level.isRaining();
-    }
 }

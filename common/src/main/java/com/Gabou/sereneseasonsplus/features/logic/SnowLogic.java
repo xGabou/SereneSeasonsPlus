@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus.features.logic;
 
+import com.Gabou.sereneseasonsplus.SereneSeasonPlusCommon;
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
@@ -9,6 +10,8 @@ import net.minecraft.world.level.ChunkPos;
 import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.Season;
 
+import java.util.Objects;
+
 
 /**
  * Central snow evaluation logic.
@@ -16,24 +19,28 @@ import sereneseasons.api.season.Season;
  */
 public final class SnowLogic {
 
-    private SnowLogic() {}
+    private SnowLogic() {
+    }
 
     public static void evaluate(ServerLevel level,
                                 Season.SubSeason currentSeason,
                                 ISeasonState seasonState,
                                 ISnowTrackedChunk tracked,
                                 ChunkPos chunkPos,
-                                boolean isLoadEvent) {
+                                boolean isLoadEvent, int maxHeight) {
 
+        if(Objects.equals(chunkPos, new ChunkPos(-157, -95))){
+            System.out.println("test");
+        }
         Season.SubSeason prevSeason = tracked.sereneseasonsplus$getLastSeason();
         if (prevSeason != currentSeason) {
             tracked.sereneseasonsplus$setLastSeason(currentSeason);
         }
 
         boolean wasRaining = tracked.sereneseasonsplus$wasRaining();
-        boolean isRaining = EnvironmentHelper.isRainning(level, chunkPos.getMiddleBlockPosition(65));
+        boolean isRaining = EnvironmentHelper.isRainning(level, chunkPos.getMiddleBlockPosition(maxHeight));
         if (isRaining != wasRaining) {
-            CommonSnowBlockFeature.HANDLER.onRainChanged(level, chunkPos, isRaining,tracked);
+            CommonSnowBlockFeature.HANDLER.onRainChanged(level, chunkPos, isRaining, tracked);
             tracked.sereneseasonsplus$incrementWasRaining(isRaining);
 
             // storm just ended on this chunk
@@ -66,10 +73,8 @@ public final class SnowLogic {
             if (!isLoadEvent) return;
         }
 
-        CommonSnowBlockFeature.LayerBounds bounds =
-                CommonSnowBlockFeature.getSeasonalLayerBounds(currentSeason, seasonState.getDay());
+        if (CommonSnowBlockFeature.HANDLER.isColdEnoughForSnow(level, chunkPos.getMiddleBlockPosition(maxHeight))) {
 
-        if (bounds != null) {
             boolean pendingSnow = CommonSnowBlockFeature.HANDLER.shouldApplySnow(level, chunkPos);
             boolean hasSnowHistory = pendingSnow
                     || CommonSnowBlockFeature.HANDLER.hasChunkSeenSnow(level, chunkPos)

@@ -7,15 +7,14 @@ import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 import net.Gabou.projectatmosphere.manager.ForecastOrchestrator;
 import net.Gabou.projectatmosphere.util.BiomeInstanceKey;
+import sereneseasons.season.SeasonHooks;
 
 public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
     @Override
     public int getBlocksToReplace(ServerLevel level, BlockPos playerPos) {
         if (!SereneSeasonsPlusForge.isProjectAtmosphereLoaded) {
-            Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
-            float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
-
-            if (temperature >= 0.15F) {
+            float temperature = SeasonHooks.getBiomeTemperature(level,level.getBiome(playerPos),playerPos);
+            if (SeasonHooks.coldEnoughToSnowSeasonal(level, playerPos)) {
                 return CommonSnowBlockFeature.calculateBlocksToReplace(temperature);
             }
 
@@ -30,5 +29,18 @@ public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
             }
         }
         return -level.random.nextInt(2,6);
+    }
+
+    @Override
+    public boolean isColdEnoughForSnow(ServerLevel level, BlockPos pos) {
+        if (!SereneSeasonsPlusForge.isProjectAtmosphereLoaded) {
+            return SeasonHooks.coldEnoughToSnowSeasonal(level, pos);
+        } else {
+            float temperature = ForecastOrchestrator.getCurrentTemperature(
+                    new BiomeInstanceKey(level.getBiome(pos).unwrapKey().get().location(), pos),
+                    level.getDayTime()
+            );
+            return temperature < 0.5F;
+        }
     }
 }

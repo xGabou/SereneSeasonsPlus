@@ -11,5 +11,4 @@ public interface IEnvironmentHelper {
     boolean isSnowySeason();
     Season.SubSeason getCurrentSeason();
     void onSeasonChange(ServerLevel serverLevel);
-    boolean isRainning(ServerLevel level, BlockPos pos);
 }

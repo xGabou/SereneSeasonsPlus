@@ -13,6 +13,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
+import sereneseasons.season.SeasonHooks;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,10 +62,9 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
 
     @Override
     public int getBlocksToReplace(ServerLevel level, BlockPos playerPos) {
-        Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
-        float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
+        float temperature = SeasonHooks.getBiomeTemperature(level,level.getBiome(playerPos),playerPos);
 
-        if (temperature >= 0.15F) {
+        if (SeasonHooks.coldEnoughToSnowSeasonal(level, playerPos)) {
             return CommonSnowBlockFeature.calculateBlocksToReplace(temperature);
         }
         return 0;
@@ -126,6 +126,8 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
         return data(level).pendingChunks.contains(chunkPos.toLong());
     }
 
+
+
     @Override
     public void onSnowApplied(ServerLevel level, ChunkPos chunkPos, boolean success) {
         SnowData data = data(level);
@@ -153,6 +155,11 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
         if (d != null) {
             persist(level, d);
         }
+    }
+
+    @Override
+    public boolean isColdEnoughForSnow(ServerLevel level, BlockPos pos) {
+        return SeasonHooks.coldEnoughToSnowSeasonal(level, pos);
     }
 
     private void blanketApplyLoadedChunks(ServerLevel level) {

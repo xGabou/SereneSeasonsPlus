@@ -53,11 +53,4 @@ public class ForgeEnvironmentHelper implements IEnvironmentHelper {
         isSnowySeason = SnowySeason.isSnowySeason(season);
 
     }
-
-    @Override
-    public boolean isRainning(ServerLevel level, BlockPos pos) {
-        if(SereneSeasonsPlusForge.isProjectAtmosphereLoaded)
-            return AtmoApi.getInstance().isRainningAt(level, pos);
-        return level.isRaining();
-    }
 }

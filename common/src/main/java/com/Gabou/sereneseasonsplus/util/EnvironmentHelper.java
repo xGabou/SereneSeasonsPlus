@@ -30,7 +30,7 @@ public class EnvironmentHelper {
     }
 
     public static boolean isRainning(ServerLevel level, BlockPos pos) {
-        return delegate.isRainning(level,pos);
+        return level.isRainingAt(pos);
     }
     // Persistence: world-level state we want to keep across reloads
     private static final String SAVE_DIR = "data/sereneseasonsplus";
