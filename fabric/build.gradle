@@ -6,9 +6,6 @@ base.archivesName.set("${mod_name}-fabric")
 loom {
     // Sépare les sources client et serveur
     splitEnvironmentSourceSets()
-    mixin {
-        defaultRefmapName.set("${mod_id}.refmap.json")
-    }
     runs {
         client {
             client()
@@ -68,6 +65,5 @@ dependencies {
     include implementation("com.electronwill.night-config:core:${nightconfig_version}")
     include implementation("net.jodah:typetools:0.6.3")
     runtimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.1")
-    modImplementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_range}"
     include group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_version}"
 }
