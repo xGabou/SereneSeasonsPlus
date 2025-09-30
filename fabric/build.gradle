@@ -4,8 +4,9 @@ plugins {
 base.archivesName.set("${mod_name}-fabric")
 
 loom {
-    // Sépare les sources client et serveur
-    splitEnvironmentSourceSets()
+    mixin {
+        defaultRefmapName.set("sereneseasonsplus-refmap.json")
+    }
     runs {
         client {
             client()
@@ -39,7 +40,6 @@ loom {
     mods {
         "${mod_id}" {
             sourceSet sourceSets.main
-            sourceSet sourceSets.client
         }
     }
 }
@@ -65,5 +65,22 @@ dependencies {
     include implementation("com.electronwill.night-config:core:${nightconfig_version}")
     include implementation("net.jodah:typetools:0.6.3")
     runtimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.1")
-    include group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_version}"
+    modCompileOnly group: "technology.roughness.whitenoise", name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_version}"
 }
+tasks.named("remapJar") {
+    doLast {
+        def jarFile = archiveFile.get().asFile
+        def tmpDir = new File(jarFile.parentFile, jarFile.name + ".tmpdir")
+        if (tmpDir.exists()) tmpDir.deleteDir()
+        copy {
+            from zipTree(jarFile)
+            into tmpDir
+            exclude("client-*-refmap.json")
+        }
+        jarFile.delete()
+        ant.zip(destfile: jarFile, basedir: tmpDir)
+        tmpDir.deleteDir()
+    }
+}
+
+

@@ -16,15 +16,14 @@
       "com.Gabou.sereneseasonsplus.SereneSeasonsPlusFabric"
     ],
     "client": [
-      "net.Gabou.sereneseasonsplus.client.SereneSeasonsPlusClientFabric"
+      "com.Gabou.sereneseasonsplus.client.SereneSeasonsPlusClientFabric"
     ],
     "modmenu": [
-      "net.Gabou.sereneseasonsplus.client.SereneSeasonsPlusModMenu"
+      "com.Gabou.sereneseasonsplus.client.SereneSeasonsPlusModMenu"
     ]
   },
   "mixins": [
-    "sereneseasonsplus.mixins.json",
-    "sereneseasonsplus.fabric.mixins.json"
+    "sereneseasonsplus.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.14.0",

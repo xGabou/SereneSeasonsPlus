@@ -2,6 +2,7 @@
   "required": true,
   "package": "com.Gabou.sereneseasonsplus.mixin",
   "compatibilityLevel": "JAVA_17",
+  "refmap": "sereneseasonsplus-refmap.json",
   "mixins": [
     "ChunkSerializerSnowMixin",
     "LevelChunkSnowMixin",

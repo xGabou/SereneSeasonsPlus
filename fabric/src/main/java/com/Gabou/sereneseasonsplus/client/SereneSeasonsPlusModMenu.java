@@ -1,6 +1,6 @@
-package net.Gabou.sereneseasonsplus.client;
+package com.Gabou.sereneseasonsplus.client;
 
-import net.Gabou.sereneseasonsplus.client.config.SereneExtendedScreen;
+import com.Gabou.sereneseasonsplus.client.config.SereneExtendedScreen;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import net.minecraft.client.gui.screens.Screen;
