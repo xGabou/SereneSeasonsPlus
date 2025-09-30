@@ -19,6 +19,7 @@ import java.nio.file.Path;
  */
 public class EnvironmentHelper {
     private static IEnvironmentHelper delegate;
+    private static IRainHandler rainHandler = new DefaultRainHandler();
 
     /** Called by Fabric/Forge bootstrap to inject the correct impl */
     public static void init(IEnvironmentHelper impl) {
@@ -30,7 +31,14 @@ public class EnvironmentHelper {
     }
 
     public static boolean isRainning(ServerLevel level, BlockPos pos) {
-        return level.isRainingAt(pos);
+        return rainHandler.isRainingAt(level, pos);
+    }
+
+    /**
+     * Allows platform bootstrap to install a custom rain handler.
+     */
+    public static void initRainHandler(IRainHandler handler) {
+        if (handler != null) rainHandler = handler;
     }
     // Persistence: world-level state we want to keep across reloads
     private static final String SAVE_DIR = "data/sereneseasonsplus";

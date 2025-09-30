@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
-    private static final class SnowData {
+    protected static final class SnowData {
         int winterId = -1;
         int stormCount = 0;
         boolean stormActive = false;
@@ -32,7 +32,7 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
 
     private final Map<ResourceKey<Level>, SnowData> perLevelData = new HashMap<>();
 
-    private SnowData data(ServerLevel level) {
+    protected SnowData data(ServerLevel level) {
         return perLevelData.computeIfAbsent(level.dimension(), k -> {
             SnowData d = new SnowData();
             // Restore from persisted storage if present
@@ -47,7 +47,7 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
         });
     }
 
-    private void persist(ServerLevel level, SnowData d) {
+    protected void persist(ServerLevel level, SnowData d) {
         SnowSavedData store = SnowSavedData.get(level);
         store.winterId = d.winterId;
         store.stormCount = d.stormCount;
@@ -162,7 +162,7 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
         return SeasonHooks.coldEnoughToSnowSeasonal(level, pos);
     }
 
-    private void blanketApplyLoadedChunks(ServerLevel level) {
+    protected void blanketApplyLoadedChunks(ServerLevel level) {
         if (!EnvironmentHelper.isSnowySeason()) return;
         sereneseasons.api.season.Season.SubSeason current = EnvironmentHelper.getCurrentSeason();
         if (current == null) return;

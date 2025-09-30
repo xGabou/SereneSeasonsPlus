@@ -1,5 +1,8 @@
 package com.Gabou.sereneseasonsplus.features;
 import com.Gabou.sereneseasonsplus.SereneSeasonsPlusForge;
+import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
+import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
+import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -42,5 +45,61 @@ public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
             );
             return temperature < 0.5F;
         }
+    }
+
+    @Override
+    public void onRainChanged(ServerLevel level, net.minecraft.world.level.ChunkPos chunkPos, boolean isRaining, ISnowTrackedChunk trackedChunk) {
+        if (!SereneSeasonsPlusForge.isProjectAtmosphereLoaded) {
+            // Defer to default behavior when PA is not present
+            super.onRainChanged(level, chunkPos, isRaining, trackedChunk);
+            return;
+        }
+
+        // With Project Atmosphere, use global snowing indicator for storm lifecycle,
+        // and local precipitation for per-chunk pending flags.
+        boolean snowySeason = EnvironmentHelper.isSnowySeason();
+        boolean globalSnowing = isSnowingSomeWhere(level);
+
+        SnowData data = data(level);
+        long key = chunkPos.toLong();
+
+        if (globalSnowing) {
+            if (snowySeason && !data.stormActive) {
+                data.stormActive = true;
+                data.stormCount++;
+            } else if (!snowySeason) {
+                data.stormActive = false;
+            }
+
+            if (snowySeason && isRaining) {
+                if (data.pendingChunks.add(key)) {
+                    data.observedChunks.add(key);
+                }
+                trackedChunk.sereneseasonsplus$setShouldApplyInitialSnow(true);
+                trackedChunk.sereneseasonsplus$willReceiveSnow(true);
+                ChunkQueue.enqueueScheduled(chunkPos);
+            }
+        } else {
+            boolean wasActive = data.stormActive;
+            data.stormActive = false;
+            if (wasActive && data.stormCount > 1 && data.lastBlanketStormCount < data.stormCount) {
+                blanketApplyLoadedChunks(level);
+                data.lastBlanketStormCount = data.stormCount;
+            }
+        }
+
+        persist(level, data);
+    }
+
+    private static boolean isSnowingSomeWhere(ServerLevel level) {
+        try {
+            Class<?> api = Class.forName("net.Gabou.projectatmosphere.api.AtmoApi");
+            java.lang.reflect.Method m = api.getMethod("isSnowingSomeWhere", ServerLevel.class);
+            Object res = m.invoke(null, level);
+            if (res instanceof Boolean b) return b;
+        } catch (Throwable ignored) {
+        }
+        // Fallback – treat as global rain if reflection failed
+        return level.isRaining();
     }
 }

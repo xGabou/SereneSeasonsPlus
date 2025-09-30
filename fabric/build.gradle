@@ -7,6 +7,11 @@ loom {
     mixin {
         defaultRefmapName.set("sereneseasonsplus-refmap.json")
     }
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
     runs {
         client {
             client()
@@ -34,15 +39,6 @@ processResources {
 tasks.withType(JavaCompile) {
     source(project(":Common").sourceSets.main.allSource)
 }
-
-// Déclare ton mod avec les 2 sources : main + client
-loom {
-    mods {
-        "${mod_id}" {
-            sourceSet sourceSets.main
-        }
-    }
-}
 tasks.withType(Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
@@ -65,7 +61,7 @@ dependencies {
     include implementation("com.electronwill.night-config:core:${nightconfig_version}")
     include implementation("net.jodah:typetools:0.6.3")
     runtimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.1")
-    modCompileOnly group: "technology.roughness.whitenoise", name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_version}"
+    modImplementation ( group: "technology.roughness.whitenoise", name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_version}")
 }
 tasks.named("remapJar") {
     doLast {

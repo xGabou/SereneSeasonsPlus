@@ -43,6 +43,9 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
         MinecraftForge.EVENT_BUS.register(this);
         CommonSnowBlockFeature.HANDLER = new ForgeSnowEnvironmentHandler();
         EnvironmentHelper.init(new ForgeEnvironmentHelper());
+        if (isProjectAtmosphereLoaded) {
+            EnvironmentHelper.initRainHandler(new ProjectAtmosphereRainHandler());
+        }
         context.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
         if(!isProjectAtmosphereLoaded) {
             SeasonChangeEvent.register();
