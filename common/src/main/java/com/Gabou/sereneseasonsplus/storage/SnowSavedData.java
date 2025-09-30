@@ -24,12 +24,18 @@ public class SnowSavedData extends SavedData {
     public static SnowSavedData load(CompoundTag tag, HolderLookup.Provider provider) {
         SnowSavedData data = new SnowSavedData();
         if (tag == null) return data;
+
         data.winterId = tag.getInt("WinterId");
         data.stormCount = tag.getInt("StormCount");
         data.stormActive = tag.getBoolean("StormActive");
         data.lastBlanketStormCount = tag.getInt("LastBlanketStormCount");
-        for (long v : tag.getLongArray("PendingChunks")) data.pendingChunks.add(v);
-        for (long v : tag.getLongArray("ObservedChunks")) data.observedChunks.add(v);
+
+        long[] pending = tag.getLongArray("PendingChunks");
+        for (long v : pending) data.pendingChunks.add(v);
+
+        long[] observed = tag.getLongArray("ObservedChunks");
+        for (long v : observed) data.observedChunks.add(v);
+
         return data;
     }
 
@@ -39,9 +45,26 @@ public class SnowSavedData extends SavedData {
         tag.putInt("StormCount", stormCount);
         tag.putBoolean("StormActive", stormActive);
         tag.putInt("LastBlanketStormCount", lastBlanketStormCount);
-        tag.putLongArray("PendingChunks", pendingChunks.stream().mapToLong(Long::longValue).toArray());
-        tag.putLongArray("ObservedChunks", observedChunks.stream().mapToLong(Long::longValue).toArray());
+
+
+
+
+
+
+        long[] pending = new long[pendingChunks.size()];
+        int i = 0;
+        for (Long v : pendingChunks) pending[i++] = v;
+        tag.putLongArray("PendingChunks", pending);
+
+
+        long[] observed = new long[observedChunks.size()];
+        i = 0;
+        for (Long v : observedChunks) observed[i++] = v;
+        tag.putLongArray("ObservedChunks", observed);
+
+
         return tag;
+
     }
     public static SnowSavedData get(ServerLevel level) {
         SavedData.Factory<SnowSavedData> factory = new SavedData.Factory<>(

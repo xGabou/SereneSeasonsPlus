@@ -5,15 +5,12 @@ plugins {
 base.archivesName.set("${mod_name}-fabric")
 
 loom {
-    // Sépare les sources client et serveur
-    splitEnvironmentSourceSets()
     mixin {
         defaultRefmapName.set("${mod_id}.refmap.json")
     }
     mods {
         "${mod_id}" {
             sourceSet sourceSets.main
-            sourceSet sourceSets.client
         }
     }
     runs {
@@ -65,6 +62,7 @@ dependencies {
     include implementation("net.jodah:typetools:0.6.3")
     runtimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.1")
     modImplementation "curse.maven:spark-361579:4950610"
-    modImplementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_range}"
+    include implementation(group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_range}")
     //modImplementation "curse.maven:sodium-394468:5092261"
+
 }

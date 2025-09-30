@@ -13,6 +13,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
+import sereneseasons.season.SeasonHooks;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
-    private static final class SnowData {
+    protected static final class SnowData {
         int winterId = -1;
         int stormCount = 0;
         boolean stormActive = false;
@@ -31,7 +32,7 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
 
     private final Map<ResourceKey<Level>, SnowData> perLevelData = new HashMap<>();
 
-    private SnowData data(ServerLevel level) {
+    protected SnowData data(ServerLevel level) {
         return perLevelData.computeIfAbsent(level.dimension(), k -> {
             SnowData d = new SnowData();
             // Restore from persisted storage if present
@@ -46,7 +47,7 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
         });
     }
 
-    private void persist(ServerLevel level, SnowData d) {
+    protected void persist(ServerLevel level, SnowData d) {
         SnowSavedData store = SnowSavedData.get(level);
         store.winterId = d.winterId;
         store.stormCount = d.stormCount;
@@ -61,10 +62,9 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
 
     @Override
     public int getBlocksToReplace(ServerLevel level, BlockPos playerPos) {
-        Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
-        float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
+        float temperature = SeasonHooks.getBiomeTemperature(level,level.getBiome(playerPos),playerPos);
 
-        if (temperature >= 0.15F) {
+        if (SeasonHooks.coldEnoughToSnowSeasonal(level, playerPos)) {
             return CommonSnowBlockFeature.calculateBlocksToReplace(temperature);
         }
         return 0;
@@ -126,6 +126,8 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
         return data(level).pendingChunks.contains(chunkPos.toLong());
     }
 
+
+
     @Override
     public void onSnowApplied(ServerLevel level, ChunkPos chunkPos, boolean success) {
         SnowData data = data(level);
@@ -155,15 +157,20 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
         }
     }
 
-    private void blanketApplyLoadedChunks(ServerLevel level) {
+    @Override
+    public boolean isColdEnoughForSnow(ServerLevel level, BlockPos pos) {
+        return SeasonHooks.coldEnoughToSnowSeasonal(level, pos);
+    }
+
+    protected void blanketApplyLoadedChunks(ServerLevel level) {
         if (!EnvironmentHelper.isSnowySeason()) return;
-        Season.SubSeason current = EnvironmentHelper.getCurrentSeason();
+        sereneseasons.api.season.Season.SubSeason current = EnvironmentHelper.getCurrentSeason();
         if (current == null) return;
 
         var chunkSource = level.getChunkSource();
         for (net.minecraft.server.level.ServerPlayer player : level.players()) {
             int view = level.getServer() != null ? level.getServer().getPlayerList().getViewDistance() : 10;
-            BlockPos center = player.blockPosition();
+            net.minecraft.core.BlockPos center = player.blockPosition();
             int pcx = center.getX() >> 4;
             int pcz = center.getZ() >> 4;
             for (int dx = -view; dx <= view; dx++) {
@@ -171,8 +178,8 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
                     int cx = pcx + dx;
                     int cz = pcz + dz;
                     net.minecraft.world.level.chunk.ChunkAccess access = chunkSource.getChunk(cx, cz, false);
-                    if (!(access instanceof LevelChunk lc)) continue;
-                    CommonSnowBlockFeature.enqueueChunkForSnowApply(lc.getPos(), current);
+                    if (!(access instanceof net.minecraft.world.level.chunk.LevelChunk lc)) continue;
+                    com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.enqueueChunkForSnowApply(lc.getPos(), current);
                 }
             }
         }

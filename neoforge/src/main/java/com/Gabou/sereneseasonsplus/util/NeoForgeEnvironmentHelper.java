@@ -65,13 +65,6 @@ public class NeoForgeEnvironmentHelper implements IEnvironmentHelper{
         return FMLEnvironment.dist.isClient();
     }
 
-
-    @Override
-    public boolean isRainning(ServerLevel level, BlockPos pos) {
-        if(SereneSeasonsPlusNeoForge.isProjectAtmosphereLoaded)
-            return AtmoApi.getInstance().isRainningAt(level, pos);
-        return level.isRaining();
-    }
     /**
      * Updates cached season information based on the given server level.
      *
@@ -87,4 +80,14 @@ public class NeoForgeEnvironmentHelper implements IEnvironmentHelper{
         // Proactively update snow/ice state in loaded chunks around players
         CommonSnowBlockFeature.onSeasonChange(serverLevel);
     }
+
+    @Override
+    public boolean isRainingAt(ServerLevel level, BlockPos pos) {
+        if(SereneSeasonsPlusNeoForge.isProjectAtmosphereLoaded)
+            return level.isRainingAt(pos);
+        else
+            return level.isRaining();
+    }
+
+
 }

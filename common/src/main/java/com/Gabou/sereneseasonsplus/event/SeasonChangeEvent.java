@@ -28,7 +28,7 @@ public class SeasonChangeEvent {
             if (event.getLevel() instanceof ServerLevel serverLevel) {
                 Season.TropicalSeason oldSeason = event.getPrevSeason();
                 Season.TropicalSeason newSeason = event.getNewSeason();
-                if (newSeason != oldSeason && Math.abs(newSeason.ordinal() - oldSeason.ordinal()) != 1) {
+                if (newSeason != oldSeason) {
                     EnvironmentHelper.onSeasonChange(serverLevel,Math.abs(newSeason.ordinal() - oldSeason.ordinal()) != 1);
                 }
             }

@@ -22,10 +22,6 @@ buildscript {
 apply plugin: 'org.jetbrains.gradle.plugin.idea-ext'
 apply plugin: 'net.minecraftforge.gradleutils'
 
-changelog {
-    fromTag '9.2.0'
-}
-
 ext {
     mod_version = gradleutils.getTagOffsetVersion()
     changelog_file = rootProject.file("build/changelog.txt")

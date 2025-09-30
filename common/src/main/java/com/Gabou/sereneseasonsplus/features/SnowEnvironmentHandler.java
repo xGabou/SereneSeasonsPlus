@@ -52,4 +52,7 @@ public interface SnowEnvironmentHandler {
      * Clears any cached state for the supplied level (typically on shutdown).
      */
     void clear(ServerLevel level);
+
+
+    boolean isColdEnoughForSnow(ServerLevel level, BlockPos pos);
 }

@@ -49,7 +49,7 @@ public class ServerLevelMixin {
         var seasonState = SeasonHelper.getSeasonState(level);
         if (seasonState == null || currentSeason == null) return;
 
-        SnowLogic.evaluate(level, currentSeason, seasonState, tracked, chunk.getPos(), false);
+        SnowLogic.evaluate(level, currentSeason, seasonState, tracked, chunk.getPos(), false,chunk.getHeight());
     }
 
 
