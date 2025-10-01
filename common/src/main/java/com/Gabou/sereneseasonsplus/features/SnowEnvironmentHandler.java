@@ -15,16 +15,6 @@ public interface SnowEnvironmentHandler {
      */
     int getBlocksToReplace(ServerLevel level, BlockPos playerPos);
     /**
-     * Returns {@code true} if this chunk should currently receive natural snow.
-     */
-    boolean shouldApplySnow(ServerLevel level, ChunkPos chunkPos);
-
-    /**
-     * Records the result of an attempted snow application.
-     */
-    void onSnowApplied(ServerLevel level, ChunkPos chunkPos, boolean success);
-
-    /**
      * @return {@code true} if this position is cold enough for snow.
      */
     boolean isColdEnoughForSnow(ServerLevel level, BlockPos pos);

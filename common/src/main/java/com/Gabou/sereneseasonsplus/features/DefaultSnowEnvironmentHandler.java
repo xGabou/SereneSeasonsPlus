@@ -31,27 +31,6 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
         return history.currentStormId;
     }
 
-
-
-    @Override
-    public boolean shouldApplySnow(ServerLevel level, ChunkPos chunkPos) {
-        var chunk = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
-        if (chunk instanceof ISnowTrackedChunk tracked) {
-            return tracked.sereneseasonsplus$shouldApplyInitialSnow();
-        }
-        return false;
-    }
-
-    @Override
-    public void onSnowApplied(ServerLevel level, ChunkPos chunkPos, boolean success) {
-        if (!success) return;
-        var chunk = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
-        if (chunk instanceof ISnowTrackedChunk tracked) {
-            tracked.sereneseasonsplus$setHasAppliedInitialSnow(true);
-            tracked.sereneseasonsplus$setShouldApplyInitialSnow(false);
-        }
-    }
-
     @Override
     public boolean isColdEnoughForSnow(ServerLevel level, BlockPos pos) {
         return SeasonHooks.coldEnoughToSnowSeasonal(level, pos);

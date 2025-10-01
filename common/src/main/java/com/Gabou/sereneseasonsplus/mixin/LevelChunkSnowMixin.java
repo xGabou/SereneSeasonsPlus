@@ -19,11 +19,6 @@ import java.util.Map;
 public class LevelChunkSnowMixin implements ISnowTrackedChunk {
 
     @Unique
-    private boolean sereneseasonsplus$shouldApplyInitialSnow = false;
-    @Unique
-    private boolean sereneseasonsplus$hasAppliedInitialSnow = false;
-
-    @Unique
     private final Map<BlockPos, Integer> sereneseasonsplus$snowColumns = new HashMap<>();
 
     @Unique
@@ -31,25 +26,6 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
 
     // --- Accessors ---
 
-    @Override
-    public boolean sereneseasonsplus$shouldApplyInitialSnow() {
-        return sereneseasonsplus$shouldApplyInitialSnow;
-    }
-
-    @Override
-    public void sereneseasonsplus$setShouldApplyInitialSnow(boolean value) {
-        this.sereneseasonsplus$shouldApplyInitialSnow = value;
-    }
-
-    @Override
-    public boolean sereneseasonsplus$hasAppliedInitialSnow() {
-        return sereneseasonsplus$hasAppliedInitialSnow;
-    }
-
-    @Override
-    public void sereneseasonsplus$setHasAppliedInitialSnow(boolean value) {
-        this.sereneseasonsplus$hasAppliedInitialSnow = value;
-    }
 
     @Override
     public Map<BlockPos, Integer> sereneseasonsplus$getSnowColumns() {
@@ -76,8 +52,6 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
                           @Nullable LevelChunk.PostLoadProcessor post,
                           CallbackInfo ci) {
         if ((Object)this instanceof ISnowTrackedChunk target && proto instanceof ISnowTrackedChunk src) {
-            target.sereneseasonsplus$setHasAppliedInitialSnow(src.sereneseasonsplus$hasAppliedInitialSnow());
-            target.sereneseasonsplus$setShouldApplyInitialSnow(src.sereneseasonsplus$shouldApplyInitialSnow());
             target.sereneseasonsplus$setLastWinterId(src.sereneseasonsplus$getLastWinterId());
 
             this.sereneseasonsplus$snowColumns.clear();

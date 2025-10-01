@@ -43,28 +43,15 @@ public class DefaultRainHandler implements IRainHandler {
     public void handleRainChange(ServerLevel level, BlockPos pos, boolean isRaining) {
         ChunkPos chunkPos = new ChunkPos(pos);
 
-        var history = SnowHistorySavedData.get(level);
-
         if (isRaining && SeasonHooks.coldEnoughToSnowSeasonal(level, pos)) {
-            // Mark for snow
-            var chunk = level.getChunk(chunkPos.x, chunkPos.z);
-            if (chunk instanceof ISnowTrackedChunk tracked) {
-                tracked.sereneseasonsplus$setShouldApplyInitialSnow(true);
-            }
-            ChunkQueue.enqueueApply(chunkPos);
-
-            // Start a new storm if we don’t already track one
-            if (!history.snowHistory.containsKey(history.currentStormId)) {
-                history.currentStormId++;
-                history.addRecord(history.currentStormId, new SnowRecord(0, 0, 0, null));
-            }
+                        ChunkQueue.enqueueApply(chunkPos);
 
         } else if (!isRaining) {
             // Storm ended → finalize record with randomized values
-            SnowRecord rec = SnowGenerator.generateStormRecord(level.random);
-            history.addRecord(history.currentStormId, rec);
+            
         }
     }
 
 }
+
 

@@ -4,14 +4,6 @@ import net.minecraft.core.BlockPos;
 import java.util.Map;
 
 public interface ISnowTrackedChunk {
-    // Tracks whether the chunk should receive deep-winter initialization snow
-    boolean sereneseasonsplus$shouldApplyInitialSnow();
-    void sereneseasonsplus$setShouldApplyInitialSnow(boolean value);
-
-    // Remembers if deep-winter initialization snow has already been applied
-    boolean sereneseasonsplus$hasAppliedInitialSnow();
-    void sereneseasonsplus$setHasAppliedInitialSnow(boolean value);
-
     // Stores the last winterId this chunk was processed for
     int sereneseasonsplus$getLastWinterId();
     void sereneseasonsplus$setLastWinterId(int id);
