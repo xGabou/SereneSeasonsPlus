@@ -86,5 +86,6 @@ public abstract class ChunkSerializerSnowMixin {
         }
 
     }
+
     }
-}
+
