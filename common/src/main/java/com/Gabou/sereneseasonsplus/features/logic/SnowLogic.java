@@ -2,7 +2,6 @@ package com.Gabou.sereneseasonsplus.features.logic;
 
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
-import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -26,20 +25,26 @@ public final class SnowLogic {
                                 int maxHeight) {
 
         // --- Check temperature ---
-        boolean coldEnough = CommonSnowBlockFeature.HANDLER.isColdEnoughForSnow(level, chunkPos.getMiddleBlockPosition(maxHeight));
+        boolean coldEnough = CommonSnowBlockFeature.HANDLER.isColdEnoughForSnow(
+                level,
+                chunkPos.getMiddleBlockPosition(maxHeight)
+        );
 
         // --- Case 1: Cold enough => pile snow ---
         if (coldEnough) {
             float globalAvg = CommonSnowBlockFeature.computeGlobalAvg(level);
             int totalPositions = tracked.sereneseasonsplus$getSnowColumnsCount();
+
             if (totalPositions == 0) {
                 if (globalAvg > 0.5f) {
-                    ChunkQueue.enqueueApply(chunkPos, currentSeason);
+                    ChunkQueue.enqueueApply(chunkPos);
                 }
             } else {
-                float currentAvg = (float) tracked.sereneseasonsplus$getSnowColumnsTotalLayers() / (float) totalPositions;
+                float currentAvg =
+                        (float) tracked.sereneseasonsplus$getSnowColumnsTotalLayers()
+                                / (float) totalPositions;
                 if (Math.abs(currentAvg - globalAvg) > 1.0f) {
-                    ChunkQueue.enqueueApply(chunkPos, currentSeason);
+                    ChunkQueue.enqueueApply(chunkPos);
                 }
             }
         }
@@ -53,7 +58,7 @@ public final class SnowLogic {
 
             if (inMeltSeason && noStormsYet) {
                 // melt all tracked snow columns until ground
-                ChunkQueue.enqueueMelt(chunkPos, false);
+                ChunkQueue.enqueueMelt(chunkPos);
             }
         }
     }

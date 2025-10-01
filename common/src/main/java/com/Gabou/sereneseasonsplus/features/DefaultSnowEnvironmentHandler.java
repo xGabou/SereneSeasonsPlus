@@ -1,69 +1,24 @@
 package com.Gabou.sereneseasonsplus.features;
 
 import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
-import com.Gabou.sereneseasonsplus.storage.SnowSavedData;
+import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
+import com.Gabou.sereneseasonsplus.storage.SnowRecord;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
-import com.Gabou.sereneseasonsplus.util.SnowUtils;
+import com.Gabou.sereneseasonsplus.util.SnowGenerator;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import sereneseasons.api.season.Season;
-import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.season.SeasonHooks;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
-    protected static final class SnowData {
-        int winterId = -1;
-        int stormCount = 0;
-        boolean stormActive = false;
-        final Set<Long> pendingChunks = new HashSet<>();
-        final Set<Long> observedChunks = new HashSet<>();
-        int lastBlanketStormCount = 0; // last stormCount when a blanket apply sweep was triggered
-    }
-
-    private final Map<ResourceKey<Level>, SnowData> perLevelData = new HashMap<>();
-
-    protected SnowData data(ServerLevel level) {
-        return perLevelData.computeIfAbsent(level.dimension(), k -> {
-            SnowData d = new SnowData();
-            // Restore from persisted storage if present
-            SnowSavedData store = SnowSavedData.get(level);
-            d.winterId = store.winterId;
-            d.stormCount = store.stormCount;
-            d.stormActive = store.stormActive;
-            d.pendingChunks.addAll(store.pendingChunks);
-            d.observedChunks.addAll(store.observedChunks);
-            d.lastBlanketStormCount = store.lastBlanketStormCount;
-            return d;
-        });
-    }
-
-    protected void persist(ServerLevel level, SnowData d) {
-        SnowSavedData store = SnowSavedData.get(level);
-        store.winterId = d.winterId;
-        store.stormCount = d.stormCount;
-        store.stormActive = d.stormActive;
-        store.pendingChunks.clear();
-        store.pendingChunks.addAll(d.pendingChunks);
-        store.observedChunks.clear();
-        store.observedChunks.addAll(d.observedChunks);
-        store.lastBlanketStormCount = d.lastBlanketStormCount;
-        store.setDirty();
-    }
 
     @Override
     public int getBlocksToReplace(ServerLevel level, BlockPos playerPos) {
-        float temperature = SeasonHooks.getBiomeTemperature(level,level.getBiome(playerPos),playerPos);
-
+        float temperature = SeasonHooks.getBiomeTemperature(level, level.getBiome(playerPos), playerPos);
         if (SeasonHooks.coldEnoughToSnowSeasonal(level, playerPos)) {
             return CommonSnowBlockFeature.calculateBlocksToReplace(temperature);
         }
@@ -71,139 +26,29 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
     }
 
     @Override
-    public void resetWinterState(ServerLevel level, int winterId) {
-        SnowData data = data(level);
-        if (data.winterId == winterId) {
-            return;
-        }
-        data.winterId = winterId;
-        data.stormCount = 0;
-        data.stormActive = false;
-        data.pendingChunks.clear();
-        data.observedChunks.clear();
-        data.lastBlanketStormCount = 0;
-        persist(level, data);
-        // Reset global current storm id as well
-        com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData hist = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get(level);
-        hist.currentStormId = 0;
-        hist.snowHistory.clear();
-        hist.setDirty();
+    public int getSnowStormsThisWinter(ServerLevel level) {
+        var history = SnowHistorySavedData.get(level);
+        return history.currentStormId;
     }
 
-    @Override
-    public void onRainChanged(ServerLevel level, ChunkPos chunkPos, boolean isRaining, ISnowTrackedChunk trackedChunk) {
-        SnowData data = data(level);
-        long key = chunkPos.toLong();
 
-        if (isRaining) {
-            boolean snowySeason = EnvironmentHelper.isSnowySeason();
-            if (snowySeason && !data.stormActive) {
-                data.stormActive = true;
-                data.stormCount++;
-                // reflect new storm id in global snow history
-                com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData hist = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get(level);
-                hist.currentStormId = data.stormCount;
-                hist.setDirty();
-                com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.currentStormId = hist.currentStormId;
-            } else if (!snowySeason) {
-                data.stormActive = false;
-            }
-            if (snowySeason && data.pendingChunks.add(key)) {
-                data.observedChunks.add(key);
-            }
-
-            if (snowySeason) {
-                trackedChunk.sereneseasonsplus$setShouldApplyInitialSnow(true);
-                trackedChunk.sereneseasonsplus$willReceiveSnow(true);
-                ChunkQueue.enqueueScheduled(chunkPos);
-            }
-        } else if (!EnvironmentHelper.isRainning(level, chunkPos.getMiddleBlockPosition(65))) {
-            boolean wasActive = data.stormActive;
-            data.stormActive = false;
-            // If a storm just ended and we've had more than one storm this winter,
-            // sweep loaded chunks to ensure blanket snow application.
-            if (wasActive && data.stormCount > 1 && data.lastBlanketStormCount < data.stormCount) {
-                blanketApplyLoadedChunks(level);
-                data.lastBlanketStormCount = data.stormCount;
-            }
-            // When a storm ends, compute and record a SnowRecord for this storm from loaded chunks
-            if (wasActive) {
-                com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData hist2 = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get(level);
-                float min = Float.MAX_VALUE, max = -Float.MAX_VALUE; long sum = 0L; long count = 0L;
-                java.util.Set<Long> seen = new java.util.HashSet<>();
-                int view = level.getServer() != null ? level.getServer().getPlayerList().getViewDistance() : 10;
-                for (net.minecraft.server.level.ServerPlayer player : level.players()) {
-                    net.minecraft.core.BlockPos center = player.blockPosition();
-                    int pcx = center.getX() >> 4;
-                    int pcz = center.getZ() >> 4;
-                    for (int dx = -view; dx <= view; dx++) {
-                        for (int dz = -view; dz <= view; dz++) {
-                            int cx = pcx + dx;
-                            int cz = pcz + dz;
-                            long key = net.minecraft.world.level.ChunkPos.asLong(cx, cz);
-                            if (!seen.add(key)) continue;
-                            net.minecraft.world.level.chunk.ChunkAccess access = level.getChunkSource().getChunk(cx, cz, false);
-                            if (!(access instanceof net.minecraft.world.level.chunk.LevelChunk lc)) continue;
-                            com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk tracked = (com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk) lc;
-                            java.util.Map<net.minecraft.core.BlockPos, Integer> cols = tracked.sereneseasonsplus$getSnowColumns();
-                            for (int v : cols.values()) {
-                                min = Math.min(min, v);
-                                max = Math.max(max, v);
-                                sum += v;
-                                count++;
-                            }
-                        }
-                    }
-                }
-                if (count > 0) {
-                    float avg = (float) sum / (float) count;
-                    com.Gabou.sereneseasonsplus.storage.SnowRecord rec = new com.Gabou.sereneseasonsplus.storage.SnowRecord(min, avg, max, null);
-                    int id = hist2.currentStormId;
-                    hist2.snowHistory.put(id, rec);
-                    hist2.setDirty();
-                    com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.SNOW_HISTORY.put(id, rec);
-                }
-            }
-        }
-        // Persist any changes in storm state / pending observations
-        persist(level, data);
-    }
 
     @Override
     public boolean shouldApplySnow(ServerLevel level, ChunkPos chunkPos) {
-        return data(level).pendingChunks.contains(chunkPos.toLong());
+        var chunk = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
+        if (chunk instanceof ISnowTrackedChunk tracked) {
+            return tracked.sereneseasonsplus$shouldApplyInitialSnow();
+        }
+        return false;
     }
-
-
 
     @Override
     public void onSnowApplied(ServerLevel level, ChunkPos chunkPos, boolean success) {
-        SnowData data = data(level);
-        long key = chunkPos.toLong();
-        if (success) {
-            data.pendingChunks.remove(key);
-        }
-        data.observedChunks.add(key);
-        persist(level, data);
-    }
-
-    @Override
-    public int getSnowStormsThisWinter(ServerLevel level) {
-        var d = data(level);
-        // Ignore the currently ongoing storm when comparing against chunk-applied totals
-        return d.stormCount - (d.stormActive ? 1 : 0);
-    }
-
-    @Override
-    public boolean hasChunkSeenSnow(ServerLevel level, ChunkPos chunkPos) {
-        return data(level).observedChunks.contains(chunkPos.toLong());
-    }
-
-    @Override
-    public void clear(ServerLevel level) {
-        SnowData d = perLevelData.remove(level.dimension());
-        if (d != null) {
-            persist(level, d);
+        if (!success) return;
+        var chunk = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
+        if (chunk instanceof ISnowTrackedChunk tracked) {
+            tracked.sereneseasonsplus$setHasAppliedInitialSnow(true);
+            tracked.sereneseasonsplus$setShouldApplyInitialSnow(false);
         }
     }
 
@@ -214,22 +59,18 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
 
     protected void blanketApplyLoadedChunks(ServerLevel level) {
         if (!EnvironmentHelper.isSnowySeason()) return;
-        sereneseasons.api.season.Season.SubSeason current = EnvironmentHelper.getCurrentSeason();
+        Season.SubSeason current = EnvironmentHelper.getCurrentSeason();
         if (current == null) return;
 
         var chunkSource = level.getChunkSource();
-        for (net.minecraft.server.level.ServerPlayer player : level.players()) {
+        for (ServerPlayer player : level.players()) {
             int view = level.getServer() != null ? level.getServer().getPlayerList().getViewDistance() : 10;
-            net.minecraft.core.BlockPos center = player.blockPosition();
+            BlockPos center = player.blockPosition();
             int pcx = center.getX() >> 4;
             int pcz = center.getZ() >> 4;
             for (int dx = -view; dx <= view; dx++) {
                 for (int dz = -view; dz <= view; dz++) {
-                    int cx = pcx + dx;
-                    int cz = pcz + dz;
-                    net.minecraft.world.level.chunk.ChunkAccess access = chunkSource.getChunk(cx, cz, false);
-                    if (!(access instanceof net.minecraft.world.level.chunk.LevelChunk lc)) continue;
-                    com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.enqueueChunkForSnowApply(lc.getPos(), current);
+                        CommonSnowBlockFeature.enqueueChunkForSnowApply(chunkSource.getChunk(pcx + dx, pcz + dz, false).getPos(), current);
                 }
             }
         }

@@ -12,5 +12,7 @@ public interface IRainHandler {
      * Returns whether it is precipitating (raining/snowing) relevant to the given position.
      */
     boolean isRainingAt(ServerLevel level, BlockPos pos);
+
+    void handleRainChange(ServerLevel level, BlockPos pos, boolean isRaining);
 }
 

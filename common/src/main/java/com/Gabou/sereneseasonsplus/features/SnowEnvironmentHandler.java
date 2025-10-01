@@ -6,53 +6,28 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 
 /**
- * Loader specific hooks used to align snow placement with the active weather
- * system.  The default implementation keeps track of the chunks that received
- * natural snowfall so the common snow logic can avoid blanketing the world the
- * moment winter begins.
+ * Loader-specific hooks used to align snow placement with the active weather
+ * system. Provides the minimum surface needed by the common snow logic.
  */
 public interface SnowEnvironmentHandler {
+    /**
+     * Compute how many blocks should be replaced with snow layers around a player position.
+     */
     int getBlocksToReplace(ServerLevel level, BlockPos playerPos);
-
     /**
-     * Clears any per-level bookkeeping for the newly detected winter.
-     */
-    void resetWinterState(ServerLevel level, int winterId);
-
-    /**
-     * Called whenever the rain/snow state for a chunk transitions.
-     */
-    void onRainChanged(ServerLevel level, ChunkPos chunkPos, boolean isRaining, ISnowTrackedChunk trackedChunk);
-
-    /**
-     * Returns {@code true} if this chunk should currently receive natural snow
-     * (e.g. because a storm has recently passed over it).
+     * Returns {@code true} if this chunk should currently receive natural snow.
      */
     boolean shouldApplySnow(ServerLevel level, ChunkPos chunkPos);
 
     /**
-     * Records the result of an attempted snow application. Successful
-     * placements clear any pending flags so subsequent storms can retrigger the
-     * chunk.
+     * Records the result of an attempted snow application.
      */
     void onSnowApplied(ServerLevel level, ChunkPos chunkPos, boolean success);
 
     /**
-     * @return number of storms detected for the active winter on this level.
+     * @return {@code true} if this position is cold enough for snow.
      */
-    int getSnowStormsThisWinter(ServerLevel level);
-
-    /**
-     * @return {@code true} if we have observed natural snowfall in this chunk
-     * during the current winter.
-     */
-    boolean hasChunkSeenSnow(ServerLevel level, ChunkPos chunkPos);
-
-    /**
-     * Clears any cached state for the supplied level (typically on shutdown).
-     */
-    void clear(ServerLevel level);
-
-
     boolean isColdEnoughForSnow(ServerLevel level, BlockPos pos);
+
+    int getSnowStormsThisWinter(ServerLevel level);
 }

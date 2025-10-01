@@ -1,6 +1,7 @@
 package com.Gabou.sereneseasonsplus.mixin;
 
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.ProtoChunk;
@@ -10,88 +11,25 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import sereneseasons.api.season.Season;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Mixin(LevelChunk.class)
 public class LevelChunkSnowMixin implements ISnowTrackedChunk {
-    @Unique
-    private Season.SubSeason sereneseasonsplus$lastSeason = null;
-    @Unique
-    private boolean sereneseasonsplus$wasRaining = false;
-    @Unique
-    private boolean sereneseasonsplus$hasReceivedSnowLayerThisStorm = false;
+
     @Unique
     private boolean sereneseasonsplus$shouldApplyInitialSnow = false;
     @Unique
     private boolean sereneseasonsplus$hasAppliedInitialSnow = false;
 
+    @Unique
+    private final Map<BlockPos, Integer> sereneseasonsplus$snowColumns = new HashMap<>();
 
     @Unique
-    private boolean sereneseasonsplus$willReceiveSnow = false;
+    private int sereneseasonsplus$lastWinterId = -1; // -1 means no winter applied yet
 
-    // NEW: track how many times this chunk has snowed
-    @Unique
-    private int sereneseasonsplus$snowCount = -1;
-
-    @Unique
-    private int sereneseasonsplus$lastWinterId = -1; // -1 means never had a winter
-
-    @Unique
-    private java.util.Map<net.minecraft.core.BlockPos, Integer> sereneseasonsplus$snowColumns = new java.util.HashMap<>();
-
-
-    @Override
-    public int sereneseasonsplus$getLastWinterId() {
-        return sereneseasonsplus$lastWinterId;
-    }
-
-    @Override
-    public void sereneseasonsplus$setLastWinterId(int id) {
-        this.sereneseasonsplus$lastWinterId = id;
-    }
-
-
-    @Override
-    public Season.SubSeason sereneseasonsplus$getLastSeason() {
-        return sereneseasonsplus$lastSeason;
-    }
-
-    @Override
-    public void sereneseasonsplus$setLastSeason(Season.SubSeason season) {
-        this.sereneseasonsplus$lastSeason = season;
-    }
-
-    @Override
-    public boolean sereneseasonsplus$wasRaining() {
-        return sereneseasonsplus$wasRaining;
-    }
-
-    @Override
-    public void sereneseasonsplus$incrementWasRaining(boolean raining) {
-        this.sereneseasonsplus$wasRaining = raining;
-    }
-
-    @Override
-    public boolean sereneseasonsplus$hasReceivedSnowLayerThisStorm() {
-        return sereneseasonsplus$hasReceivedSnowLayerThisStorm;
-    }
-
-
-    @Override
-    public void sereneseasonsplus$willReceiveSnow(boolean b) {
-        this.sereneseasonsplus$willReceiveSnow = b;
-    }
-
-    @Override
-    public boolean sereneseasonsplus$shouldReceiveSnow() {
-        return this.sereneseasonsplus$willReceiveSnow;
-    }
-
-
-    @Override
-    public void sereneseasonsplus$setHasReceivedSnowLayerThisStorm(boolean value) {
-        this.sereneseasonsplus$hasReceivedSnowLayerThisStorm = value;
-    }
+    // --- Accessors ---
 
     @Override
     public boolean sereneseasonsplus$shouldApplyInitialSnow() {
@@ -113,31 +51,22 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
         this.sereneseasonsplus$hasAppliedInitialSnow = value;
     }
 
-    // --- New accessors for snow count ---
     @Override
-    public int sereneseasonsplus$getSnowCount() {
-        return sereneseasonsplus$snowCount;
-    }
-
-    @Override
-    public void sereneseasonsplus$incrementSnowCount() {
-        if(sereneseasonsplus$snowCount < 0) {
-            sereneseasonsplus$snowCount = 0;
-        }
-        sereneseasonsplus$snowCount++;
-    }
-
-    @Override
-    public void sereneseasonsplus$setSnowCount(int value) {
-        this.sereneseasonsplus$snowCount = value;
-    }
-
-    @Override
-    public java.util.Map<net.minecraft.core.BlockPos, Integer> sereneseasonsplus$getSnowColumns() {
+    public Map<BlockPos, Integer> sereneseasonsplus$getSnowColumns() {
         return sereneseasonsplus$snowColumns;
     }
 
+    @Override
+    public int sereneseasonsplus$getLastWinterId() {
+        return sereneseasonsplus$lastWinterId;
+    }
 
+    @Override
+    public void sereneseasonsplus$setLastWinterId(int id) {
+        this.sereneseasonsplus$lastWinterId = id;
+    }
+
+    // --- Copy from ProtoChunk into LevelChunk when promoted ---
     @Inject(
             method = "<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;)V",
             at = @At("TAIL")
@@ -147,20 +76,12 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
                           @Nullable LevelChunk.PostLoadProcessor post,
                           CallbackInfo ci) {
         if ((Object)this instanceof ISnowTrackedChunk target && proto instanceof ISnowTrackedChunk src) {
-            target.sereneseasonsplus$setSnowCount(src.sereneseasonsplus$getSnowCount());
             target.sereneseasonsplus$setHasAppliedInitialSnow(src.sereneseasonsplus$hasAppliedInitialSnow());
             target.sereneseasonsplus$setShouldApplyInitialSnow(src.sereneseasonsplus$shouldApplyInitialSnow());
-            target.sereneseasonsplus$incrementWasRaining(src.sereneseasonsplus$wasRaining());
-            target.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(src.sereneseasonsplus$hasReceivedSnowLayerThisStorm());
-            if (src.sereneseasonsplus$getLastSeason() != null) {
-                target.sereneseasonsplus$setLastSeason(src.sereneseasonsplus$getLastSeason());
-            }
-            // Copy snow columns map
+            target.sereneseasonsplus$setLastWinterId(src.sereneseasonsplus$getLastWinterId());
+
             this.sereneseasonsplus$snowColumns.clear();
             this.sereneseasonsplus$snowColumns.putAll(src.sereneseasonsplus$getSnowColumns());
         }
     }
-
 }
-
-

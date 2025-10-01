@@ -40,12 +40,13 @@ public class EnvironmentHelper {
     public static void initRainHandler(IRainHandler handler) {
         if (handler != null) rainHandler = handler;
     }
+
     // Persistence: world-level state we want to keep across reloads
     private static final String SAVE_DIR = "data/sereneseasonsplus";
     private static final String SAVE_FILE = "world_state.json";
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    // Track last seen sub-season to avoid double-incrementing winter ID on restart
+    // Track last seen sub-season
     private static Season.SubSeason lastSubSeason = null;
 
     // Load persisted data when a world starts
@@ -56,16 +57,11 @@ public class EnvironmentHelper {
             if (Files.exists(path)) {
                 String raw = Files.readString(path, StandardCharsets.UTF_8);
                 JsonObject obj = GSON.fromJson(raw, JsonObject.class);
-                if (obj != null) {
-                    if (obj.has("currentWinterId")) {
-                        currentWinterId = obj.get("currentWinterId").getAsInt();
-                    }
-                    if (obj.has("lastSubSeason")) {
-                        try {
-                            lastSubSeason = Season.SubSeason.valueOf(obj.get("lastSubSeason").getAsString());
-                        } catch (IllegalArgumentException ignored) {
-                            lastSubSeason = null;
-                        }
+                if (obj != null && obj.has("lastSubSeason")) {
+                    try {
+                        lastSubSeason = Season.SubSeason.valueOf(obj.get("lastSubSeason").getAsString());
+                    } catch (IllegalArgumentException ignored) {
+                        lastSubSeason = null;
                     }
                 }
             }
@@ -82,7 +78,6 @@ public class EnvironmentHelper {
             Files.createDirectories(path.getParent());
             JsonObject obj = new JsonObject();
             obj.addProperty("version", 1);
-            obj.addProperty("currentWinterId", currentWinterId);
             Season.SubSeason cur = lastSubSeason != null ? lastSubSeason : getCurrentSeason();
             if (cur != null) obj.addProperty("lastSubSeason", cur.name());
             String json = GSON.toJson(obj);
@@ -112,29 +107,16 @@ public class EnvironmentHelper {
         return delegate.getCurrentSeason();
     }
 
-    public static void onServerStarted(ServerLevel level)
-    {
+    public static void onServerStarted(ServerLevel level) {
         onWorldLoad(level);
-        onSeasonChange(level,false);
-        CommonSnowBlockFeature.HANDLER.resetWinterState(level, currentWinterId);
-    }
-
-
-    private static int currentWinterId = 0;
-
-    public static int getCurrentWinterId() {
-        return currentWinterId;
+        onSeasonChange(level, false);
     }
 
     public static void onSeasonChange(ServerLevel serverLevel, boolean forced) {
         delegate.onSeasonChange(serverLevel);
 
-        // Detect first sub-season of winter, avoiding double-count on reload by comparing last sub-season
+        // Track current sub-season to avoid duplication
         Season.SubSeason current = getCurrentSeason();
-        if (current == Season.SubSeason.EARLY_WINTER && lastSubSeason != Season.SubSeason.EARLY_WINTER) {
-            currentWinterId++; // new winter!
-            CommonSnowBlockFeature.HANDLER.resetWinterState(serverLevel, currentWinterId);
-        }
         lastSubSeason = current;
 
         if (forced) {
@@ -144,7 +126,5 @@ public class EnvironmentHelper {
 
     public static void onServerStopping(ServerLevel level) {
         onWorldSave(level);
-        CommonSnowBlockFeature.HANDLER.clear(level);
     }
-
 }

@@ -10,28 +10,22 @@ import java.util.Map;
 /**
  * Rain handler for Project Atmosphere: use per-position precipitation checks.
  */
-public class ProjectAtmosphereRainHandler implements IRainHandler {
-
-    private static final int CACHE_INTERVAL_TICKS = 100;
-
-    private static final class CacheEntry {
-        int lastTick;
-        boolean lastValue;
-    }
-
-    private final Map<ServerLevel, CacheEntry> cache = new HashMap<>();
-
+public class ProjectAtmosphereRainHandler extends DefaultRainHandler {
 
     @Override
-    public boolean isRainingAt(ServerLevel level, BlockPos pos) {
-        CacheEntry e = cache.computeIfAbsent(level, k -> new CacheEntry());
-        int tick = com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.getTickCounter();
-        if (tick - e.lastTick >= CACHE_INTERVAL_TICKS) {
-            e.lastValue = level.isRainingAt(pos); // vanilla: global precipitation
-            e.lastTick = tick;
+    public boolean isRaining(ServerLevel level, BlockPos pos) {
+        return isSnowingSomeWhere(level); // vanilla: global precipitation
+    }
+    private static boolean isSnowingSomeWhere(ServerLevel level) {
+        try {
+            Class<?> api = Class.forName("net.Gabou.projectatmosphere.api.AtmoApi");
+            java.lang.reflect.Method m = api.getMethod("isSnowingSomeWhere", ServerLevel.class);
+            Object res = m.invoke(null, level);
+            if (res instanceof Boolean b) return b;
+        } catch (Throwable ignored) {
         }
-        return e.lastValue;
-
+        // Fallback – treat as global rain if reflection failed
+        return level.isRaining();
     }
 }
 

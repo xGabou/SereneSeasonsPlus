@@ -71,6 +71,7 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
         EnvironmentHelper.onServerStarted(event.getServer().getLevel(Level.OVERWORLD));
     }
 
+
     /**
      * Client-only setup. Enqueues registration of client UI such as the
      * config screen.

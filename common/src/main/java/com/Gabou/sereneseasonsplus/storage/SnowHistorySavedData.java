@@ -43,4 +43,12 @@ public class SnowHistorySavedData extends SavedData {
     public static SnowHistorySavedData get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(SnowHistorySavedData::load, SnowHistorySavedData::new, "ssp_snow_history");
     }
+    public void addRecord(int id, SnowRecord record) {
+        snowHistory.put(id, record);
+        setDirty();
+    }
+
+    public SnowRecord getRecord(int id) {
+        return snowHistory.get(id);
+    }
 }
