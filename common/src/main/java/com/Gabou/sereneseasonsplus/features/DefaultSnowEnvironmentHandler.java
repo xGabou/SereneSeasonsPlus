@@ -83,6 +83,11 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
         data.observedChunks.clear();
         data.lastBlanketStormCount = 0;
         persist(level, data);
+        // Reset global current storm id as well
+        com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData hist = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get(level);
+        hist.currentStormId = 0;
+        hist.snowHistory.clear();
+        hist.setDirty();
     }
 
     @Override
@@ -95,6 +100,11 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
             if (snowySeason && !data.stormActive) {
                 data.stormActive = true;
                 data.stormCount++;
+                // reflect new storm id in global snow history
+                com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData hist = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get(level);
+                hist.currentStormId = data.stormCount;
+                hist.setDirty();
+                com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.currentStormId = hist.currentStormId;
             } else if (!snowySeason) {
                 data.stormActive = false;
             }
@@ -115,6 +125,44 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
             if (wasActive && data.stormCount > 1 && data.lastBlanketStormCount < data.stormCount) {
                 blanketApplyLoadedChunks(level);
                 data.lastBlanketStormCount = data.stormCount;
+            }
+            // When a storm ends, compute and record a SnowRecord for this storm from loaded chunks
+            if (wasActive) {
+                com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData hist2 = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get(level);
+                float min = Float.MAX_VALUE, max = -Float.MAX_VALUE; long sum = 0L; long count = 0L;
+                java.util.Set<Long> seen = new java.util.HashSet<>();
+                int view = level.getServer() != null ? level.getServer().getPlayerList().getViewDistance() : 10;
+                for (net.minecraft.server.level.ServerPlayer player : level.players()) {
+                    net.minecraft.core.BlockPos center = player.blockPosition();
+                    int pcx = center.getX() >> 4;
+                    int pcz = center.getZ() >> 4;
+                    for (int dx = -view; dx <= view; dx++) {
+                        for (int dz = -view; dz <= view; dz++) {
+                            int cx = pcx + dx;
+                            int cz = pcz + dz;
+                            long key = net.minecraft.world.level.ChunkPos.asLong(cx, cz);
+                            if (!seen.add(key)) continue;
+                            net.minecraft.world.level.chunk.ChunkAccess access = level.getChunkSource().getChunk(cx, cz, false);
+                            if (!(access instanceof net.minecraft.world.level.chunk.LevelChunk lc)) continue;
+                            com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk tracked = (com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk) lc;
+                            java.util.Map<net.minecraft.core.BlockPos, Integer> cols = tracked.sereneseasonsplus$getSnowColumns();
+                            for (int v : cols.values()) {
+                                min = Math.min(min, v);
+                                max = Math.max(max, v);
+                                sum += v;
+                                count++;
+                            }
+                        }
+                    }
+                }
+                if (count > 0) {
+                    float avg = (float) sum / (float) count;
+                    com.Gabou.sereneseasonsplus.storage.SnowRecord rec = new com.Gabou.sereneseasonsplus.storage.SnowRecord(min, avg, max, null);
+                    int id = hist2.currentStormId;
+                    hist2.snowHistory.put(id, rec);
+                    hist2.setDirty();
+                    com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.SNOW_HISTORY.put(id, rec);
+                }
             }
         }
         // Persist any changes in storm state / pending observations
@@ -141,7 +189,9 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
 
     @Override
     public int getSnowStormsThisWinter(ServerLevel level) {
-        return data(level).stormCount;
+        var d = data(level);
+        // Ignore the currently ongoing storm when comparing against chunk-applied totals
+        return d.stormCount - (d.stormActive ? 1 : 0);
     }
 
     @Override

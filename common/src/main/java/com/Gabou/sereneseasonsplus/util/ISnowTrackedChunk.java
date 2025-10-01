@@ -31,5 +31,16 @@ public interface ISnowTrackedChunk {
     int sereneseasonsplus$getLastWinterId();
     void sereneseasonsplus$setLastWinterId(int id);
 
+    // Per-chunk snow columns: maps a block position to its current snow layer count
+    java.util.Map<net.minecraft.core.BlockPos, Integer> sereneseasonsplus$getSnowColumns();
+    default int sereneseasonsplus$getSnowColumnsTotalLayers() {
+        int sum = 0;
+        for (int v : sereneseasonsplus$getSnowColumns().values()) sum += v;
+        return sum;
+    }
+    default int sereneseasonsplus$getSnowColumnsCount() {
+        return sereneseasonsplus$getSnowColumns().size();
+    }
+
 }
 

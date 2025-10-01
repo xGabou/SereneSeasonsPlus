@@ -36,6 +36,10 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     @Unique
     private int sereneseasonsplus$lastWinterId = -1; // -1 means never had a winter
 
+    @Unique
+    private java.util.Map<net.minecraft.core.BlockPos, Integer> sereneseasonsplus$snowColumns = new java.util.HashMap<>();
+
+
     @Override
     public int sereneseasonsplus$getLastWinterId() {
         return sereneseasonsplus$lastWinterId;
@@ -128,6 +132,12 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
         this.sereneseasonsplus$snowCount = value;
     }
 
+    @Override
+    public java.util.Map<net.minecraft.core.BlockPos, Integer> sereneseasonsplus$getSnowColumns() {
+        return sereneseasonsplus$snowColumns;
+    }
+
+
     @Inject(
             method = "<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;)V",
             at = @At("TAIL")
@@ -145,6 +155,9 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
             if (src.sereneseasonsplus$getLastSeason() != null) {
                 target.sereneseasonsplus$setLastSeason(src.sereneseasonsplus$getLastSeason());
             }
+            // Copy snow columns map
+            this.sereneseasonsplus$snowColumns.clear();
+            this.sereneseasonsplus$snowColumns.putAll(src.sereneseasonsplus$getSnowColumns());
         }
     }
 

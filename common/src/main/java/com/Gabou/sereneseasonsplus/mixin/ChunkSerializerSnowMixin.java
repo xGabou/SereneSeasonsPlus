@@ -33,9 +33,18 @@ public abstract class ChunkSerializerSnowMixin {
             if (tracked.sereneseasonsplus$getLastSeason() != null) {
                 tag.putString("LastSeason", tracked.sereneseasonsplus$getLastSeason().name());
             }
-            if (tag.contains("LastWinterId")) {
-                tracked.sereneseasonsplus$setLastWinterId(tag.getInt("LastWinterId"));
+            // Persist last winter id correctly
+            tag.putInt("LastWinterId", tracked.sereneseasonsplus$getLastWinterId());
+
+            // Persist snow columns as a list of {Pos: long, Layers: int}
+            net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
+            for (java.util.Map.Entry<net.minecraft.core.BlockPos, Integer> e : tracked.sereneseasonsplus$getSnowColumns().entrySet()) {
+                net.minecraft.nbt.CompoundTag entry = new net.minecraft.nbt.CompoundTag();
+                entry.putLong("Pos", e.getKey().asLong());
+                entry.putInt("Layers", e.getValue());
+                list.add(entry);
             }
+            tag.put("SnowColumns", list);
 
             root.put(SSP, tag);
             cir.setReturnValue(root);
@@ -55,13 +64,27 @@ public abstract class ChunkSerializerSnowMixin {
                 tracked.sereneseasonsplus$incrementWasRaining(tag.getBoolean("WasRaining"));
                 tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(tag.getBoolean("HasReceivedSnowLayerThisStorm"));
                 tracked.sereneseasonsplus$willReceiveSnow(tag.getBoolean("WillReceiveSnow"));
-                tag.putInt("LastWinterId", tracked.sereneseasonsplus$getLastWinterId());
+                if (tag.contains("LastWinterId")) {
+                    tracked.sereneseasonsplus$setLastWinterId(tag.getInt("LastWinterId"));
+                }
                 if (tag.contains("LastSeason")) {
                     try {
                         tracked.sereneseasonsplus$setLastSeason(Season.SubSeason.valueOf(tag.getString("LastSeason")));
                     } catch (IllegalArgumentException ignored) {}
                 }
+                // Load snow columns
+                tracked.sereneseasonsplus$getSnowColumns().clear();
+                net.minecraft.nbt.ListTag list = tag.getList("SnowColumns", 10); // 10 = CompoundTag id
+                for (int i = 0; i < list.size(); i++) {
+                    net.minecraft.nbt.CompoundTag entry = list.getCompound(i);
+                    long posLong = entry.getLong("Pos");
+                    int layers = entry.getInt("Layers");
+                    net.minecraft.core.BlockPos bp = net.minecraft.core.BlockPos.of(posLong);
+                    tracked.sereneseasonsplus$getSnowColumns().put(bp.immutable(), layers);
+                }
             }
         }
+
+    }
     }
 }

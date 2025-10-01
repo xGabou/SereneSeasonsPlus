@@ -45,6 +45,10 @@ public class CommonSnowBlockFeature {
 
     protected static int snowStormIntensity = 0;
 
+    // Global snow history: finished storms only
+    public static final java.util.Map<Integer, com.Gabou.sereneseasonsplus.storage.SnowRecord> SNOW_HISTORY = new java.util.HashMap<>();
+    public static int currentStormId = 0; // id of ongoing storm; exclude from piling comparisons
+
     protected static boolean isSnowStorming = false;
 
     // Ensures we catch up once for chunks that loaded during startup
@@ -201,14 +205,34 @@ public class CommonSnowBlockFeature {
         if (tracked == null) return;
 
         ChunkPos chunkPos = chunk.getPos();
+        // Instant converge: pile or melt immediately
+        boolean cold = HANDLER.isColdEnoughForSnow(level, chunkPos.getMiddleBlockPosition(level.getMinBuildHeight()));
+        boolean anyChanged = false;
+        if (cold) {
+            anyChanged = pileChunkTowardsGlobal(level, chunk);
+            if (anyChanged) {
+                chunkTaskTypes.put(chunkPos, ChunkQueue.TaskType.APPLY_SNOW);
+                chunksToDirty.add(chunkPos);
+            }
+        } else if (shouldMeltInSeason(level)) {
+            anyChanged = meltEntireColumns(level, chunk);
+            if (anyChanged) {
+                chunkTaskTypes.put(chunkPos, ChunkQueue.TaskType.MELT_SNOW);
+                chunksToDirty.add(chunkPos);
+            }
+        }
+        if (anyChanged) {
+            processQueuedChanges(level, Integer.MAX_VALUE);
+            finalizeChunkBatch(level);
+        }
+
+        // Also let periodic logic update flags
         var seasonState = SeasonHelper.getSeasonState(level);
         Season.SubSeason currentSeason = EnvironmentHelper.getCurrentSeason();
-
         if (seasonState == null || currentSeason == null) {
             ChunkQueue.enqueueScheduled(chunkPos);
             return;
         }
-
         SnowLogic.evaluate(level, currentSeason, seasonState, tracked, chunkPos, true, chunk.getHeight());
     }
 
@@ -238,6 +262,12 @@ public class CommonSnowBlockFeature {
                                            ChunkPos chunkPos,
                                            Season.SubSeason subSeason,
                                            RandomSource random) {
+        // First, attempt to pile towards global average if needed
+        LevelChunk lc = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
+        if (lc != null && lc instanceof LevelChunk) {
+            boolean piled = pileChunkTowardsGlobal(level, lc);
+            if (piled) return true;
+        }
 
         int day = SeasonHelper.getSeasonState(level).getDay();
 
@@ -299,29 +329,81 @@ public class CommonSnowBlockFeature {
             return true;
         }
 
-        final RandomSource random = level.getRandom();
-        final boolean[] any = {false};
-        iterateChunkColumns(level, chunkPos, (pos, state) -> {
+        // Melt using tracked snow columns only. If none are recorded, do nothing.
+        LevelChunk chunk = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
+        if (!(chunk instanceof ISnowTrackedChunk tracked)) {
+            return false;
+        }
+
+        java.util.Map<BlockPos, Integer> columns = tracked.sereneseasonsplus$getSnowColumns();
+        if (columns == null || columns.isEmpty()) {
+            return false; // no tracked snow -> nothing to melt
+        }
+
+        // Determine the topmost snow position per (x,z) column from the recorded entries.
+        java.util.HashMap<Long, BlockPos> topByColumn = new java.util.HashMap<>();
+        for (BlockPos p : columns.keySet()) {
+            long key = (((long) p.getX()) << 32) ^ (p.getZ() & 0xffffffffL);
+            BlockPos cur = topByColumn.get(key);
+            if (cur == null || p.getY() > cur.getY()) {
+                topByColumn.put(key, p.immutable());
+            }
+        }
+
+        boolean changed = false;
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+
+        for (BlockPos top : topByColumn.values()) {
+            BlockState state = level.getBlockState(top);
+
+            // Remove the topmost snow layer at the surface
             if (state.is(Blocks.SNOW_BLOCK)) {
-                if (random.nextBoolean()) {
-                    any[0] |= queueClearIfNeeded(level, pos, false);
-                } else {
-                    any[0] |= queueSnowLayersIfNeeded(level, pos, 4, false);
-                }
+                // Convert a full snow block to 7 layers
+                changed |= queueSnowLayersIfNeeded(level, top, 7, false);
             } else if (state.is(Blocks.SNOW)) {
                 int layers = state.getValue(BlockStateProperties.LAYERS);
-                int drop = 1 + random.nextInt(2);
-                int newLayers = Math.max(0, layers - drop);
-                if (newLayers <= 0) {
-                    any[0] |= queueClearIfNeeded(level, pos, false);
+                if (layers <= 1) {
+                    changed |= queueClearIfNeeded(level, top, false);
                 } else {
-                    any[0] |= queueSnowLayersIfNeeded(level, pos, newLayers, false);
+                    changed |= queueSnowLayersIfNeeded(level, top, layers - 1, false);
                 }
-            } else if (state.is(Blocks.ICE) && random.nextFloat() < 0.35F) {
-                any[0] |= queueClearIfNeeded(level, pos, true);
+            } else {
+                // If recorded top entry isn't currently snow (desync), try to find snow below it
+                int minY = level.getMinBuildHeight();
+                cursor.set(top.getX(), top.getY(), top.getZ());
+                while (cursor.getY() >= minY) {
+                    BlockState s = level.getBlockState(cursor);
+                    if (s.is(Blocks.SNOW_BLOCK)) {
+                        changed |= queueSnowLayersIfNeeded(level, cursor.immutable(), 7, false);
+                        break;
+                    } else if (s.is(Blocks.SNOW)) {
+                        int l = s.getValue(BlockStateProperties.LAYERS);
+                        if (l <= 1) {
+                            changed |= queueClearIfNeeded(level, cursor.immutable(), false);
+                        } else {
+                            changed |= queueSnowLayersIfNeeded(level, cursor.immutable(), l - 1, false);
+                        }
+                        break;
+                    }
+                    cursor.move(0, -1, 0);
+                }
             }
-        });
-        return any[0];
+
+            // Then proceed downward: if subsequent blocks are also snow, remove them until ground
+            int minY = level.getMinBuildHeight();
+            cursor.set(top.getX(), top.getY() - 1, top.getZ());
+            while (cursor.getY() >= minY) {
+                BlockState below = level.getBlockState(cursor);
+                if (below.is(Blocks.SNOW) || below.is(Blocks.SNOW_BLOCK)) {
+                    changed |= queueClearIfNeeded(level, cursor.immutable(), false);
+                    cursor.move(0, -1, 0);
+                } else {
+                    break;
+                }
+            }
+        }
+
+        return changed;
     }
 
     /**
@@ -810,6 +892,174 @@ public class CommonSnowBlockFeature {
         if (current.equals(wanted)) return false;
         int flags = Block.UPDATE_CLIENTS | (knownShape ? Block.UPDATE_KNOWN_SHAPE : 0);
         return level.setBlock(pos, wanted, flags);
+    }
+
+    // --- Snow piling towards global history ---
+
+    private static boolean pileChunkTowardsGlobal(ServerLevel level, LevelChunk chunk) {
+        ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
+        ChunkPos cp = chunk.getPos();
+        BlockPos mid = cp.getMiddleBlockPosition(level.getMinBuildHeight());
+        if (!HANDLER.isColdEnoughForSnow(level, mid)) return false;
+
+        float targetAvg = computeGlobalAvg(level);
+
+        java.util.Map<BlockPos, Integer> columns = tracked.sereneseasonsplus$getSnowColumns();
+
+        boolean anyChanged = false;
+        if (!columns.isEmpty()) {
+            // Compute current average
+            long totalLayers = 0L;
+            for (int v : columns.values()) totalLayers += v;
+            int totalPositions = columns.size();
+            float currentAvg = totalPositions > 0 ? (float) totalLayers / (float) totalPositions : 0f;
+
+            float diff = targetAvg - currentAvg;
+            if (Math.abs(diff) > 1.0f) {
+                int delta = Math.round(diff);
+                for (java.util.Map.Entry<BlockPos, Integer> e : new java.util.ArrayList<>(columns.entrySet())) {
+                    BlockPos pos = e.getKey();
+                    int cur = e.getValue();
+                    int wanted = net.minecraft.util.Mth.clamp(cur + delta, 0, 8);
+                    if (wanted <= 0) {
+                        anyChanged |= queueClearIfNeeded(level, pos, false);
+                        columns.remove(pos);
+                    } else {
+                        anyChanged |= queueLayersWithClimb(level, pos, wanted);
+                        columns.put(pos.immutable(), wanted);
+                    }
+                }
+            }
+        } else {
+            // No snow in this chunk: staged random based on history min/max
+            com.Gabou.sereneseasonsplus.storage.SnowRecord mm = aggregateFinishedStormMinMax(level);
+            if (mm != null && mm.maxLayers > mm.minLayers && targetAvg > 0.5f) {
+                anyChanged |= stageInitFromMinMax(level, chunk.getPos(), mm);
+            }
+        }
+        return anyChanged;
+    }
+
+    private static boolean queueLayersWithClimb(ServerLevel level, BlockPos start, int targetLayers) {
+        targetLayers = net.minecraft.util.Mth.clamp(targetLayers, 1, 8);
+        if (queueSnowLayersIfNeeded(level, start, targetLayers, true)) return true;
+        BlockPos.MutableBlockPos p = new BlockPos.MutableBlockPos().set(start);
+        BlockState snow = Blocks.SNOW.defaultBlockState();
+        int max = Math.min(level.getMaxBuildHeight(), start.getY() + 6);
+        for (int y = start.getY() + 1; y <= max; y++) {
+            p.setY(y);
+            if (snow.canSurvive(level, p)) {
+                return queueSnowLayersIfNeeded(level, p, targetLayers, true);
+            }
+        }
+        return false;
+    }
+
+    private static boolean stageInitFromMinMax(ServerLevel level, ChunkPos chunkPos, com.Gabou.sereneseasonsplus.storage.SnowRecord mm) {
+        final java.util.concurrent.atomic.AtomicBoolean any = new java.util.concurrent.atomic.AtomicBoolean(false);
+        int baseX = chunkPos.getMinBlockX();
+        int baseZ = chunkPos.getMinBlockZ();
+        int maxX = chunkPos.getMaxBlockX();
+        int maxZ = chunkPos.getMaxBlockZ();
+        java.util.Random rng = RANDOM;
+        int rangeInt = (int) Math.max(1, Math.floor(mm.maxLayers - mm.minLayers));
+        for (int x = baseX; x <= maxX; x++) {
+            for (int z = baseZ; z <= maxZ; z++) {
+                int r = 1 + rng.nextInt(Math.max(1, rangeInt));
+                float staged = mm.minLayers + r;
+                int layers = net.minecraft.util.Mth.clamp(Math.round(staged), 1, 8);
+                int topY = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, x, z) + 1;
+                BlockPos pos = new BlockPos(x, topY, z);
+                if (queueLayersWithClimb(level, pos, layers)) {
+                    any.set(true);
+                    // update tracked snowColumns if chunk is loaded
+                    LevelChunk lc = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
+                    if (lc instanceof ISnowTrackedChunk t) {
+                        t.sereneseasonsplus$getSnowColumns().put(pos.immutable(), layers);
+                    }
+                }
+            }
+        }
+        return any.get();
+    }
+
+    private static boolean meltEntireColumns(ServerLevel level, LevelChunk chunk) {
+        ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
+        java.util.Map<BlockPos, Integer> columns = new java.util.HashMap<>(tracked.sereneseasonsplus$getSnowColumns());
+        boolean any = false;
+        for (java.util.Map.Entry<BlockPos, Integer> e : columns.entrySet()) {
+            BlockPos pos = e.getKey();
+            BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos().set(pos);
+            while (true) {
+                BlockState st = level.getBlockState(m);
+                if (st.is(Blocks.SNOW)) {
+                    int layers = st.getValue(SnowLayerBlock.LAYERS);
+                    int newLayers = Math.max(0, layers - 1);
+                    if (newLayers == 0) {
+                        any |= queueClearIfNeeded(level, m, false);
+                        m.move(0, -1, 0);
+                        continue;
+                    } else {
+                        any |= queueSnowLayersIfNeeded(level, m, newLayers, false);
+                        break;
+                    }
+                } else if (st.is(Blocks.SNOW_BLOCK)) {
+                    any |= queueSnowLayersIfNeeded(level, m, 7, false);
+                    break;
+                }
+                break;
+            }
+            // Update snowColumns to reflect new top
+            BlockState ns = level.getBlockState(pos);
+            if (ns.is(Blocks.SNOW)) {
+                tracked.sereneseasonsplus$getSnowColumns().put(pos.immutable(), ns.getValue(SnowLayerBlock.LAYERS));
+            } else if (ns.is(Blocks.SNOW_BLOCK)) {
+                tracked.sereneseasonsplus$getSnowColumns().put(pos.immutable(), 8);
+            } else {
+                tracked.sereneseasonsplus$getSnowColumns().remove(pos);
+            }
+        }
+        return any;
+    }
+
+    private static boolean shouldMeltInSeason(ServerLevel level) {
+        Season.SubSeason current = EnvironmentHelper.getCurrentSeason();
+        boolean inRange = current != null && current.ordinal() >= Season.SubSeason.LATE_SPRING.ordinal()
+                && current.ordinal() <= Season.SubSeason.EARLY_WINTER.ordinal();
+        boolean noCompletedStorms = HANDLER.getSnowStormsThisWinter(level) == 0;
+        return inRange && noCompletedStorms;
+    }
+
+    public static float computeGlobalAvg(ServerLevel level) {
+        // Sum over finished storms only; exclude current if active
+        com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get(level);
+        boolean excludeCurrent = com.Gabou.sereneseasonsplus.storage.SnowSavedData.get(level).stormActive;
+        int excludeId = excludeCurrent ? sd.currentStormId : -1;
+        float sum = 0f; int count = 0;
+        for (java.util.Map.Entry<Integer, com.Gabou.sereneseasonsplus.storage.SnowRecord> e : sd.snowHistory.entrySet()) {
+            if (e.getKey() == excludeId) continue;
+            sum += e.getValue().avgLayers;
+            count++;
+        }
+        if (count == 0) return 0f;
+        return sum / (float) count;
+    }
+
+    private static com.Gabou.sereneseasonsplus.storage.SnowRecord aggregateFinishedStormMinMax(ServerLevel level) {
+        com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get(level);
+        boolean excludeCurrent = com.Gabou.sereneseasonsplus.storage.SnowSavedData.get(level).stormActive;
+        int excludeId = excludeCurrent ? sd.currentStormId : -1;
+        float min = Float.MAX_VALUE, max = -Float.MAX_VALUE, avg = 0f; int count = 0;
+        for (java.util.Map.Entry<Integer, com.Gabou.sereneseasonsplus.storage.SnowRecord> e : sd.snowHistory.entrySet()) {
+            if (e.getKey() == excludeId) continue;
+            com.Gabou.sereneseasonsplus.storage.SnowRecord r = e.getValue();
+            min = Math.min(min, r.minLayers);
+            max = Math.max(max, r.maxLayers);
+            avg += r.avgLayers;
+            count++;
+        }
+        if (count == 0) return null;
+        return new com.Gabou.sereneseasonsplus.storage.SnowRecord(min, avg / count, max, null);
     }
 
     /**

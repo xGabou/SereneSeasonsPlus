@@ -6,6 +6,7 @@
   "mixins": [
     "ChunkSerializerSnowMixin",
     "LevelChunkSnowMixin",
+    "LevelSnowMixin",
     "MinecraftServerMixin",
     "ServerLevelMixin"
   ],
