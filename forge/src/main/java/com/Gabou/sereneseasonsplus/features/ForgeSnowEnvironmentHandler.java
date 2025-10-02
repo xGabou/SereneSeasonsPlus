@@ -75,8 +75,6 @@ public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
                 if (data.pendingChunks.add(key)) {
                     data.observedChunks.add(key);
                 }
-                trackedChunk.sereneseasonsplus$setShouldApplyInitialSnow(true);
-                trackedChunk.sereneseasonsplus$willReceiveSnow(true);
                 ChunkQueue.enqueueScheduled(chunkPos);
             }
         } else {

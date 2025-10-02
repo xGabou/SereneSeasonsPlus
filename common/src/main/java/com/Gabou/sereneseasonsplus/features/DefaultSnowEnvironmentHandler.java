@@ -113,8 +113,6 @@ public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
             }
 
             if (snowySeason) {
-                trackedChunk.sereneseasonsplus$setShouldApplyInitialSnow(true);
-                trackedChunk.sereneseasonsplus$willReceiveSnow(true);
                 ChunkQueue.enqueueScheduled(chunkPos);
             }
         } else if (!EnvironmentHelper.isRainning(level, chunkPos.getMiddleBlockPosition(65))) {
