@@ -56,6 +56,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         SereneService.HANDLER = new FabricAsyncExecutorHandler();
         CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
         server.getGameRules().getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT).set(999, server);
+        EnvironmentHelper.onServerStarted(server.getLevel(Level.OVERWORLD));
     }
 
     private void onServerStopping(MinecraftServer server) {

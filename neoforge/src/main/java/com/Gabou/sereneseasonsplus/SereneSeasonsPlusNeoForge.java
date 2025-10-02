@@ -60,6 +60,7 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
         SereneService.HANDLER = new NeoForgeAsyncExecutorHandler();
         event.getServer().getGameRules().getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT).set(999, event.getServer());
         CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
+        EnvironmentHelper.onServerStarted(event.getServer().getLevel(Level.OVERWORLD));
     }
 
     /**
