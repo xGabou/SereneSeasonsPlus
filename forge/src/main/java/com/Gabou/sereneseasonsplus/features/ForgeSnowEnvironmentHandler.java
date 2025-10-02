@@ -4,6 +4,7 @@ import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
+import net.Gabou.projectatmosphere.api.AtmoApi;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import sereneseasons.api.season.Season;
@@ -58,7 +59,7 @@ public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
         // With Project Atmosphere, use global snowing indicator for storm lifecycle,
         // and local precipitation for per-chunk pending flags.
         boolean snowySeason = EnvironmentHelper.isSnowySeason();
-        boolean globalSnowing = isSnowingSomeWhere(level);
+        boolean globalSnowing = AtmoApi.getInstance().isRainningLevel(level,BlockPos.ZERO);
 
         SnowData data = data(level);
         long key = chunkPos.toLong();
@@ -91,15 +92,5 @@ public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
         persist(level, data);
     }
 
-    private static boolean isSnowingSomeWhere(ServerLevel level) {
-        try {
-            Class<?> api = Class.forName("net.Gabou.projectatmosphere.api.AtmoApi");
-            java.lang.reflect.Method m = api.getMethod("isSnowingSomeWhere", ServerLevel.class);
-            Object res = m.invoke(null, level);
-            if (res instanceof Boolean b) return b;
-        } catch (Throwable ignored) {
-        }
-        // Fallback – treat as global rain if reflection failed
-        return level.isRaining();
-    }
+
 }

@@ -1,6 +1,7 @@
 package com.Gabou.sereneseasonsplus.util;
 
 import com.Gabou.sereneseasonsplus.SereneSeasonsPlusForge;
+import net.Gabou.projectatmosphere.api.AtmoApi;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
@@ -27,7 +28,7 @@ public class ProjectAtmosphereRainHandler implements IRainHandler {
         CacheEntry e = cache.computeIfAbsent(level, k -> new CacheEntry());
         int tick = com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.getTickCounter();
         if (tick - e.lastTick >= CACHE_INTERVAL_TICKS) {
-            e.lastValue = level.isRainingAt(pos); // vanilla: global precipitation
+            e.lastValue = AtmoApi.getInstance().isRainningLevel(level,pos); // vanilla: global precipitation
             e.lastTick = tick;
         }
         return e.lastValue;
