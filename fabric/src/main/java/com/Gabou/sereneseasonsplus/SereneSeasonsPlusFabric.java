@@ -9,14 +9,12 @@ import com.Gabou.sereneseasonsplus.util.FabricAsyncExecutorHandler;
 import com.Gabou.sereneseasonsplus.util.FabricEnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.SereneService;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.chunk.ChunkAccess;
 
 public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements ModInitializer {
 
@@ -27,7 +25,6 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         // Server lifecycle hooks
         ServerLifecycleEvents.SERVER_STARTED.register(this::onServerStarting);
         ServerLifecycleEvents.SERVER_STOPPING.register(this::onServerStopping);
-        ServerChunkEvents.CHUNK_LOAD.register(this::onChunkLoad);
         EnvironmentHelper.init(new FabricEnvironmentHelper());
         SeasonChangeEvent.register();
         SereneExtendedConfig.registerReloadListener(this::onConfigReload);
@@ -67,14 +64,5 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
 
     }
-
-    private void onChunkLoad(ServerLevel level, ChunkAccess chunkAccess) {
-        if (level == null) return;
-        if (!(chunkAccess instanceof net.minecraft.world.level.chunk.LevelChunk chunk)) return;
-        if (level.isClientSide()) return;
-        if (level.dimension() != Level.OVERWORLD) return;
-        CommonSnowBlockFeature.handleOnChunkLoad(chunk,level);
-    }
-
 
 }

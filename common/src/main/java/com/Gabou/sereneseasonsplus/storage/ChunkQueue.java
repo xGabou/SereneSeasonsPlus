@@ -34,15 +34,6 @@ public final class ChunkQueue {
         TASKS_NEXT_TICK.clear();
     }
 
-    public static void enqueueApplyWithSitting(ChunkPos chunkPos, Season.SubSeason subSeason, int sittingTicks) {
-        EntryKey key = new EntryKey(ChunkPos.asLong(chunkPos.x, chunkPos.z), TaskType.APPLY_SNOW, false);
-        if (SCHEDULED.add(key)) {
-            TASKS_NEXT_TICK.add(new Entry(chunkPos, TaskType.APPLY_SNOW, subSeason, false,sittingTicks));
-        }
-    }
-
-
-
     public static void enqueueScheduled(ChunkPos chunkPos) {
         EntryKey key = new EntryKey(ChunkPos.asLong(chunkPos.x, chunkPos.z), TaskType.APPLY_SNOW, true);
         if (SCHEDULED.add(key)) {
@@ -131,10 +122,7 @@ public final class ChunkQueue {
         SCHEDULED_TASKS.clear();
     }
 
-    public record Entry(ChunkPos pos, TaskType type, Season.SubSeason subSeason, boolean fullClear,int sittingTicks) {
-        public Entry(ChunkPos pos, TaskType type, Season.SubSeason subSeason, boolean fullClear) {
-            this(pos, type, subSeason, fullClear,0);
-        }
+    public record Entry(ChunkPos pos, TaskType type, Season.SubSeason subSeason, boolean fullClear) {
     }
 
     public enum TaskType {

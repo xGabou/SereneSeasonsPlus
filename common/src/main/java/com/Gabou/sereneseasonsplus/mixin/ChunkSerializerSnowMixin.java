@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import sereneseasons.api.season.Season;
 
 @Mixin(ChunkSerializer.class)
 public abstract class ChunkSerializerSnowMixin {
@@ -24,16 +23,6 @@ public abstract class ChunkSerializerSnowMixin {
         CompoundTag root = cir.getReturnValue();
         if (access instanceof ISnowTrackedChunk tracked) {
             CompoundTag tag = new CompoundTag();
-            tag.putInt("SnowCount", tracked.sereneseasonsplus$getSnowCount());
-            tag.putBoolean("HasAppliedInitialSnow", tracked.sereneseasonsplus$hasAppliedInitialSnow());
-            tag.putBoolean("ShouldApplyInitialSnow", tracked.sereneseasonsplus$shouldApplyInitialSnow());
-            tag.putBoolean("WasRaining", tracked.sereneseasonsplus$wasRaining());
-            tag.putBoolean("HasReceivedSnowLayerThisStorm", tracked.sereneseasonsplus$hasReceivedSnowLayerThisStorm());
-            tag.putBoolean("WillReceiveSnow", tracked.sereneseasonsplus$shouldReceiveSnow());
-            if (tracked.sereneseasonsplus$getLastSeason() != null) {
-                tag.putString("LastSeason", tracked.sereneseasonsplus$getLastSeason().name());
-            }
-            // Persist last winter id correctly
             tag.putInt("LastWinterId", tracked.sereneseasonsplus$getLastWinterId());
 
             // Persist snow columns as a list of {Pos: long, Layers: int}
@@ -58,19 +47,8 @@ public abstract class ChunkSerializerSnowMixin {
         if (access instanceof ISnowTrackedChunk tracked) {
             CompoundTag tag = nbt.getCompound(SSP);
             if (!tag.isEmpty()) {
-                tracked.sereneseasonsplus$setSnowCount(tag.getInt("SnowCount"));
-                tracked.sereneseasonsplus$setHasAppliedInitialSnow(tag.getBoolean("HasAppliedInitialSnow"));
-                tracked.sereneseasonsplus$setShouldApplyInitialSnow(tag.getBoolean("ShouldApplyInitialSnow"));
-                tracked.sereneseasonsplus$incrementWasRaining(tag.getBoolean("WasRaining"));
-                tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(tag.getBoolean("HasReceivedSnowLayerThisStorm"));
-                tracked.sereneseasonsplus$willReceiveSnow(tag.getBoolean("WillReceiveSnow"));
                 if (tag.contains("LastWinterId")) {
                     tracked.sereneseasonsplus$setLastWinterId(tag.getInt("LastWinterId"));
-                }
-                if (tag.contains("LastSeason")) {
-                    try {
-                        tracked.sereneseasonsplus$setLastSeason(Season.SubSeason.valueOf(tag.getString("LastSeason")));
-                    } catch (IllegalArgumentException ignored) {}
                 }
                 // Load snow columns
                 tracked.sereneseasonsplus$getSnowColumns().clear();

@@ -25,10 +25,18 @@ public class DefaultRainHandler implements IRainHandler {
         CacheEntry e = cache.computeIfAbsent(level, k -> new CacheEntry());
         int tick = com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.getTickCounter();
         if (tick - e.lastTick >= CACHE_INTERVAL_TICKS) {
-            e.lastValue = level.isRaining(); // vanilla: global precipitation
+            e.lastValue = queryPrecipitation(level, pos);
             e.lastTick = tick;
         }
         return e.lastValue;
+    }
+
+    /**
+     * Computes the current precipitation state for the supplied level/position.
+     * Subclasses can override to integrate with other weather systems.
+     */
+    protected boolean queryPrecipitation(ServerLevel level, BlockPos pos) {
+        return level.isRaining();
     }
 }
 

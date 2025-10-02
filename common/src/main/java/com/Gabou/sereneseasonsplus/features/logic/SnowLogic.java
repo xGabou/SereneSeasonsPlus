@@ -31,13 +31,13 @@ public final class SnowLogic {
         // --- Case 1: Cold enough => pile snow ---
         if (coldEnough) {
             float globalAvg = CommonSnowBlockFeature.computeGlobalAvg(level);
-            int totalPositions = tracked.sereneseasonsplus$getSnowColumnsCount();
+            int totalPositions = tracked.sereneseasonsplus$getTrackedColumnCount();
             if (totalPositions == 0) {
                 if (globalAvg > 0.5f) {
                     ChunkQueue.enqueueApply(chunkPos, currentSeason);
                 }
             } else {
-                float currentAvg = (float) tracked.sereneseasonsplus$getSnowColumnsTotalLayers() / (float) totalPositions;
+                float currentAvg = (float) tracked.sereneseasonsplus$getTotalSnowLayers() / (float) totalPositions;
                 if (Math.abs(currentAvg - globalAvg) > 1.0f) {
                     ChunkQueue.enqueueApply(chunkPos, currentSeason);
                 }
