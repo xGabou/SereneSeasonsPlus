@@ -9,6 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
@@ -220,7 +221,21 @@ public class CommonSnowBlockFeature {
                                         RandomSource columnRandom,
                                         LayerBounds bounds) {
         BlockState belowState = level.getBlockState(belowPos);
-        if (belowState.isAir() || !belowState.getFluidState().isEmpty()) return false;
+        if (belowState.isAir()) return false;
+
+        if (belowState.is(Blocks.WATER)) {
+            queueChange(belowPos, Blocks.ICE.defaultBlockState(), Block.UPDATE_CLIENTS);
+            return true;
+        }
+
+        if (belowState.is(Blocks.LAVA)) {
+            return false;
+        }
+
+        if (!belowState.getFluidState().isEmpty()) return false;
+        if (!level.canSeeSkyFromBelowWater(surfacePos) && !hasLeafCanopyAbove(level, surfacePos)) {
+            return false;
+        }
         BlockState current = level.getBlockState(surfacePos);
         if (current.canBeReplaced()) {
             return queueSnowLayersIfNeeded(level, surfacePos, 1, true);
@@ -245,6 +260,31 @@ public class CommonSnowBlockFeature {
         }
 
         return queueSnowLayersIfNeeded(level, surfacePos, targetLayers, true);
+    }
+
+    private static boolean hasLeafCanopyAbove(ServerLevel level, BlockPos surfacePos) {
+        BlockPos.MutableBlockPos scanPos = new BlockPos.MutableBlockPos(surfacePos.getX(), surfacePos.getY() + 1, surfacePos.getZ());
+        int maxY = Math.min(level.getMaxBuildHeight(), surfacePos.getY() + 12);
+
+        for (int y = scanPos.getY(); y <= maxY; y++) {
+            scanPos.setY(y);
+            BlockState aboveState = level.getBlockState(scanPos);
+            if (aboveState.isAir()) {
+                continue;
+            }
+
+            if (aboveState.is(BlockTags.LEAVES)) {
+                return true;
+            }
+
+            if (aboveState.is(BlockTags.LOGS)) {
+                continue;
+            }
+
+            return false;
+        }
+
+        return false;
     }
 
 
