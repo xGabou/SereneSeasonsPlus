@@ -8,7 +8,6 @@ package com.Gabou.sereneseasonsplus;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
 import com.Gabou.sereneseasonsplus.features.*;
-import com.Gabou.sereneseasonsplus.mixin.MinecraftServerMixin;
 import com.Gabou.sereneseasonsplus.util.*;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.GameRules;

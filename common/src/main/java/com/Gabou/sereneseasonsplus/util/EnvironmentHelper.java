@@ -34,6 +34,18 @@ public class EnvironmentHelper {
         return rainHandler.isRainingAt(level, pos);
     }
 
+    public static void onSimpleCloudSpawned(ServerLevel level, int hashcode) {
+        rainHandler.onSimpleCloudsSpawned(level,hashcode);
+    }
+
+    public static void checkAndUpdate(ServerLevel level) {
+        rainHandler.checkAndUpdate(level);
+    }
+
+    public static void  onSimpleCloudsDespawned(ServerLevel level,int hashcode) {
+        rainHandler.onSimpleCloudsDespawned(level,hashcode);
+    }
+
     /**
      * Allows platform bootstrap to install a custom rain handler.
      */

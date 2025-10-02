@@ -46,15 +46,20 @@ public final class SnowLogic {
 
         // --- Case 2: Too warm => melt snow ---
         else {
-            boolean inMeltSeason = currentSeason.ordinal() >= Season.SubSeason.LATE_SPRING.ordinal()
-                    && currentSeason.ordinal() <= Season.SubSeason.EARLY_WINTER.ordinal();
+            // Fonte inconditionnelle en saison chaude
+            boolean inWarmSeason = currentSeason.ordinal() >= Season.SubSeason.LATE_SPRING.ordinal()
+                    && currentSeason.ordinal() < Season.SubSeason.EARLY_WINTER.ordinal();
 
-            boolean noStormsYet = CommonSnowBlockFeature.HANDLER.getSnowStormsThisWinter(level) == 0;
+            // Fonte conditionnelle seulement en début d’hiver (si aucune tempête encore)
+            boolean inEarlyWinterNoStorm = currentSeason == Season.SubSeason.EARLY_WINTER
+                    && CommonSnowBlockFeature.HANDLER.getSnowStormsThisWinter(level) == 0;
 
-            if (inMeltSeason && noStormsYet) {
+            if (inWarmSeason || inEarlyWinterNoStorm) {
                 // melt all tracked snow columns until ground
                 ChunkQueue.enqueueMelt(chunkPos, false);
             }
         }
+
+
     }
 }

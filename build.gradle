@@ -1,3 +1,4 @@
+
 buildscript {
     repositories {
         gradlePluginPortal()
@@ -113,5 +114,42 @@ subprojects {
     tasks.withType(GenerateModuleMetadata) {
         enabled = false
     }
+    // Vérif des fichiers lang après la copie des ressources
+    tasks.named("processResources") {
+        doLast {
+            def langDir = file("$projectDir/src/main/resources/assets/minecraft/lang")
+
+            if (!langDir.exists()) {
+                println "⚠️ Aucun dossier 'lang' trouvé → check ignoré."
+                return
+            }
+
+            def langFiles = langDir.listFiles()?.findAll { it.name.endsWith(".json") } ?: []
+
+            if (langFiles.isEmpty()) {
+                println "⚠️ Aucun fichier de langue trouvé → check ignoré."
+                return
+            }
+
+            def invalid = []
+            langFiles.each { f ->
+                try {
+                    new groovy.json.JsonSlurper().parse(f)
+                } catch (Exception e) {
+                    invalid << f.name
+                }
+            }
+
+            if (!invalid.isEmpty()) {
+                println "⚠️ Fichiers de langue invalides (mais build continue): ${invalid}"
+            } else {
+                println "✅ Vérification des fichiers de langue réussie (${langFiles.size()} fichiers valides)."
+            }
+        }
+    }
+
+
+
+
 }
 

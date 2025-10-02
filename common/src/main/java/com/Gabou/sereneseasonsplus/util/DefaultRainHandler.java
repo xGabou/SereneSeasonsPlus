@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus.util;
 
+import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
@@ -7,36 +8,48 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Vanilla-compatible rain handler with simple per-level caching.
- * Checks global rain state once every 100 server ticks.
+ * Vanilla-compatible rain handler.
+ * - Global: tracks last raining state per-level to detect changes.
+ * - Local: supports per-position precipitation checks (simple in vanilla).
  */
 public class DefaultRainHandler implements IRainHandler {
-    private static final int CACHE_INTERVAL_TICKS = 100;
-
-    private static final class CacheEntry {
-        int lastTick;
+    protected static class State {
         boolean lastValue;
     }
 
-    private final Map<ServerLevel, CacheEntry> cache = new HashMap<>();
+    protected final Map<ServerLevel, State> states = new HashMap<>();
+
+    /**
+     * Called each tick to detect transitions in raining state.
+     * If the state changes, you can trigger onRainChanged from outside.
+     */
+    @Override
+    public void checkAndUpdate(ServerLevel level) {
+        State s = states.computeIfAbsent(level, k -> new State());
+        boolean now = level.isRaining();
+        if (now != s.lastValue) {
+            s.lastValue = now;
+            CommonSnowBlockFeature.HANDLER.onRainChanged(level, now);
+        }
+    }
+
 
     @Override
-    public boolean isRainingAt(ServerLevel level, BlockPos pos) {
-        CacheEntry e = cache.computeIfAbsent(level, k -> new CacheEntry());
-        int tick = com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.getTickCounter();
-        if (tick - e.lastTick >= CACHE_INTERVAL_TICKS) {
-            e.lastValue = queryPrecipitation(level, pos);
-            e.lastTick = tick;
-        }
-        return e.lastValue;
+    public void onSimpleCloudsSpawned(ServerLevel level,int hashCode) {
+
+
+    }
+    @Override
+    public void onSimpleCloudsDespawned(ServerLevel level, int hashCode) {
+
     }
 
     /**
-     * Computes the current precipitation state for the supplied level/position.
-     * Subclasses can override to integrate with other weather systems.
+     * Vanilla just uses global rain, ignoring pos.
+     * For PA you can override to check region-based precipitation.
      */
-    protected boolean queryPrecipitation(ServerLevel level, BlockPos pos) {
+    @Override
+    public boolean isRainingAt(ServerLevel level, BlockPos pos) {
         return level.isRaining();
     }
 }
-

@@ -89,7 +89,7 @@ dependencies {
     runtimeOnly("me.djtheredstoner:DevAuth-forge-latest:1.2.1")
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     //runtimeOnly "curse.maven:embeddium-908741:5681725"
-    compileOnly fg.deobf("curse.maven:project-atmosphere-1258344:7029770")
+    compileOnly fg.deobf("curse.maven:project-atmosphere-1258344:7059543")
     implementation fg.deobf("curse.maven:spark-361579:4738952")
     //implementation fg.deobf("curse.maven:alltheleaks-1091339:6967574")
     implementation fg.deobf("curse.maven:ferritecore-429235:4810975")
