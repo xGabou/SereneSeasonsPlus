@@ -37,6 +37,18 @@ public final class SnowLogic {
         if (coldEnough) {
             float globalAvg = CommonSnowBlockFeature.computeGlobalAvg(level);
             int totalPositions = tracked.sereneseasonsplus$getTrackedColumnCount();
+
+            // Ensure per-column baseline from finished storms is met across the chunk
+            int baseline = CommonSnowBlockFeature.computeGlobalMinSum(level);
+            if (baseline > 0) {
+                int baselineTotal = baseline * 256; // 16x16 columns per chunk
+                int trackedTotal = tracked.sereneseasonsplus$getTotalSnowLayers();
+                if (trackedTotal < baselineTotal) {
+                    ChunkQueue.enqueueApply(chunkPos, currentSeason);
+                    return;
+                }
+            }
+
             if (totalPositions == 0) {
                 if (globalAvg > 0.5f) {
                     ChunkQueue.enqueueApply(chunkPos, currentSeason);

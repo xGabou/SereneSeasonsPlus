@@ -94,6 +94,10 @@ public class DefaultSnowEnvironmentHandler implements ISnowEnvironmentHandler {
             if (data.activeStorms.isEmpty()) {
                 int stormId = data.stormCount + 1;
                 data.activeStorms.add(stormId);
+                // Mark active storm id so it is excluded from global computations
+                SnowHistorySavedData hist = SnowHistorySavedData.get(level);
+                hist.currentStormId = stormId;
+                hist.setDirty();
             }
         } else {
             if (!data.activeStorms.isEmpty()) {
@@ -103,10 +107,11 @@ public class DefaultSnowEnvironmentHandler implements ISnowEnvironmentHandler {
                 SnowHistorySavedData hist = SnowHistorySavedData.get(level);
                 SnowRecord rec = SnowGenerator.generateStormRecord(level.random);
 
+                // Persist the finished storm under its own id
                 data.stormCount++;
-                hist.currentStormId = data.stormCount;
-                hist.snowHistory.put(hist.currentStormId, rec);
-                SnowHistorySavedData.get(level).snowHistory.put(hist.currentStormId, rec);
+                hist.snowHistory.put(endedStormId, rec);
+                // Clear active storm marker
+                hist.currentStormId = 0;
 
                 hist.setDirty();
             }
