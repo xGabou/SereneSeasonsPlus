@@ -383,13 +383,18 @@ public class CommonSnowBlockFeature {
             }
         }
 
-        // If no baseline change, allow active storm pattern to add bias
-        if (!any) {
-            SnowHistorySavedData sd = SnowHistorySavedData.get(level);
-            if (sd != null && sd.currentStormId > 0) {
+        // After baseline, add distribution either from active storm or combined finished storms
+        SnowHistorySavedData sd = SnowHistorySavedData.get(level);
+        if (sd != null) {
+            if (sd.currentStormId > 0) {
                 SnowRecord rec = sd.snowHistory.get(sd.currentStormId);
                 if (rec != null) {
-                    return applySnowPattern(level, chunk, rec, level.random);
+                    return applySnowPattern(level, chunk, rec, level.random) || any;
+                }
+            } else {
+                SnowRecord combined = aggregateFinishedStormSums(level);
+                if (combined != null) {
+                    return applyCombinedFinishedPattern(level, chunk, combined, level.random) || any;
                 }
             }
         }
@@ -518,6 +523,101 @@ public class CommonSnowBlockFeature {
                     if (need > 0) {
                         cursor.move(0, 1, 0);
                     }
+                }
+
+                while (need >= 8 && cursor.getY() < level.getMaxBuildHeight()) {
+                    if (placeOrQueueLayers(level, cursor, 8, true, true)) {
+                        tracked.sereneseasonsplus$getSnowColumns().put(cursor.immutable(), 8);
+                        any = true;
+                    }
+                    need -= 8;
+                    cursor.move(0, 1, 0);
+                }
+
+                if (need > 0 && cursor.getY() < level.getMaxBuildHeight()) {
+                    if (placeOrQueueLayers(level, cursor, need, true, true)) {
+                        tracked.sereneseasonsplus$getSnowColumns().put(cursor.immutable(), need);
+                        any = true;
+                    }
+                }
+            }
+        }
+
+        return any;
+    }
+
+    private static boolean applyCombinedFinishedPattern(ServerLevel level,
+                                                        LevelChunk chunk,
+                                                        SnowRecord combined,
+                                                        RandomSource rng) {
+        if (!(chunk instanceof ISnowTrackedChunk tracked)) return false;
+
+        ChunkPos cp = chunk.getPos();
+        int baseX = cp.getMinBlockX();
+        int baseZ = cp.getMinBlockZ();
+
+        int minL = Math.max(0, Math.round(combined.minLayers));
+        int avgL = Math.max(minL, Math.round(combined.avgLayers));
+        int maxL = Math.max(avgL, Math.round(combined.maxLayers));
+
+        boolean any = false;
+
+        for (int dx = 0; dx < 16; dx++) {
+            for (int dz = 0; dz < 16; dz++) {
+                int x = baseX + dx;
+                int z = baseZ + dz;
+
+                float white = rng.nextFloat();
+                double wave = Math.sin((x * 0.12D) + (z * 0.12D));
+                float noise = Mth.clamp((float) ((white * 0.7) + ((wave + 1.0) * 0.15)), 0f, 1f);
+
+                int pick = minL + Math.round(noise * Math.max(0, maxL - minL));
+                int towardAvg = Math.round(Mth.lerp(0.35f, pick, avgL));
+                int desired = Math.max(minL, towardAvg);
+                if (desired <= 0) continue;
+
+                BlockPos surface = findPlacementTop(level, x, z);
+                if (surface == null) continue;
+
+                // Compute current total in this column
+                int minY = level.getMinBuildHeight();
+                int currentTotal = 0;
+                BlockPos.MutableBlockPos down = new BlockPos.MutableBlockPos(surface.getX(), surface.getY(), surface.getZ());
+                BlockState at = level.getBlockState(down);
+                if (!at.is(Blocks.SNOW) && !at.is(Blocks.SNOW_BLOCK)) {
+                    down.move(0, -1, 0);
+                }
+                while (down.getY() >= minY) {
+                    BlockState s = level.getBlockState(down);
+                    if (s.is(Blocks.SNOW)) {
+                        currentTotal += s.getValue(BlockStateProperties.LAYERS);
+                    } else if (s.is(Blocks.SNOW_BLOCK)) {
+                        currentTotal += 8;
+                    } else {
+                        break;
+                    }
+                    down.move(0, -1, 0);
+                }
+
+                int need = desired - currentTotal;
+                if (need <= 0) continue;
+
+                // Place increments at/above the top
+                BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos(surface.getX(), surface.getY(), surface.getZ());
+                BlockState existing = level.getBlockState(cursor);
+                if (existing.is(Blocks.SNOW) || existing.is(Blocks.SNOW_BLOCK)) {
+                    int currentLayers = existing.is(Blocks.SNOW_BLOCK) ? 8 : existing.getValue(BlockStateProperties.LAYERS);
+                    int freeSpace = 8 - currentLayers;
+                    if (freeSpace > 0 && need > 0) {
+                        int add = Math.min(freeSpace, need);
+                        int targetLayers = currentLayers + add;
+                        if (placeOrQueueLayers(level, cursor, targetLayers, true, true)) {
+                            tracked.sereneseasonsplus$getSnowColumns().put(cursor.immutable(), targetLayers);
+                            any = true;
+                        }
+                        need -= add;
+                    }
+                    if (need > 0) cursor.move(0, 1, 0);
                 }
 
                 while (need >= 8 && cursor.getY() < level.getMaxBuildHeight()) {
@@ -887,6 +987,24 @@ public class CommonSnowBlockFeature {
         }
         if (count == 0) return null;
         return new SnowRecord(min, avg / count, max, null);
+    }
+
+    private static SnowRecord aggregateFinishedStormSums(ServerLevel level) {
+        SnowHistorySavedData sd = SnowHistorySavedData.get(level);
+        if (sd == null || sd.snowHistory.isEmpty()) return null;
+        int excludeId = sd.currentStormId;
+        float sumMin = 0f, sumAvg = 0f, sumMax = 0f;
+        int count = 0;
+        for (Map.Entry<Integer, SnowRecord> e : sd.snowHistory.entrySet()) {
+            if (excludeId > 0 && e.getKey() == excludeId) continue;
+            SnowRecord r = e.getValue();
+            sumMin += Math.max(0f, r.minLayers);
+            sumAvg += Math.max(0f, r.avgLayers);
+            sumMax += Math.max(0f, r.maxLayers);
+            count++;
+        }
+        if (count == 0) return null;
+        return new SnowRecord(sumMin, sumAvg, sumMax, null);
     }
 
     public static void onServerStarting(int config, boolean snowStorm) {

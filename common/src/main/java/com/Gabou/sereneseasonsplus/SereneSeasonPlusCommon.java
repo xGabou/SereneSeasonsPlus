@@ -2,11 +2,13 @@ package com.Gabou.sereneseasonsplus;
 
 import com.Gabou.sereneseasonsplus.util.ConfigHacks;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
+import sereneseasons.init.ModTags;
 
 public class SereneSeasonPlusCommon {
     protected int ticker = 0;
@@ -91,6 +93,7 @@ public class SereneSeasonPlusCommon {
                         double nightSpeed = this.getNightSpeedForSeason(currentSubSeason);
                         ConfigHacks.setTimeSpeeds(daySpeed, nightSpeed);
                         LogInfo(currentSubSeason, daySpeed, nightSpeed);
+                        //level.registryAccess().registryOrThrow(Registries.BIOME).getTagOrEmpty(ModTags.Biomes.BLACKLISTED_BIOMES).forEach((holder -> {LOGGER.info(holder.unwrapKey().get().location().toString());}));
                     } else if (CUSTOM_CYCLE_LENGTH) {
                         ConfigHacks.setTimeSpeeds(CUSTOM_DAY_LENGTH, CUSTOM_NIGHT_LENGTH);
                         LogInfo(currentSubSeason, CUSTOM_DAY_LENGTH, CUSTOM_NIGHT_LENGTH);

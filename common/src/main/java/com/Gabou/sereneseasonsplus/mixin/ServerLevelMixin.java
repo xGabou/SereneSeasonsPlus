@@ -6,9 +6,16 @@ import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -32,6 +39,9 @@ public class ServerLevelMixin {
     @Shadow
     @Final
     private static Logger LOGGER;
+    @Shadow
+    @Final
+    private ServerChunkCache chunkSource;
     @Unique
     private static final int MIN_TICKS_INTERVALLES = 10;
 
@@ -42,42 +52,80 @@ public class ServerLevelMixin {
                     target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V",
                     shift = At.Shift.AFTER,
                     ordinal = 0
-            )
+            ),
+            cancellable = true
     )
-    private void snow$addToQueue(LevelChunk chunk, int randomTickSpeed, CallbackInfo ci) {
-        if (CommonSnowBlockFeature.getTickCounter() % MIN_TICKS_INTERVALLES != 0) return;
-        if (!(chunk.getLevel() instanceof ServerLevel level)) return;
-        if (level.dimension() != Level.OVERWORLD) return;
+    private void ssp$handleSnowAndIce(LevelChunk chunk, int randomTickSpeed, CallbackInfo ci) {
+        ServerLevel level = (ServerLevel)(Object)this;
+        ProfilerFiller profiler = level.getProfiler();
 
-        ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
-        Season.SubSeason currentSeason = EnvironmentHelper.getCurrentSeason();
-        var seasonState = SeasonHelper.getSeasonState(level);
-        if (seasonState == null || currentSeason == null) return;
+        // ✅ Run your seasonal snow queue logic first
+        if (CommonSnowBlockFeature.getTickCounter() % MIN_TICKS_INTERVALLES == 0
+                && level.dimension() == Level.OVERWORLD) {
 
-        // Use cached surface height from your mixin instead of chunk.getHeight()
-        int surfaceHeight = tracked.sereneseasonsplus$getSurfaceHeight();
+            ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
+            Season.SubSeason currentSeason = EnvironmentHelper.getCurrentSeason();
+            var seasonState = SeasonHelper.getSeasonState(level);
 
-        SnowLogic.evaluate(level, currentSeason, seasonState, tracked, chunk.getPos(), false, surfaceHeight);
-    }
-
-
-    @Redirect(
-            method = "tickChunk",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"
-            )
-    )
-    private boolean onSnowPlaced(ServerLevel instance, BlockPos pos, BlockState state) {
-        boolean result = instance.setBlockAndUpdate(pos, state);
-
-        // only track snow placement/updates
-        if (result) {
-            com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.accumulateColumnUpdate(pos, state);
+            if (seasonState != null && currentSeason != null) {
+                int surfaceHeight = tracked.sereneseasonsplus$getSurfaceHeight();
+                SnowLogic.evaluate(level, currentSeason, seasonState, tracked, chunk.getPos(), false, surfaceHeight);
+            }
         }
 
-        return result;
+        // ✅ Replace vanilla ice/snow logic
+        profiler.popPush("iceandsnow");
+        if (level.random.nextInt(16) == 0) {
+            int j = chunk.getPos().getMinBlockX();
+            int k = chunk.getPos().getMinBlockZ();
+            BlockPos blockPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(j, 0, k, 15));
+            BlockPos blockPos2 = blockPos.below();
+            Biome biome = level.getBiome(blockPos).value();
+
+            // Ice freeze
+            if (biome.shouldFreeze(level, blockPos2)) {
+                BlockState ice = Blocks.ICE.defaultBlockState();
+                if (level.setBlockAndUpdate(blockPos2, ice)) {
+                    CommonSnowBlockFeature.accumulateColumnUpdate(blockPos2, ice);
+                }
+            }
+
+            // Snow accumulation (uses your helper instead of vanilla "bl")
+            if (EnvironmentHelper.isRainning(level, blockPos)) {
+                int maxSnow = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
+                if (maxSnow > 0 && biome.shouldSnow(level, blockPos)) {
+                    BlockState state = level.getBlockState(blockPos);
+
+                    if (state.is(Blocks.SNOW)) {
+                        int layers = state.getValue(SnowLayerBlock.LAYERS);
+                        if (layers < Math.min(maxSnow, 8)) {
+                            BlockState next = state.setValue(SnowLayerBlock.LAYERS, layers + 1);
+                            Block.pushEntitiesUp(state, next, level, blockPos);
+                            if (level.setBlockAndUpdate(blockPos, next)) {
+                                CommonSnowBlockFeature.accumulateColumnUpdate(blockPos, next);
+                            }
+                        }
+                    } else {
+                        BlockState snow = Blocks.SNOW.defaultBlockState();
+                        if (level.setBlockAndUpdate(blockPos, snow)) {
+                            CommonSnowBlockFeature.accumulateColumnUpdate(blockPos, snow);
+                        }
+                    }
+                }
+
+                // Precipitation hook
+                Biome.Precipitation precipitation = biome.getPrecipitationAt(blockPos2);
+                if (precipitation != Biome.Precipitation.NONE) {
+                    BlockState base = level.getBlockState(blockPos2);
+                    base.getBlock().handlePrecipitation(base, level, blockPos2, precipitation);
+                }
+            }
+        }
+
+        // Cancel vanilla handling since we replaced it
+        ci.cancel();
     }
+
 
 
 }

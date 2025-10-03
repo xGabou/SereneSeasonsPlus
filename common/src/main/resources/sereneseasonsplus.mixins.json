@@ -6,8 +6,8 @@
   "mixins": [
     "ChunkSerializerSnowMixin",
     "LevelChunkSnowMixin",
-    "LevelSnowMixin",
     "MinecraftServerMixin",
+    "SeasonHooksMixin",
     "ServerLevelMixin"
   ],
   "client": [

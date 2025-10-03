@@ -2,9 +2,13 @@ package com.Gabou.sereneseasonsplus.event;
 
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import glitchcore.event.EventManager;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonChangedEvent;
+import sereneseasons.init.ModTags;
+
+import static com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.LOGGER;
 
 public class SeasonChangeEvent {
 
