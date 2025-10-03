@@ -60,9 +60,10 @@ public class DefaultSnowEnvironmentHandler implements ISnowEnvironmentHandler {
         if (!isOverworld(level)) return 0;
 
         float temperature = SeasonHooks.getBiomeTemperature(level, level.getBiome(pos), pos);
+        // Remove snow only when it is NOT cold enough
         return SeasonHooks.coldEnoughToSnowSeasonal(level, pos)
-                ? CommonSnowBlockFeature.calculateBlocksToReplace(temperature)
-                : 0;
+                ? 0
+                : CommonSnowBlockFeature.calculateBlocksToReplace(temperature);
     }
 
     @Override

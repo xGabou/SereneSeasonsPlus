@@ -2,6 +2,7 @@ package com.Gabou.sereneseasonsplus.mixin;
 
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.level.ChunkPos;
@@ -25,10 +26,13 @@ public abstract class ChunkSerializerSnowMixin {
             CompoundTag tag = new CompoundTag();
             tag.putInt("LastWinterId", tracked.sereneseasonsplus$getLastWinterId());
 
+            // Save surface height if available
+            tag.putInt("SurfaceHeight", tracked.sereneseasonsplus$getSurfaceHeight());
+
             // Persist snow columns as a list of {Pos: long, Layers: int}
-            net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
+            ListTag list = new ListTag();
             for (java.util.Map.Entry<net.minecraft.core.BlockPos, Integer> e : tracked.sereneseasonsplus$getSnowColumns().entrySet()) {
-                net.minecraft.nbt.CompoundTag entry = new net.minecraft.nbt.CompoundTag();
+                CompoundTag entry = new CompoundTag();
                 entry.putLong("Pos", e.getKey().asLong());
                 entry.putInt("Layers", e.getValue());
                 list.add(entry);
@@ -50,11 +54,15 @@ public abstract class ChunkSerializerSnowMixin {
                 if (tag.contains("LastWinterId")) {
                     tracked.sereneseasonsplus$setLastWinterId(tag.getInt("LastWinterId"));
                 }
+                if (tag.contains("SurfaceHeight")) {
+                    tracked.sereneseasonsplus$setSurfaceHeight(tag.getInt("SurfaceHeight"));
+                }
+
                 // Load snow columns
                 tracked.sereneseasonsplus$getSnowColumns().clear();
-                net.minecraft.nbt.ListTag list = tag.getList("SnowColumns", 10); // 10 = CompoundTag id
+                ListTag list = tag.getList("SnowColumns", 10); // 10 = CompoundTag id
                 for (int i = 0; i < list.size(); i++) {
-                    net.minecraft.nbt.CompoundTag entry = list.getCompound(i);
+                    CompoundTag entry = list.getCompound(i);
                     long posLong = entry.getLong("Pos");
                     int layers = entry.getInt("Layers");
                     net.minecraft.core.BlockPos bp = net.minecraft.core.BlockPos.of(posLong);
@@ -62,8 +70,5 @@ public abstract class ChunkSerializerSnowMixin {
                 }
             }
         }
-
     }
-
-    }
-
+}

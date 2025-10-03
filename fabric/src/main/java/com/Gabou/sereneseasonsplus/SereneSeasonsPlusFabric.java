@@ -15,6 +15,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.ChunkAccess;
 
 public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements ModInitializer {
 
@@ -63,6 +64,14 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
         CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
 
+    }
+
+    private void onChunkLoad(ServerLevel level, ChunkAccess chunkAccess) {
+        if (level == null) return;
+        if (!(chunkAccess instanceof net.minecraft.world.level.chunk.LevelChunk chunk)) return;
+        if (level.isClientSide()) return;
+        if (level.dimension() != Level.OVERWORLD) return;
+        CommonSnowBlockFeature.handleOnChunkLoad(chunk,level);
     }
 
 }

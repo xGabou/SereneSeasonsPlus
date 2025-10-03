@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus.features.logic;
 
+import com.Gabou.sereneseasonsplus.SereneSeasonPlusCommon;
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
@@ -24,9 +25,13 @@ public final class SnowLogic {
                                 ChunkPos chunkPos,
                                 boolean isLoadEvent,
                                 int maxHeight) {
+        if(chunkPos.equals(new ChunkPos(-328,355))){
+            CommonSnowBlockFeature.LOGGER.info("test");
+        }
 
         // --- Check temperature ---
         boolean coldEnough = CommonSnowBlockFeature.HANDLER.isColdEnoughForSnow(level, chunkPos.getMiddleBlockPosition(maxHeight));
+
 
         // --- Case 1: Cold enough => pile snow ---
         if (coldEnough) {
@@ -38,7 +43,7 @@ public final class SnowLogic {
                 }
             } else {
                 float currentAvg = (float) tracked.sereneseasonsplus$getTotalSnowLayers() / (float) totalPositions;
-                if (Math.abs(currentAvg - globalAvg) > 1.0f) {
+                if (Math.abs(currentAvg - globalAvg) > 0.5f) {
                     ChunkQueue.enqueueApply(chunkPos, currentSeason);
                 }
             }

@@ -22,5 +22,10 @@ public interface ISnowTrackedChunk {
     default int sereneseasonsplus$getTrackedColumnCount() {
         return sereneseasonsplus$getSnowColumns().size();
     }
+
+
+    int sereneseasonsplus$getSurfaceHeight();
+
+    void sereneseasonsplus$setSurfaceHeight(int height);
 }
 

@@ -9,8 +9,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -56,9 +54,12 @@ public class ServerLevelMixin {
         var seasonState = SeasonHelper.getSeasonState(level);
         if (seasonState == null || currentSeason == null) return;
 
+        // Use cached surface height from your mixin instead of chunk.getHeight()
+        int surfaceHeight = tracked.sereneseasonsplus$getSurfaceHeight();
 
-        SnowLogic.evaluate(level, currentSeason, seasonState, tracked, chunk.getPos(), false,chunk.getHeight());
+        SnowLogic.evaluate(level, currentSeason, seasonState, tracked, chunk.getPos(), false, surfaceHeight);
     }
+
 
     @Redirect(
             method = "tickChunk",
@@ -72,18 +73,7 @@ public class ServerLevelMixin {
 
         // only track snow placement/updates
         if (result) {
-            LevelChunk chunk = instance.getChunkAt(pos);
-            if (chunk instanceof ISnowTrackedChunk tracked) {
-                if (state.is(Blocks.SNOW)) {
-                    int layers = state.getValue(SnowLayerBlock.LAYERS);
-                    tracked.sereneseasonsplus$getSnowColumns().put(pos.immutable(), layers);
-                } else if (state.is(Blocks.SNOW_BLOCK)) {
-                    tracked.sereneseasonsplus$getSnowColumns().put(pos.immutable(), 8);
-                } else {
-                    // any non-snow state clears the entry for this position
-                    tracked.sereneseasonsplus$getSnowColumns().remove(pos);
-                }
-            }
+            com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.accumulateColumnUpdate(pos, state);
         }
 
         return result;

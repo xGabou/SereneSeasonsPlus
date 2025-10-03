@@ -14,6 +14,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -127,6 +128,20 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
     public void onConfigReload(TickEvent.ServerTickEvent event) {
         CommonSnowBlockFeature.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
         SereneService.reloadConfig();
+    }
+
+
+    /**
+     * Queues chunk processing when chunks load (e.g., as players move),
+     * so snow/ice are cleared or accelerated-melted immediately without rejoining.
+     */
+    @SubscribeEvent
+    public void onChunkLoad(ChunkEvent.Load event) {
+        if (!(event.getChunk() instanceof net.minecraft.world.level.chunk.LevelChunk chunk)) return;
+        var level = chunk.getLevel();
+        if (level.isClientSide()) return;
+        if (level.dimension() != Level.OVERWORLD) return;
+        CommonSnowBlockFeature.handleOnChunkLoad(chunk, (ServerLevel) level);
     }
 
 
