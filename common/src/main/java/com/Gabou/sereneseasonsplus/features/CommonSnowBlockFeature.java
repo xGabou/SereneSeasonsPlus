@@ -309,14 +309,40 @@ public class CommonSnowBlockFeature {
                     break;
                 }
 
-                while (need > 0 && topCursor.getY() < level.getMaxBuildHeight()) {
-                    int toPlace = Math.min(8, need);
-                    if (placeOrQueueLayers(level, topCursor, toPlace, true, true)) {
-                        tracked.sereneseasonsplus$getSnowColumns().put(topCursor.immutable(), toPlace);
+                int remaining = need;
+                BlockPos.MutableBlockPos placePos = new BlockPos.MutableBlockPos(topCursor.getX(), topCursor.getY(), topCursor.getZ());
+                BlockPos.MutableBlockPos belowPos = new BlockPos.MutableBlockPos(topCursor.getX(), topCursor.getY() - 1, topCursor.getZ());
+
+                if (belowPos.getY() >= minY) {
+                    BlockState topState = level.getBlockState(belowPos);
+                    if (topState.is(Blocks.SNOW) || topState.is(Blocks.SNOW_BLOCK)) {
+                        int currentLayers = topState.is(Blocks.SNOW_BLOCK)
+                                ? 8
+                                : topState.getValue(BlockStateProperties.LAYERS);
+                        int freeSpace = 8 - currentLayers;
+                        if (freeSpace > 0 && remaining > 0) {
+                            int add = Math.min(freeSpace, remaining);
+                            int targetLayers = currentLayers + add;
+                            if (placeOrQueueLayers(level, belowPos, targetLayers, true, true)) {
+                                tracked.sereneseasonsplus$getSnowColumns().put(belowPos.immutable(), targetLayers);
+                                any = true;
+                            }
+                            remaining -= add;
+                        }
+                        if (remaining <= 0) {
+                            continue;
+                        }
+                    }
+                }
+
+                while (remaining > 0 && placePos.getY() < level.getMaxBuildHeight()) {
+                    int toPlace = Math.min(8, remaining);
+                    if (placeOrQueueLayers(level, placePos, toPlace, true, true)) {
+                        tracked.sereneseasonsplus$getSnowColumns().put(placePos.immutable(), toPlace);
                         any = true;
                     }
-                    need -= toPlace;
-                    topCursor.move(0, 1, 0);
+                    remaining -= toPlace;
+                    placePos.move(0, 1, 0);
                 }
             }
         }
@@ -387,21 +413,41 @@ public class CommonSnowBlockFeature {
 
                 // --- place stacked snow ---
                 BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos(surface.getX(), surface.getY(), surface.getZ());
-                int snowBlocks = totalLayers / 8;
-                int remainder = totalLayers % 8;
+                int remaining = totalLayers;
 
-                for (int i = 0; i < snowBlocks; i++) {
+                BlockState existing = level.getBlockState(cursor);
+                if (existing.is(Blocks.SNOW) || existing.is(Blocks.SNOW_BLOCK)) {
+                    int currentLayers = existing.is(Blocks.SNOW_BLOCK)
+                            ? 8
+                            : existing.getValue(BlockStateProperties.LAYERS);
+                    int freeSpace = 8 - currentLayers;
+                    if (freeSpace > 0 && remaining > 0) {
+                        int add = Math.min(freeSpace, remaining);
+                        int targetLayers = currentLayers + add;
+                        if (placeOrQueueLayers(level, cursor, targetLayers, true, true)) {
+                            tracked.sereneseasonsplus$getSnowColumns().put(cursor.immutable(), targetLayers);
+                            any = true;
+                        }
+                        remaining -= add;
+                    }
+                    if (remaining <= 0) {
+                        continue;
+                    }
+                    cursor.move(0, 1, 0);
+                }
+
+                while (remaining >= 8 && cursor.getY() < level.getMaxBuildHeight()) {
                     if (placeOrQueueLayers(level, cursor, 8, true, true)) {
-                        // Track exactly 8 layers for each full block in the column
                         tracked.sereneseasonsplus$getSnowColumns().put(cursor.immutable(), 8);
                         any = true;
                     }
-                    cursor.move(0, 1, 0); // stack upwards
+                    remaining -= 8;
+                    cursor.move(0, 1, 0);
                 }
 
-                if (remainder > 0) {
-                    if (placeOrQueueLayers(level, cursor, remainder, true, true)) {
-                        tracked.sereneseasonsplus$getSnowColumns().put(cursor.immutable(), remainder);
+                if (remaining > 0 && cursor.getY() < level.getMaxBuildHeight()) {
+                    if (placeOrQueueLayers(level, cursor, remaining, true, true)) {
+                        tracked.sereneseasonsplus$getSnowColumns().put(cursor.immutable(), remaining);
                         any = true;
                     }
                 }
