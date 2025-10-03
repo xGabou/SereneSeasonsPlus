@@ -1,10 +1,10 @@
 package com.Gabou.sereneseasonsplus.features.logic;
 
-import com.Gabou.sereneseasonsplus.SereneSeasonPlusCommon;
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import sereneseasons.api.season.ISeasonState;
@@ -30,7 +30,10 @@ public final class SnowLogic {
         }
 
         // --- Check temperature ---
-        boolean coldEnough = CommonSnowBlockFeature.HANDLER.isColdEnoughForSnow(level, chunkPos.getMiddleBlockPosition(maxHeight));
+        BlockPos samplePos = chunkPos.getMiddleBlockPosition(Math.max(level.getMinBuildHeight(), maxHeight));
+        boolean coldEnough = CommonSnowBlockFeature.HANDLER.isColdEnoughForSnow(level, samplePos);
+        boolean snowingNow = EnvironmentHelper.isRainning(level, samplePos);
+        boolean allowApply = snowingNow || isLoadEvent;
 
 
         // --- Case 1: Cold enough => pile snow ---
@@ -43,19 +46,19 @@ public final class SnowLogic {
             if (baseline > 0) {
                 int baselineTotal = baseline * 256; // 16x16 columns per chunk
                 int trackedTotal = tracked.sereneseasonsplus$getTotalSnowLayers();
-                if (trackedTotal < baselineTotal) {
+                if (trackedTotal < baselineTotal && allowApply) {
                     ChunkQueue.enqueueApply(chunkPos, currentSeason);
                     return;
                 }
             }
 
             if (totalPositions == 0) {
-                if (globalAvg > 0.5f) {
+                if (globalAvg > 0.5f && allowApply) {
                     ChunkQueue.enqueueApply(chunkPos, currentSeason);
                 }
             } else {
                 float currentAvg = (float) tracked.sereneseasonsplus$getTotalSnowLayers() / (float) totalPositions;
-                if (Math.abs(currentAvg - globalAvg) > 0.5f) {
+                if (Math.abs(currentAvg - globalAvg) > 0.5f && allowApply) {
                     ChunkQueue.enqueueApply(chunkPos, currentSeason);
                 }
             }
