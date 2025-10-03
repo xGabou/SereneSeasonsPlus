@@ -82,12 +82,15 @@ public class ServerLevelMixin {
             BlockPos blockPos2 = blockPos.below();
             Biome biome = level.getBiome(blockPos).value();
 
-            // Ice freeze
+            // Ice freeze (vanilla cold freeze or snow-precip freeze for water biomes)
             if (biome.shouldFreeze(level, blockPos2)) {
                 BlockState ice = Blocks.ICE.defaultBlockState();
                 if (level.setBlockAndUpdate(blockPos2, ice)) {
                     CommonSnowBlockFeature.accumulateColumnUpdate(blockPos2, ice);
                 }
+            } else if (EnvironmentHelper.isRainning(level, blockPos)
+                    && CommonSnowBlockFeature.HANDLER.isColdEnoughForSnow(level, blockPos)) {
+                CommonSnowBlockFeature.tryFreezeWaterAt(level, blockPos2);
             }
 
             // Snow accumulation (uses your helper instead of vanilla "bl")

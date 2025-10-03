@@ -12,6 +12,8 @@ import com.Gabou.sereneseasonsplus.util.MinecraftServerAccess;
 import com.Gabou.sereneseasonsplus.util.SnowUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.core.Holder;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
@@ -235,6 +237,10 @@ public class CommonSnowBlockFeature {
                         BlockState ns = level.getBlockState(targetPos);
                         accumulateColumnUpdate(targetPos, ns);
                     }
+
+                    // Try freezing water in water biomes near this attempt
+                    BlockPos below = new BlockPos(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z), z).below();
+                    tryFreezeWaterAt(level, below);
                 }
             } else {
                 for (int i = 0; i < blocksToReplace; ++i) {
@@ -399,6 +405,40 @@ public class CommonSnowBlockFeature {
             }
         }
         return any;
+    }
+
+    // Attempts to freeze a water block at pos if conditions are met. Returns true if a block changed.
+    public static boolean tryFreezeWaterAt(ServerLevel level, BlockPos pos) {
+        if (pos == null) return false;
+        BlockState state = level.getBlockState(pos);
+        if (!state.is(Blocks.WATER)) return false;
+
+        BlockPos sample = pos.above();
+        if (!EnvironmentHelper.isRainning(level, sample)) return false;
+        if (!HANDLER.isColdEnoughForSnow(level, sample)) return false;
+        if (!isWaterBiome(level, pos)) return false;
+
+        BlockState ice = Blocks.ICE.defaultBlockState();
+        if (level.setBlockAndUpdate(pos, ice)) {
+            accumulateColumnUpdate(pos, ice);
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean isWaterBiome(ServerLevel level, BlockPos pos) {
+        try {
+            Holder<net.minecraft.world.level.biome.Biome> holder = level.getBiome(pos);
+            return holder.unwrapKey()
+                    .map(key -> {
+                        ResourceLocation rl = key.location();
+                        String path = rl.getPath();
+                        return path.contains("ocean") || path.contains("river");
+                    })
+                    .orElse(false);
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     private static boolean applySnowPatternFromActiveRecord(ServerLevel level, LevelChunk chunk) {
