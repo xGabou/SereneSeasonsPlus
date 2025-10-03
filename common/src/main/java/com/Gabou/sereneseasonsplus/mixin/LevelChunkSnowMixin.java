@@ -30,6 +30,14 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     @Unique
     private int sereneseasonsplus$surfaceHeight = -1;
 
+    // Active storm progress (0..1), storm id bound to this progress, and last tick progressed
+    @Unique
+    private float sereneseasonsplus$stormProgress = 0f;
+    @Unique
+    private int sereneseasonsplus$stormIdApplied = 0;
+    @Unique
+    private int sereneseasonsplus$lastProgressTick = 0;
+
     @Override
     public int sereneseasonsplus$getLastWinterId() {
         return sereneseasonsplus$lastWinterId;
@@ -61,6 +69,36 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
         sereneseasonsplus$surfaceHeight = height;
     }
 
+    @Override
+    public float sereneseasonsplus$getStormProgress() {
+        return sereneseasonsplus$stormProgress;
+    }
+
+    @Override
+    public void sereneseasonsplus$setStormProgress(float progress) {
+        sereneseasonsplus$stormProgress = progress;
+    }
+
+    @Override
+    public int sereneseasonsplus$getStormIdApplied() {
+        return sereneseasonsplus$stormIdApplied;
+    }
+
+    @Override
+    public void sereneseasonsplus$setStormIdApplied(int id) {
+        sereneseasonsplus$stormIdApplied = id;
+    }
+
+    @Override
+    public int sereneseasonsplus$getLastProgressTick() {
+        return sereneseasonsplus$lastProgressTick;
+    }
+
+    @Override
+    public void sereneseasonsplus$setLastProgressTick(int tick) {
+        sereneseasonsplus$lastProgressTick = tick;
+    }
+
     @Inject(
             method = "<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;)V",
             at = @At("TAIL")
@@ -73,6 +111,10 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
             target.sereneseasonsplus$setLastWinterId(src.sereneseasonsplus$getLastWinterId());
             this.sereneseasonsplus$snowColumns.clear();
             this.sereneseasonsplus$snowColumns.putAll(src.sereneseasonsplus$getSnowColumns());
+            // Copy progress fields across proto->level chunk transition
+            target.sereneseasonsplus$setStormProgress(src.sereneseasonsplus$getStormProgress());
+            target.sereneseasonsplus$setStormIdApplied(src.sereneseasonsplus$getStormIdApplied());
+            target.sereneseasonsplus$setLastProgressTick(src.sereneseasonsplus$getLastProgressTick());
         }
 
     }

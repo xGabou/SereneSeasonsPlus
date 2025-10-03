@@ -29,6 +29,11 @@ public abstract class ChunkSerializerSnowMixin {
             // Save surface height if available
             tag.putInt("SurfaceHeight", tracked.sereneseasonsplus$getSurfaceHeight());
 
+            // Save storm progress tracking
+            tag.putFloat("StormProgress", tracked.sereneseasonsplus$getStormProgress());
+            tag.putInt("StormIdApplied", tracked.sereneseasonsplus$getStormIdApplied());
+            tag.putInt("LastProgressTick", tracked.sereneseasonsplus$getLastProgressTick());
+
             // Persist snow columns as a list of {Pos: long, Layers: int}
             ListTag list = new ListTag();
             for (java.util.Map.Entry<net.minecraft.core.BlockPos, Integer> e : tracked.sereneseasonsplus$getSnowColumns().entrySet()) {
@@ -56,6 +61,17 @@ public abstract class ChunkSerializerSnowMixin {
                 }
                 if (tag.contains("SurfaceHeight")) {
                     tracked.sereneseasonsplus$setSurfaceHeight(tag.getInt("SurfaceHeight"));
+                }
+
+                // Load storm progress tracking
+                if (tag.contains("StormProgress")) {
+                    tracked.sereneseasonsplus$setStormProgress(tag.getFloat("StormProgress"));
+                }
+                if (tag.contains("StormIdApplied")) {
+                    tracked.sereneseasonsplus$setStormIdApplied(tag.getInt("StormIdApplied"));
+                }
+                if (tag.contains("LastProgressTick")) {
+                    tracked.sereneseasonsplus$setLastProgressTick(tag.getInt("LastProgressTick"));
                 }
 
                 // Load snow columns

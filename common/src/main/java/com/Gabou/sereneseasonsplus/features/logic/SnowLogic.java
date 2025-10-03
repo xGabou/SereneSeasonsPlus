@@ -62,24 +62,29 @@ public final class SnowLogic {
                     ChunkQueue.enqueueApply(chunkPos, currentSeason);
                 }
             }
-        }
 
-        // --- Case 2: Too warm => melt snow ---
-        else {
-            // Fonte inconditionnelle en saison chaude
-            boolean inWarmSeason = currentSeason.ordinal() >= Season.SubSeason.LATE_SPRING.ordinal()
-                    && currentSeason.ordinal() < Season.SubSeason.EARLY_WINTER.ordinal();
-
-            // Fonte conditionnelle seulement en début d’hiver (si aucune tempête encore)
-            boolean inEarlyWinterNoStorm = currentSeason == Season.SubSeason.EARLY_WINTER
-                    && CommonSnowBlockFeature.HANDLER.getSnowStormsThisWinter(level) == 0;
-
-            if (inWarmSeason || inEarlyWinterNoStorm) {
-                // melt all tracked snow columns until ground
-                ChunkQueue.enqueueMelt(chunkPos, false);
+            // If a storm is currently active, drive a random piling pass using the active storm record
+            com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get(level);
+            if (sd != null && sd.currentStormId > 0) {
+                ChunkQueue.enqueueApply(chunkPos, currentSeason);
             }
+
+            // --- Case 2: Too warm => melt snow ---
+            else {
+                // Fonte inconditionnelle en saison chaude
+                boolean inWarmSeason = currentSeason.ordinal() >= Season.SubSeason.LATE_SPRING.ordinal()
+                        && currentSeason.ordinal() < Season.SubSeason.EARLY_WINTER.ordinal();
+
+                // Fonte conditionnelle seulement en début d’hiver (si aucune tempête encore)
+                boolean inEarlyWinterNoStorm = currentSeason == Season.SubSeason.EARLY_WINTER
+                        && CommonSnowBlockFeature.HANDLER.getSnowStormsThisWinter(level) == 0;
+
+                if (inWarmSeason || inEarlyWinterNoStorm) {
+                    // melt all tracked snow columns until ground
+                    ChunkQueue.enqueueMelt(chunkPos, false);
+                }
+            }
+
         }
-
-
     }
 }

@@ -27,5 +27,16 @@ public interface ISnowTrackedChunk {
     int sereneseasonsplus$getSurfaceHeight();
 
     void sereneseasonsplus$setSurfaceHeight(int height);
-}
 
+    // Active-storm progress tracking per chunk (0..1)
+    float sereneseasonsplus$getStormProgress();
+    void sereneseasonsplus$setStormProgress(float progress);
+
+    // Storm id the progress is for; helps reset when a new storm starts
+    int sereneseasonsplus$getStormIdApplied();
+    void sereneseasonsplus$setStormIdApplied(int id);
+
+    // Last tick count when progress was updated; used to scale by time
+    int sereneseasonsplus$getLastProgressTick();
+    void sereneseasonsplus$setLastProgressTick(int tick);
+}

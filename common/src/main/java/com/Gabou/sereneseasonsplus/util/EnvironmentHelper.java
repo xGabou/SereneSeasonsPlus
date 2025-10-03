@@ -1,6 +1,7 @@
 package com.Gabou.sereneseasonsplus.util;
 
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
+import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -148,6 +149,14 @@ public class EnvironmentHelper {
             CommonSnowBlockFeature.HANDLER.resetWinterState(serverLevel, currentWinterId);
         }
         lastSubSeason = current;
+
+        // If we enter a hot season, reset snow history so future winters don't inherit it
+        if (HotSeason.isHotSeason(current)) {
+            SnowHistorySavedData hist = SnowHistorySavedData.get(serverLevel);
+            hist.currentStormId = 0;
+            hist.snowHistory.clear();
+            hist.setDirty();
+        }
 
         if (forced) {
             CommonSnowBlockFeature.onSeasonChange(serverLevel);

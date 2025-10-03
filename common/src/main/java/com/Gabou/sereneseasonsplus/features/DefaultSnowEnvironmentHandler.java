@@ -60,10 +60,12 @@ public class DefaultSnowEnvironmentHandler implements ISnowEnvironmentHandler {
         if (!isOverworld(level)) return 0;
 
         float temperature = SeasonHooks.getBiomeTemperature(level, level.getBiome(pos), pos);
+        boolean cold = SeasonHooks.coldEnoughToSnowSeasonal(level, pos);
+        boolean precip = EnvironmentHelper.isRainning(level, pos);
+        // Place snow flurries when cold and precipitating (signal with -1)
+        if (cold && precip) return -1;
         // Remove snow only when it is NOT cold enough
-        return SeasonHooks.coldEnoughToSnowSeasonal(level, pos)
-                ? 0
-                : CommonSnowBlockFeature.calculateBlocksToReplace(temperature);
+        return cold ? 0 : CommonSnowBlockFeature.calculateBlocksToReplace(temperature);
     }
 
     @Override
@@ -94,9 +96,14 @@ public class DefaultSnowEnvironmentHandler implements ISnowEnvironmentHandler {
             if (data.activeStorms.isEmpty()) {
                 int stormId = data.stormCount + 1;
                 data.activeStorms.add(stormId);
-                // Mark active storm id so it is excluded from global computations
+                // Create and register an active storm record at start so piling can be random immediately
                 SnowHistorySavedData hist = SnowHistorySavedData.get(level);
                 hist.currentStormId = stormId;
+                // Generate and store the record now; computeGlobal* exclude currentStormId
+                if (!hist.snowHistory.containsKey(stormId)) {
+                    SnowRecord rec = SnowGenerator.generateStormRecord(level.random);
+                    hist.snowHistory.put(stormId, rec);
+                }
                 hist.setDirty();
             }
         } else {
@@ -105,11 +112,13 @@ public class DefaultSnowEnvironmentHandler implements ISnowEnvironmentHandler {
                 data.activeStorms.remove(endedStormId);
 
                 SnowHistorySavedData hist = SnowHistorySavedData.get(level);
-                SnowRecord rec = SnowGenerator.generateStormRecord(level.random);
-
-                // Persist the finished storm under its own id
+                // Ensure an entry exists for the ended storm; it may already have been created at start
+                if (!hist.snowHistory.containsKey(endedStormId)) {
+                    SnowRecord rec = SnowGenerator.generateStormRecord(level.random);
+                    hist.snowHistory.put(endedStormId, rec);
+                }
+                // Persist the finished storm count
                 data.stormCount++;
-                hist.snowHistory.put(endedStormId, rec);
                 // Clear active storm marker
                 hist.currentStormId = 0;
 

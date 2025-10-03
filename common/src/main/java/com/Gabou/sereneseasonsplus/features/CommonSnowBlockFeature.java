@@ -60,6 +60,18 @@ public class CommonSnowBlockFeature {
     static int applyCycleTotal = 0;
     static int applyCycleProcessed = 0;
 
+    // Piling speed controls for active storms
+    // When true, use immediate/fast piling (current behavior). When false, pile gradually.
+    public static boolean FAST_PILING_MODE = false;
+    // Target time to reach full storm distribution (in ticks). Default ~8000 per request.
+    public static int ACTIVE_STORM_TARGET_TICKS = 8000;
+    // Multiplier to scale the speed (1.0 = default; >1 faster, <1 slower)
+    public static float STORM_INTENSITY_MULTIPLIER = 1.0f;
+
+    public static void setFastPilingMode(boolean enabled) { FAST_PILING_MODE = enabled; }
+    public static void setActiveStormTargetTicks(int ticks) { ACTIVE_STORM_TARGET_TICKS = Math.max(1, ticks); }
+    public static void setStormIntensityMultiplier(float mult) { STORM_INTENSITY_MULTIPLIER = Math.max(0.01f, mult); }
+
     public static int getTickCounter() { return tickCounter; }
 
     public static void handleServerTick(MinecraftServer server, ServerLevel level) {
@@ -182,7 +194,6 @@ public class CommonSnowBlockFeature {
 
             int blocksToReplace = HANDLER.getBlocksToReplace(level, playerPos);
             if (blocksToReplace < 0) {
-
                 if (!EnvironmentHelper.isRainning(level, playerPos)) continue;
 
                 final RandomSource random = level.random;
@@ -195,9 +206,34 @@ public class CommonSnowBlockFeature {
                     BlockPos surface = findPlacementTop(level, x, z);
                     if (surface == null) continue;
 
-                    if (placeOrQueueLayers(level, surface, 1, true, false)) {
-                        BlockState ns = level.getBlockState(surface);
-                        accumulateColumnUpdate(surface, ns);
+                    BlockState st = level.getBlockState(surface);
+                    BlockPos targetPos = surface;
+                    int targetLayers = 1;
+
+                    if (st.is(Blocks.SNOW)) {
+                        int cur = st.getValue(SnowLayerBlock.LAYERS);
+                        if (cur < 8) {
+                            targetLayers = cur + 1;
+                        } else {
+                            // stack above
+                            BlockPos above = surface.above();
+                            if (!level.isEmptyBlock(above)) continue;
+                            targetPos = above;
+                            targetLayers = 1;
+                        }
+                    } else if (st.is(Blocks.SNOW_BLOCK)) {
+                        BlockPos above = surface.above();
+                        if (!level.isEmptyBlock(above)) continue;
+                        targetPos = above;
+                        targetLayers = 1;
+                    } else {
+                        targetPos = surface;
+                        targetLayers = 1;
+                    }
+
+                    if (placeOrQueueLayers(level, targetPos, targetLayers, true, false)) {
+                        BlockState ns = level.getBlockState(targetPos);
+                        accumulateColumnUpdate(targetPos, ns);
                     }
                 }
             } else {
@@ -388,6 +424,30 @@ public class CommonSnowBlockFeature {
 
         boolean any = false;
 
+        // Compute per-chunk storm progress (0..1). If fast mode, jump to 1.
+        float progress = 1.0f;
+        int currentTick = getTickCounter();
+        if (!FAST_PILING_MODE) {
+            com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get(level);
+            int activeId = (sd != null) ? sd.currentStormId : 0;
+            if (activeId > 0) {
+                if (tracked.sereneseasonsplus$getStormIdApplied() != activeId) {
+                    // New storm: reset progress for this chunk
+                    tracked.sereneseasonsplus$setStormIdApplied(activeId);
+                    tracked.sereneseasonsplus$setStormProgress(0f);
+                    tracked.sereneseasonsplus$setLastProgressTick(currentTick);
+                }
+                float cur = tracked.sereneseasonsplus$getStormProgress();
+                int last = tracked.sereneseasonsplus$getLastProgressTick();
+                int dt = Math.max(1, currentTick - last);
+                float delta = (float) dt / (float) Math.max(1, ACTIVE_STORM_TARGET_TICKS);
+                cur = Mth.clamp(cur + (delta * STORM_INTENSITY_MULTIPLIER), 0f, 1f);
+                tracked.sereneseasonsplus$setStormProgress(cur);
+                tracked.sereneseasonsplus$setLastProgressTick(currentTick);
+                progress = cur;
+            }
+        }
+
         for (int dx = 0; dx < 16; dx++) {
             for (int dz = 0; dz < 16; dz++) {
                 int x = baseX + dx;
@@ -411,43 +471,67 @@ public class CommonSnowBlockFeature {
                 int towardAvg = Math.round(Mth.lerp(0.35f, pick, avg));
                 int totalLayers = Math.max(1, towardAvg); // can exceed 8 now
 
+                // Desired layers for current progress (0..1)
+                int desired = FAST_PILING_MODE ? totalLayers : Math.max(0, Math.round(totalLayers * progress));
+                if (desired <= 0) continue;
+
                 // --- place stacked snow ---
                 BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos(surface.getX(), surface.getY(), surface.getZ());
-                int remaining = totalLayers;
+                // Count current total layers in this column (downwards)
+                int minY = level.getMinBuildHeight();
+                int currentTotal = 0;
+                BlockPos.MutableBlockPos down = new BlockPos.MutableBlockPos(surface.getX(), surface.getY(), surface.getZ());
+                // If current pos is not snow, step down one to find stack
+                BlockState at = level.getBlockState(down);
+                if (!at.is(Blocks.SNOW) && !at.is(Blocks.SNOW_BLOCK)) {
+                    down.move(0, -1, 0);
+                }
+                while (down.getY() >= minY) {
+                    BlockState s = level.getBlockState(down);
+                    if (s.is(Blocks.SNOW)) {
+                        currentTotal += s.getValue(BlockStateProperties.LAYERS);
+                    } else if (s.is(Blocks.SNOW_BLOCK)) {
+                        currentTotal += 8;
+                    } else {
+                        break;
+                    }
+                    down.move(0, -1, 0);
+                }
 
+                int need = desired - currentTotal;
+                if (need <= 0) continue;
+
+                // Place the needed increment at/above the current top
                 BlockState existing = level.getBlockState(cursor);
                 if (existing.is(Blocks.SNOW) || existing.is(Blocks.SNOW_BLOCK)) {
-                    int currentLayers = existing.is(Blocks.SNOW_BLOCK)
-                            ? 8
-                            : existing.getValue(BlockStateProperties.LAYERS);
+                    int currentLayers = existing.is(Blocks.SNOW_BLOCK) ? 8 : existing.getValue(BlockStateProperties.LAYERS);
                     int freeSpace = 8 - currentLayers;
-                    if (freeSpace > 0 && remaining > 0) {
-                        int add = Math.min(freeSpace, remaining);
+                    if (freeSpace > 0 && need > 0) {
+                        int add = Math.min(freeSpace, need);
                         int targetLayers = currentLayers + add;
                         if (placeOrQueueLayers(level, cursor, targetLayers, true, true)) {
                             tracked.sereneseasonsplus$getSnowColumns().put(cursor.immutable(), targetLayers);
                             any = true;
                         }
-                        remaining -= add;
+                        need -= add;
                     }
-                    if (remaining <= 0) {
-                        continue;
+                    if (need > 0) {
+                        cursor.move(0, 1, 0);
                     }
-                    cursor.move(0, 1, 0);
                 }
 
-                while (remaining >= 8 && cursor.getY() < level.getMaxBuildHeight()) {
+                while (need >= 8 && cursor.getY() < level.getMaxBuildHeight()) {
                     if (placeOrQueueLayers(level, cursor, 8, true, true)) {
                         tracked.sereneseasonsplus$getSnowColumns().put(cursor.immutable(), 8);
                         any = true;
                     }
-                    remaining -= 8;
+                    need -= 8;
                     cursor.move(0, 1, 0);
                 }
 
-                if (remaining > 0 && cursor.getY() < level.getMaxBuildHeight()) {
-                    if (placeOrQueueLayers(level, cursor, remaining, true, true)) {
-                        tracked.sereneseasonsplus$getSnowColumns().put(cursor.immutable(), remaining);
+                if (need > 0 && cursor.getY() < level.getMaxBuildHeight()) {
+                    if (placeOrQueueLayers(level, cursor, need, true, true)) {
+                        tracked.sereneseasonsplus$getSnowColumns().put(cursor.immutable(), need);
                         any = true;
                     }
                 }
@@ -528,19 +612,8 @@ public class CommonSnowBlockFeature {
                     cursor.move(0, -1, 0);
                 }
             }
-
-            int minY = level.getMinBuildHeight();
-            cursor.set(top.getX(), top.getY() - 1, top.getZ());
-            while (cursor.getY() >= minY) {
-                BlockState below = level.getBlockState(cursor);
-                if (below.is(Blocks.SNOW) || below.is(Blocks.SNOW_BLOCK)) {
-                    changed |= queueClearIfNeeded(level, cursor.immutable(), false);
-                    columns.remove(cursor.immutable());
-                    cursor.move(0, -1, 0);
-                } else {
-                    break;
-                }
-            }
+            // Do not clear the entire column below in a regular melt pass.
+            // Each melt tick only reduces the topmost stack by 1 layer.
         }
 
         return changed;
@@ -720,7 +793,8 @@ public class CommonSnowBlockFeature {
                     if (val <= 0) {
                         columns.remove(up.getKey());
                     } else {
-                        columns.put(up.getKey().immutable(), val);
+                        // Ensure per-position layers are bounded to [1..8]
+                        columns.put(up.getKey().immutable(), Mth.clamp(val, 1, 8));
                     }
                 }
             }
