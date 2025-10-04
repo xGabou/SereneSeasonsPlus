@@ -1,35 +1,46 @@
 package com.Gabou.sereneseasonsplus.util;
 
-import sereneseasons.api.season.Season;
+import net.minecraft.core.BlockPos;
+
+import java.util.Map;
+import java.util.Set;
 
 public interface ISnowTrackedChunk {
-    Season.SubSeason sereneseasonsplus$getLastSeason();
-    void sereneseasonsplus$setLastSeason(Season.SubSeason season);
-
-    boolean sereneseasonsplus$wasRaining();
-    void sereneseasonsplus$incrementWasRaining(boolean raining);
-
-    // Tracks whether this chunk already received its single noisy layer for the current storm
-    boolean sereneseasonsplus$hasReceivedSnowLayerThisStorm();
-    void sereneseasonsplus$setHasReceivedSnowLayerThisStorm(boolean value);
-
-    // Tracks whether the chunk should receive deep-winter initialization snow
-    boolean sereneseasonsplus$shouldApplyInitialSnow();
-    void sereneseasonsplus$setShouldApplyInitialSnow(boolean value);
-
-    // Remembers if deep-winter initialization snow has already been applied
-    boolean sereneseasonsplus$hasAppliedInitialSnow();
-    void sereneseasonsplus$setHasAppliedInitialSnow(boolean value);
-    int sereneseasonsplus$getSnowCount();
-    void sereneseasonsplus$incrementSnowCount();
-
-    void sereneseasonsplus$setSnowCount(int value);
-
-
-    void sereneseasonsplus$willReceiveSnow(boolean b);
-    boolean sereneseasonsplus$shouldReceiveSnow();
     int sereneseasonsplus$getLastWinterId();
     void sereneseasonsplus$setLastWinterId(int id);
 
-}
+    // Per-chunk snow columns: maps a block position to its current snow layer count
+    Map<BlockPos, Integer> sereneseasonsplus$getSnowColumns();
 
+    default int sereneseasonsplus$getTotalSnowLayers() {
+        int sum = 0;
+        for (int value : sereneseasonsplus$getSnowColumns().values()) {
+            sum += value;
+        }
+        return sum;
+    }
+
+    default int sereneseasonsplus$getTrackedColumnCount() {
+        return sereneseasonsplus$getSnowColumns().size();
+    }
+
+
+    int sereneseasonsplus$getSurfaceHeight();
+
+    void sereneseasonsplus$setSurfaceHeight(int height);
+
+    // Active-storm progress tracking per chunk (0..1)
+    float sereneseasonsplus$getStormProgress();
+    void sereneseasonsplus$setStormProgress(float progress);
+
+    // Storm id the progress is for; helps reset when a new storm starts
+    int sereneseasonsplus$getStormIdApplied();
+    void sereneseasonsplus$setStormIdApplied(int id);
+
+    // Last tick count when progress was updated; used to scale by time
+    int sereneseasonsplus$getLastProgressTick();
+    void sereneseasonsplus$setLastProgressTick(int tick);
+
+    // Positions of ice we froze (rivers/oceans) to thaw efficiently later
+    Set<BlockPos> sereneseasonsplus$getIceColumns();
+}

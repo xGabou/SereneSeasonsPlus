@@ -1,180 +1,163 @@
 package com.Gabou.sereneseasonsplus.features;
 
-import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
+import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
+import com.Gabou.sereneseasonsplus.storage.SnowRecord;
 import com.Gabou.sereneseasonsplus.storage.SnowSavedData;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
-import com.Gabou.sereneseasonsplus.util.SnowUtils;
+import com.Gabou.sereneseasonsplus.util.SnowGenerator;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.chunk.LevelChunk;
-import sereneseasons.api.season.Season;
-import sereneseasons.api.season.SeasonHelper;
+import sereneseasons.season.SeasonHooks;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
-public class DefaultSnowEnvironmentHandler implements SnowEnvironmentHandler {
-    private static final class SnowData {
+/**
+ * Handles snow lifecycle for vanilla/Serene Seasons.
+ * Supports only one global storm at a time (tracked as ID 0).
+ */
+public class DefaultSnowEnvironmentHandler implements ISnowEnvironmentHandler {
+
+    protected static final class SnowData {
         int winterId = -1;
         int stormCount = 0;
-        boolean stormActive = false;
-        final Set<Long> pendingChunks = new HashSet<>();
-        final Set<Long> observedChunks = new HashSet<>();
-        int lastBlanketStormCount = 0; // last stormCount when a blanket apply sweep was triggered
+        final Set<Integer> activeStorms = new HashSet<>(); // active storm IDs
     }
 
-    private final Map<ResourceKey<Level>, SnowData> perLevelData = new HashMap<>();
+    protected SnowData overworldData;
 
-    private SnowData data(ServerLevel level) {
-        return perLevelData.computeIfAbsent(level.dimension(), k -> {
-            SnowData d = new SnowData();
-            // Restore from persisted storage if present
-            SnowSavedData store = SnowSavedData.get(level);
-            d.winterId = store.winterId;
-            d.stormCount = store.stormCount;
-            d.stormActive = store.stormActive;
-            d.pendingChunks.addAll(store.pendingChunks);
-            d.observedChunks.addAll(store.observedChunks);
-            d.lastBlanketStormCount = store.lastBlanketStormCount;
-            return d;
-        });
+    protected boolean isOverworld(ServerLevel level) {
+        return level.dimension() == Level.OVERWORLD;
     }
 
-    private void persist(ServerLevel level, SnowData d) {
+    protected SnowData getOrCreateData(ServerLevel level) {
+        if (overworldData == null) {
+            overworldData = new SnowData();
+            restore(level, overworldData);
+        }
+        return overworldData;
+    }
+
+    protected void restore(ServerLevel level, SnowData data) {
         SnowSavedData store = SnowSavedData.get(level);
-        store.winterId = d.winterId;
-        store.stormCount = d.stormCount;
-        store.stormActive = d.stormActive;
-        store.pendingChunks.clear();
-        store.pendingChunks.addAll(d.pendingChunks);
-        store.observedChunks.clear();
-        store.observedChunks.addAll(d.observedChunks);
-        store.lastBlanketStormCount = d.lastBlanketStormCount;
+        data.winterId = store.winterId;
+        data.stormCount = store.stormCount;
+        data.activeStorms.clear(); // only restored count, not sessions
+    }
+
+    protected void persist(ServerLevel level, SnowData data) {
+        SnowSavedData store = SnowSavedData.get(level);
+        store.winterId = data.winterId;
+        store.stormCount = data.stormCount;
         store.setDirty();
     }
 
     @Override
-    public int getBlocksToReplace(ServerLevel level, BlockPos playerPos) {
-        Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
-        float temperature = SnowUtils.getCachedBiomeTemperature(level, playerPos, currentSubSeason);
+    public int getBlocksToReplace(ServerLevel level, BlockPos pos) {
+        if (!isOverworld(level)) return 0;
 
-        if (temperature >= 0.15F) {
-            return CommonSnowBlockFeature.calculateBlocksToReplace(temperature);
-        }
-        return 0;
+        float temperature = SeasonHooks.getBiomeTemperature(level, level.getBiome(pos), pos);
+        boolean cold = SeasonHooks.coldEnoughToSnowSeasonal(level, pos);
+        boolean precip = EnvironmentHelper.isRainning(level, pos);
+        // Place snow flurries when cold and precipitating (signal with -1)
+        if (cold && precip) return -1;
+        // Remove snow only when it is NOT cold enough
+        return cold ? 0 : CommonSnowBlockFeature.calculateBlocksToReplace(temperature);
     }
 
     @Override
     public void resetWinterState(ServerLevel level, int winterId) {
-        SnowData data = data(level);
-        if (data.winterId == winterId) {
-            return;
-        }
+        if (!isOverworld(level)) return;
+
+        SnowData data = getOrCreateData(level);
+        if (data.winterId == winterId) return;
+
         data.winterId = winterId;
         data.stormCount = 0;
-        data.stormActive = false;
-        data.pendingChunks.clear();
-        data.observedChunks.clear();
-        data.lastBlanketStormCount = 0;
+        data.activeStorms.clear();
         persist(level, data);
+
+        SnowHistorySavedData hist = SnowHistorySavedData.get(level);
+        hist.currentStormId = 0;
+        hist.snowHistory.clear();
+        hist.setDirty();
     }
 
     @Override
-    public void onRainChanged(ServerLevel level, ChunkPos chunkPos, boolean isRaining, ISnowTrackedChunk trackedChunk) {
-        SnowData data = data(level);
-        long key = chunkPos.toLong();
+    public void onRainChanged(ServerLevel level, boolean isRaining) {
+        if (!isOverworld(level)) return;
 
-        if (isRaining) {
-            boolean snowySeason = EnvironmentHelper.isSnowySeason();
-            if (snowySeason && !data.stormActive) {
-                data.stormActive = true;
+        SnowData data = getOrCreateData(level);
+
+        if (isRaining && EnvironmentHelper.isSnowySeason()) {
+            if (data.activeStorms.isEmpty()) {
+                int stormId = data.stormCount + 1;
+                data.activeStorms.add(stormId);
+                // Create and register an active storm record at start so piling can be random immediately
+                SnowHistorySavedData hist = SnowHistorySavedData.get(level);
+                hist.currentStormId = stormId;
+                // Generate and store the record now; computeGlobal* exclude currentStormId
+                if (!hist.snowHistory.containsKey(stormId)) {
+                    SnowRecord rec = SnowGenerator.generateStormRecord(level.random);
+                    hist.snowHistory.put(stormId, rec);
+                }
+                hist.setDirty();
+            }
+        } else {
+            if (!data.activeStorms.isEmpty()) {
+                int endedStormId = data.activeStorms.iterator().next();
+                data.activeStorms.remove(endedStormId);
+
+                SnowHistorySavedData hist = SnowHistorySavedData.get(level);
+                // Ensure an entry exists for the ended storm; it may already have been created at start
+                if (!hist.snowHistory.containsKey(endedStormId)) {
+                    SnowRecord rec = SnowGenerator.generateStormRecord(level.random);
+                    hist.snowHistory.put(endedStormId, rec);
+                }
+                // Persist the finished storm count
                 data.stormCount++;
-            } else if (!snowySeason) {
-                data.stormActive = false;
-            }
-            if (snowySeason && data.pendingChunks.add(key)) {
-                data.observedChunks.add(key);
-            }
+                // Clear active storm marker
+                hist.currentStormId = 0;
 
-            if (snowySeason) {
-                trackedChunk.sereneseasonsplus$setShouldApplyInitialSnow(true);
-                trackedChunk.sereneseasonsplus$willReceiveSnow(true);
-                ChunkQueue.enqueueScheduled(chunkPos);
-            }
-        } else if (!EnvironmentHelper.isRainning(level, chunkPos.getMiddleBlockPosition(65))) {
-            boolean wasActive = data.stormActive;
-            data.stormActive = false;
-            // If a storm just ended and we've had more than one storm this winter,
-            // sweep loaded chunks to ensure blanket snow application.
-            if (wasActive && data.stormCount > 1 && data.lastBlanketStormCount < data.stormCount) {
-                blanketApplyLoadedChunks(level);
-                data.lastBlanketStormCount = data.stormCount;
+                hist.setDirty();
             }
         }
-        // Persist any changes in storm state / pending observations
-        persist(level, data);
-    }
-
-    @Override
-    public boolean shouldApplySnow(ServerLevel level, ChunkPos chunkPos) {
-        return data(level).pendingChunks.contains(chunkPos.toLong());
-    }
-
-    @Override
-    public void onSnowApplied(ServerLevel level, ChunkPos chunkPos, boolean success) {
-        SnowData data = data(level);
-        long key = chunkPos.toLong();
-        if (success) {
-            data.pendingChunks.remove(key);
-        }
-        data.observedChunks.add(key);
         persist(level, data);
     }
 
     @Override
     public int getSnowStormsThisWinter(ServerLevel level) {
-        return data(level).stormCount;
-    }
-
-    @Override
-    public boolean hasChunkSeenSnow(ServerLevel level, ChunkPos chunkPos) {
-        return data(level).observedChunks.contains(chunkPos.toLong());
+        if (!isOverworld(level)) return 0;
+        SnowData data = getOrCreateData(level);
+        return data.stormCount - data.activeStorms.size();
     }
 
     @Override
     public void clear(ServerLevel level) {
-        SnowData d = perLevelData.remove(level.dimension());
-        if (d != null) {
-            persist(level, d);
+        if (!isOverworld(level)) return;
+        if (overworldData != null) {
+            persist(level, overworldData);
+            overworldData = null;
         }
     }
 
-    private void blanketApplyLoadedChunks(ServerLevel level) {
-        if (!EnvironmentHelper.isSnowySeason()) return;
-        Season.SubSeason current = EnvironmentHelper.getCurrentSeason();
-        if (current == null) return;
+    @Override
+    public boolean isColdEnoughForSnow(ServerLevel level, BlockPos pos) {
+        return isOverworld(level) && SeasonHooks.coldEnoughToSnowSeasonal(level, pos);
+    }
 
-        var chunkSource = level.getChunkSource();
-        for (net.minecraft.server.level.ServerPlayer player : level.players()) {
-            int view = level.getServer() != null ? level.getServer().getPlayerList().getViewDistance() : 10;
-            BlockPos center = player.blockPosition();
-            int pcx = center.getX() >> 4;
-            int pcz = center.getZ() >> 4;
-            for (int dx = -view; dx <= view; dx++) {
-                for (int dz = -view; dz <= view; dz++) {
-                    int cx = pcx + dx;
-                    int cz = pcz + dz;
-                    net.minecraft.world.level.chunk.ChunkAccess access = chunkSource.getChunk(cx, cz, false);
-                    if (!(access instanceof LevelChunk lc)) continue;
-                    CommonSnowBlockFeature.enqueueChunkForSnowApply(lc.getPos(), current);
-                }
-            }
-        }
+
+    @Override
+    public void onRainCloudSpawned(ServerLevel level, int hashCode) {
+        // no-op
+    }
+
+    /** Called when a rainy cloud despawns */
+    @Override
+    public void onRainCloudDespawned(ServerLevel level, int hashCode) {
+        // no-op
     }
 }

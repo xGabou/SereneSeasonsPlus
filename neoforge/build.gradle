@@ -4,7 +4,8 @@ plugins {
     id "com.matthewprenger.cursegradle" version "1.4.0"
 }
 
-base.archivesName.set("${mod_name}-neoforge")
+base.archivesName.set("NeoForge-Version-${mod_name}")
+
 
 minecraft {
     mappings {

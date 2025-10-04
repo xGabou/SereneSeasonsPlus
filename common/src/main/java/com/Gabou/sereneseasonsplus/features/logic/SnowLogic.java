@@ -4,15 +4,15 @@ import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.Season;
 
-
 /**
  * Central snow evaluation logic.
- * Called from both chunk load (bootstrap) and periodic tick (maintenance).
+ * Now driven by coldness and global snow history.
  */
 public final class SnowLogic {
 
@@ -23,101 +23,67 @@ public final class SnowLogic {
                                 ISeasonState seasonState,
                                 ISnowTrackedChunk tracked,
                                 ChunkPos chunkPos,
-                                boolean isLoadEvent) {
+                                boolean isLoadEvent,
+                                int maxHeight) {
+//        if (chunkPos.equals(new ChunkPos(6, 5))) {
+//            CommonSnowBlockFeature.LOGGER.info("test");
+//        }
 
-        Season.SubSeason prevSeason = tracked.sereneseasonsplus$getLastSeason();
-        if (prevSeason != currentSeason) {
-            tracked.sereneseasonsplus$setLastSeason(currentSeason);
-        }
+        // --- Check temperature ---
+        BlockPos samplePos = chunkPos.getMiddleBlockPosition(Math.max(level.getMinBuildHeight(), maxHeight));
+        boolean coldEnough = CommonSnowBlockFeature.HANDLER.isColdEnoughForSnow(level, samplePos);
+        boolean snowingNow = EnvironmentHelper.isRainning(level, samplePos);
+        boolean allowApply = snowingNow || isLoadEvent;
 
-        boolean wasRaining = tracked.sereneseasonsplus$wasRaining();
-        boolean isRaining = EnvironmentHelper.isRainning(level, chunkPos.getMiddleBlockPosition(65));
-        if (isRaining != wasRaining) {
-            CommonSnowBlockFeature.HANDLER.onRainChanged(level, chunkPos, isRaining,tracked);
-            tracked.sereneseasonsplus$incrementWasRaining(isRaining);
+        // --- Case 1: Cold enough => pile snow ---
+        if (coldEnough) {
+            float globalAvg = CommonSnowBlockFeature.computeGlobalAvg(level);
+            int totalPositions = tracked.sereneseasonsplus$getTrackedColumnCount();
 
-            // storm just ended on this chunk
-            if (!isRaining) {
-                // if this chunk actually received a layer during that storm
-                // we can consider the first storm for this winter completed globally
-                if (tracked.sereneseasonsplus$hasReceivedSnowLayerThisStorm()) {
-                    WinterFlags.markFirstStormFinished(level, EnvironmentHelper.getCurrentWinterId());
+            // Ensure per-column baseline from finished storms is met across the chunk
+            int baseline = CommonSnowBlockFeature.computeGlobalMinSum(level);
+            if (baseline > 0) {
+                int baselineTotal = baseline * 256; // 16x16 columns per chunk
+                int trackedTotal = tracked.sereneseasonsplus$getTotalSnowLayers();
+                if (trackedTotal < baselineTotal && allowApply) {
+                    ChunkQueue.enqueueApply(chunkPos, currentSeason);
+                    return;
                 }
-                tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(false);
-            }
-        }
-
-        int globalWinterId = EnvironmentHelper.getCurrentWinterId();
-        if (tracked.sereneseasonsplus$getLastWinterId() != globalWinterId) {
-            tracked.sereneseasonsplus$setLastWinterId(globalWinterId);
-            tracked.sereneseasonsplus$setSnowCount(-1);
-            tracked.sereneseasonsplus$setHasAppliedInitialSnow(false);
-            tracked.sereneseasonsplus$setShouldApplyInitialSnow(false);
-            tracked.sereneseasonsplus$willReceiveSnow(false);
-            tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(false);
-
-            // clear stale snow if this chunk has not actually seen snow in this new winter
-            boolean seenThisWinter = CommonSnowBlockFeature.HANDLER.hasChunkSeenSnow(level, chunkPos)
-                    || tracked.sereneseasonsplus$getSnowCount() > 0;
-            if (!seenThisWinter) {
-                ChunkQueue.enqueueMelt(chunkPos, true);
             }
 
-            if (!isLoadEvent) return;
-        }
-
-        CommonSnowBlockFeature.LayerBounds bounds =
-                CommonSnowBlockFeature.getSeasonalLayerBounds(currentSeason, seasonState.getDay());
-
-        if (bounds != null) {
-            boolean pendingSnow = CommonSnowBlockFeature.HANDLER.shouldApplySnow(level, chunkPos);
-            boolean hasSnowHistory = pendingSnow
-                    || CommonSnowBlockFeature.HANDLER.hasChunkSeenSnow(level, chunkPos)
-                    || tracked.sereneseasonsplus$getSnowCount() > 0;
-
-            // mark that this chunk received a layer during the ongoing storm once we decide to apply
-            if (pendingSnow) {
-                tracked.sereneseasonsplus$setShouldApplyInitialSnow(true);
+            if (totalPositions == 0) {
+                if (globalAvg > 0.5f && allowApply) {
+                    ChunkQueue.enqueueApply(chunkPos, currentSeason);
+                }
+            } else {
+                float currentAvg = (float) tracked.sereneseasonsplus$getTotalSnowLayers() / (float) totalPositions;
+                if (Math.abs(currentAvg - globalAvg) > 0.5f && allowApply) {
+                    ChunkQueue.enqueueApply(chunkPos, currentSeason);
+                }
             }
 
-            int sc = tracked.sereneseasonsplus$getSnowCount();
-            boolean firstTimeHere = sc <= 0;
-
-            // initial spread should wait until the first storm of the winter has finished
-            boolean firstStormFinished = WinterFlags.hasFirstStormFinished(level, globalWinterId);
-            boolean okForInitialSpread = firstStormFinished && !isRaining;
-
-            boolean needsInitial = firstTimeHere && !tracked.sereneseasonsplus$hasAppliedInitialSnow();
-
-            // Three possible reasons to apply
-            // 1 natural storm snowfall now for this chunk
-            // 2 post storm initial spread for chunks that should be snowy but missed the storm
-            // 3 previously flagged retry
-            boolean applyNow =
-                    ((pendingSnow && firstTimeHere) || tracked.sereneseasonsplus$shouldReceiveSnow()) && (okForInitialSpread && needsInitial && hasSnowHistory);
-
-            if (applyNow) {
+            // If a storm is currently active, drive a random piling pass using the active storm record
+            com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get(level);
+            if (sd != null && sd.currentStormId > 0) {
                 ChunkQueue.enqueueApply(chunkPos, currentSeason);
-                tracked.sereneseasonsplus$willReceiveSnow(true);
-
-                if (pendingSnow) {
-                    // this chunk actually participated in the storm
-                    tracked.sereneseasonsplus$setHasReceivedSnowLayerThisStorm(true);
-                } else if (okForInitialSpread && needsInitial) {
-                    // mark that this chunk has consumed its initial spread opportunity
-                    tracked.sereneseasonsplus$setHasAppliedInitialSnow(true);
-                }
             }
 
-            // do not force clear shouldApplyInitialSnow here
-            // let the queue success path clear your flags where you already do so
-        } else {
-            boolean longGap = prevSeason == null
-                    || Math.abs(currentSeason.ordinal() - prevSeason.ordinal()) != 1
-                    || EnvironmentHelper.isHotSeason();
+        }
+        // --- Case 2: Too warm => melt snow ---
+        else {
+            // Unconditional melt in warm sub-seasons
+            boolean inWarmSeason = currentSeason.ordinal() >= Season.SubSeason.LATE_SPRING.ordinal()
+                    && currentSeason.ordinal() < Season.SubSeason.EARLY_WINTER.ordinal();
 
-            ChunkQueue.enqueueMelt(chunkPos, longGap);
+            // Conditional melt only at start of winter if no storms occurred
+            boolean inEarlyWinterNoStorm = currentSeason == Season.SubSeason.EARLY_WINTER
+                    && CommonSnowBlockFeature.HANDLER.getSnowStormsThisWinter(level) == 0;
+
+            if (inWarmSeason || inEarlyWinterNoStorm) {
+                // melt all tracked snow columns until ground
+                ChunkQueue.enqueueMelt(chunkPos, false);
+            }
         }
     }
-
 }
+

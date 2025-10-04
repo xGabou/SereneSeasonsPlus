@@ -7,6 +7,8 @@
     "ChunkSerializerSnowMixin",
     "LevelChunkSnowMixin",
     "MinecraftServerMixin",
+    "ProtoChunkSnowMixin",
+    "SeasonHooksMixin",
     "ServerLevelMixin"
   ],
   "client": [

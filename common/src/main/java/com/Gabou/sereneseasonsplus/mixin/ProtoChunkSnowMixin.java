@@ -2,24 +2,17 @@ package com.Gabou.sereneseasonsplus.mixin;
 
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.ProtoChunk;
-import net.minecraft.world.level.levelgen.Heightmap;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-@Mixin(LevelChunk.class)
-public class LevelChunkSnowMixin implements ISnowTrackedChunk {
+@Mixin(ProtoChunk.class)
+public class ProtoChunkSnowMixin implements ISnowTrackedChunk {
     @Unique
     private int sereneseasonsplus$lastWinterId = -1;
 
@@ -28,13 +21,9 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     @Unique
     private final Set<BlockPos> sereneseasonsplus$iceColumns = new HashSet<>();
 
-    /**
-     * Cached surface height (first available, not average)
-     */
     @Unique
     private int sereneseasonsplus$surfaceHeight = -1;
 
-    // Active storm progress (0..1), storm id bound to this progress, and last tick progressed
     @Unique
     private float sereneseasonsplus$stormProgress = 0f;
     @Unique
@@ -62,17 +51,11 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
         return sereneseasonsplus$iceColumns;
     }
 
-    /**
-     * Getter for cached surface height
-     */
     @Override
     public int sereneseasonsplus$getSurfaceHeight() {
         return sereneseasonsplus$surfaceHeight;
     }
 
-    /**
-     * @param height
-     */
     @Override
     public void sereneseasonsplus$setSurfaceHeight(int height) {
         sereneseasonsplus$surfaceHeight = height;
@@ -106,28 +89,5 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     @Override
     public void sereneseasonsplus$setLastProgressTick(int tick) {
         sereneseasonsplus$lastProgressTick = tick;
-    }
-
-    @Inject(
-            method = "<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;)V",
-            at = @At("TAIL")
-    )
-    private void ssp$copy(ServerLevel level,
-                          ProtoChunk proto,
-                          @Nullable LevelChunk.PostLoadProcessor post,
-                          CallbackInfo ci) {
-        if ((Object) this instanceof ISnowTrackedChunk target && proto instanceof ISnowTrackedChunk src) {
-            target.sereneseasonsplus$setLastWinterId(src.sereneseasonsplus$getLastWinterId());
-            this.sereneseasonsplus$snowColumns.clear();
-            this.sereneseasonsplus$snowColumns.putAll(src.sereneseasonsplus$getSnowColumns());
-            // Copy ice positions
-            this.sereneseasonsplus$iceColumns.clear();
-            this.sereneseasonsplus$iceColumns.addAll(src.sereneseasonsplus$getIceColumns());
-            // Copy progress fields across proto->level chunk transition
-            target.sereneseasonsplus$setStormProgress(src.sereneseasonsplus$getStormProgress());
-            target.sereneseasonsplus$setStormIdApplied(src.sereneseasonsplus$getStormIdApplied());
-            target.sereneseasonsplus$setLastProgressTick(src.sereneseasonsplus$getLastProgressTick());
-        }
-
     }
 }

@@ -1,6 +1,7 @@
 package com.Gabou.sereneseasonsplus.util;
 
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
+import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -19,6 +20,7 @@ import java.nio.file.Path;
  */
 public class EnvironmentHelper {
     private static IEnvironmentHelper delegate;
+    private static IRainHandler rainHandler = new DefaultRainHandler();
 
     /** Called by Fabric/Forge bootstrap to inject the correct impl */
     public static void init(IEnvironmentHelper impl) {
@@ -30,7 +32,26 @@ public class EnvironmentHelper {
     }
 
     public static boolean isRainning(ServerLevel level, BlockPos pos) {
-        return delegate.isRainning(level,pos);
+        return rainHandler.isRainingAt(level, pos);
+    }
+
+    public static void onSimpleCloudSpawned(ServerLevel level, int hashcode) {
+        rainHandler.onSimpleCloudsSpawned(level,hashcode);
+    }
+
+    public static void checkAndUpdate(ServerLevel level) {
+        rainHandler.checkAndUpdate(level);
+    }
+
+    public static void  onSimpleCloudsDespawned(ServerLevel level,int hashcode) {
+        rainHandler.onSimpleCloudsDespawned(level,hashcode);
+    }
+
+    /**
+     * Allows platform bootstrap to install a custom rain handler.
+     */
+    public static void initRainHandler(IRainHandler handler) {
+        if (handler != null) rainHandler = handler;
     }
     // Persistence: world-level state we want to keep across reloads
     private static final String SAVE_DIR = "data/sereneseasonsplus";
@@ -128,6 +149,14 @@ public class EnvironmentHelper {
             CommonSnowBlockFeature.HANDLER.resetWinterState(serverLevel, currentWinterId);
         }
         lastSubSeason = current;
+
+        // If we enter a hot season, reset snow history so future winters don't inherit it
+        if (HotSeason.isHotSeason(current)) {
+            SnowHistorySavedData hist = SnowHistorySavedData.get(serverLevel);
+            hist.currentStormId = 0;
+            hist.snowHistory.clear();
+            hist.setDirty();
+        }
 
         if (forced) {
             CommonSnowBlockFeature.onSeasonChange(serverLevel);

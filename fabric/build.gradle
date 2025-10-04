@@ -2,18 +2,16 @@ plugins {
     id "fabric-loom" version "1.9-SNAPSHOT"
     id "com.matthewprenger.cursegradle" version "1.4.0"
 }
-base.archivesName.set("${mod_name}-fabric")
+base.archivesName.set("Fabric-Version-${mod_id}")
 
 loom {
     // Sépare les sources client et serveur
-    splitEnvironmentSourceSets()
     mixin {
-        defaultRefmapName.set("${mod_id}.refmap.json")
+        defaultRefmapName.set("sereneseasonsplus-refmap.json")
     }
     mods {
         "${mod_id}" {
             sourceSet sourceSets.main
-            sourceSet sourceSets.client
         }
     }
     runs {
@@ -67,4 +65,19 @@ dependencies {
     modImplementation "curse.maven:spark-361579:4950610"
     modImplementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_range}"
     //modImplementation "curse.maven:sodium-394468:5092261"
+}
+tasks.named("remapJar") {
+    doLast {
+        def jarFile = archiveFile.get().asFile
+        def tmpDir = new File(jarFile.parentFile, jarFile.name + ".tmpdir")
+        if (tmpDir.exists()) tmpDir.deleteDir()
+        copy {
+            from zipTree(jarFile)
+            into tmpDir
+            exclude("client-*-refmap.json")
+        }
+        jarFile.delete()
+        ant.zip(destfile: jarFile, basedir: tmpDir)
+        tmpDir.deleteDir()
+    }
 }
