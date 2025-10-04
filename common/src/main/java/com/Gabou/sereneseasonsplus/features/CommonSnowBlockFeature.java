@@ -2,6 +2,7 @@ package com.Gabou.sereneseasonsplus.features;
 
 
 import com.Gabou.sereneseasonsplus.features.logic.SnowLogic;
+import com.Gabou.sereneseasonsplus.features.snowstorm.ISnowStormLevel;
 import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
 import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
 import com.Gabou.sereneseasonsplus.storage.SnowRecord;
@@ -1160,5 +1161,19 @@ public class CommonSnowBlockFeature {
         } else {
             return temperature < 0.5F ? 3 : 25;
         }
+    }
+
+    public static boolean isSnowStormAt(ServerLevel level, ChunkPos pos) {
+        if (level instanceof ISnowStormLevel stormLevel) {
+            return stormLevel.sereneseasonsplus$isSnowStormAt(pos);
+        }
+        return false; // safe default if mixin fails
+    }
+
+    public static int getSnowStormIntensity(ServerLevel level, ChunkPos pos) {
+        if (level instanceof ISnowStormLevel stormLevel) {
+            return stormLevel.sereneseasonsplus$getSnowStormIntensity(pos);
+        }
+        return 0; // default = no storm
     }
 }
