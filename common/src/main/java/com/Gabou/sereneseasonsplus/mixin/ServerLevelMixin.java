@@ -79,7 +79,7 @@ public class ServerLevelMixin {
                     tracked.sereneseasonsplus$setSurfaceHeight(surfaceHeightCache);
                 }
                 int surfaceHeight = tracked.sereneseasonsplus$getSurfaceHeight();
-                SnowLogic.evaluate(level, currentSeason, seasonState, tracked, cpos, false, surfaceHeight);
+                SnowLogic.evaluate(level, currentSeason, seasonState, tracked, cpos, true, surfaceHeight);
             }
             }
         }

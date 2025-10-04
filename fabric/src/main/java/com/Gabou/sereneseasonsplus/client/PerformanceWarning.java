@@ -13,7 +13,7 @@ public class PerformanceWarning extends Screen {
 
     @Override
     protected void init() {
-        String text = "I Understand and I will not bother the devs with performance issues";
+        String text = "I Understand and I will not bother the devs with performance issues from SS+";
         int textWidth = this.font.width(text) + 20; // +20 for padding
 
         this.addRenderableWidget(

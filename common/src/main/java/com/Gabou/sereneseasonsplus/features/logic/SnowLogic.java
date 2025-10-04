@@ -25,9 +25,9 @@ public final class SnowLogic {
                                 ChunkPos chunkPos,
                                 boolean isLoadEvent,
                                 int maxHeight) {
-        if (chunkPos.equals(new ChunkPos(-328, 355))) {
-            CommonSnowBlockFeature.LOGGER.info("test");
-        }
+//        if (chunkPos.equals(new ChunkPos(6, 5))) {
+//            CommonSnowBlockFeature.LOGGER.info("test");
+//        }
 
         // --- Check temperature ---
         BlockPos samplePos = chunkPos.getMiddleBlockPosition(Math.max(level.getMinBuildHeight(), maxHeight));

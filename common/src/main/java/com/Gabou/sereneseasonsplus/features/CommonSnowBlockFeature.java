@@ -1105,6 +1105,14 @@ public class CommonSnowBlockFeature {
         playerPositions.clear();
         ChunkQueue.clear();
         pendingColumnMapUpdates.clear();
+        pendingChanges.clear();
+        pendingIceAdds.clear();
+        chunksToDirty.clear();
+        snowPill.clear();
+        applyCycleTotal = 0;
+        applyCycleProcessed = 0;
+
+
     }
 
     public static void onServerStopping() {
@@ -1115,6 +1123,10 @@ public class CommonSnowBlockFeature {
         chunksToDirty.clear();
         pendingColumnMapUpdates.clear();
         snowPill.clear();
+        applyCycleTotal = 0;
+        applyCycleProcessed = 0;
+        pendingIceAdds.clear();
+
     }
 
     public static void onConfigReload(int config, boolean snowStorm) {

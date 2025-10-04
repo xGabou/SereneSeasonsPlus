@@ -25,7 +25,8 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
     public void onInitialize() {
         LOGGER.info("Initializing Serene Seasons Plus (Fabric)");
         // Server lifecycle hooks
-        ServerLifecycleEvents.SERVER_STARTED.register(this::onServerStarting);
+        ServerLifecycleEvents.SERVER_STARTED.register(this::onServerStarted);
+        ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStarting);
         ServerLifecycleEvents.SERVER_STOPPING.register(this::onServerStopping);
         EnvironmentHelper.init(new FabricEnvironmentHelper());
         SeasonChangeEvent.register();
@@ -53,14 +54,11 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         LOGGER.info("Serene Seasons Plus server starting!");
         SereneService.HANDLER = new FabricAsyncExecutorHandler();
         CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
-        server.getGameRules().getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT).set(999, server);
-        EnvironmentHelper.onServerStarted(server.getLevel(Level.OVERWORLD));
     }
 
     private void onServerStopping(MinecraftServer server) {
         SereneService.shutdown();
         SereneService.HANDLER = null;
-        CommonSnowBlockFeature.onServerStopping();
         EnvironmentHelper.onServerStopping(server.getLevel(Level.OVERWORLD));
     }
 
@@ -69,6 +67,11 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
         CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
 
+    }
+
+    private void onServerStarted(MinecraftServer server) {
+        EnvironmentHelper.onServerStarted(server.getLevel(Level.OVERWORLD));
+        server.getGameRules().getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT).set(999, server);
     }
 
     private void onChunkLoad(ServerLevel level, ChunkAccess chunkAccess) {
