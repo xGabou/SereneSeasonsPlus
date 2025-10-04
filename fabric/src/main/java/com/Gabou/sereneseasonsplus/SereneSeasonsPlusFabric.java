@@ -8,6 +8,7 @@ import com.Gabou.sereneseasonsplus.util.FabricAsyncExecutorHandler;
 import com.Gabou.sereneseasonsplus.util.FabricEnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.SereneService;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -34,6 +35,11 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         // Server tick hook
         ServerTickEvents.START_WORLD_TICK.register(this::onWorldTick);
 
+        // Commands
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, selection) ->
+                com.Gabou.sereneseasonsplus.util.DebugCommands.registerTo(dispatcher)
+        );
+
         // If you have client-only stuff, register it in SereneSeasonsPlusClientFabric
     }
 
@@ -50,6 +56,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         SereneService.HANDLER = new FabricAsyncExecutorHandler();
         CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
         server.getGameRules().getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT).set(999, server);
+        EnvironmentHelper.onServerStarted(server.getLevel(Level.OVERWORLD));
     }
 
     private void onServerStopping(MinecraftServer server) {
