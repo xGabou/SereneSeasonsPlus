@@ -27,6 +27,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import net.minecraft.world.level.LevelReader;
+import sereneseasons.season.SeasonHooks;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import sereneseasons.api.season.Season;
@@ -60,16 +62,25 @@ public class ServerLevelMixin {
         ProfilerFiller profiler = level.getProfiler();
 
         // ✅ Run your seasonal snow queue logic first
-        if (CommonSnowBlockFeature.getTickCounter() % MIN_TICKS_INTERVALLES == 0
-                && level.dimension() == Level.OVERWORLD) {
+        if (level.dimension() == Level.OVERWORLD) {
+            int t = CommonSnowBlockFeature.getTickCounter();
+            ChunkPos cpos = chunk.getPos();
+            boolean doEval = ((cpos.x ^ cpos.z ^ t) & 15) == 0; // ~once per 16 ticks per ticking chunk
+            if (doEval) {
 
             ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
             Season.SubSeason currentSeason = EnvironmentHelper.getCurrentSeason();
             var seasonState = SeasonHelper.getSeasonState(level);
 
             if (seasonState != null && currentSeason != null) {
+                // Lazily cache surface height if not set yet
+                if (tracked.sereneseasonsplus$getSurfaceHeight() == -1) {
+                    int surfaceHeightCache = level.getHeight(Heightmap.Types.WORLD_SURFACE, cpos.getMiddleBlockX(), cpos.getMiddleBlockZ());
+                    tracked.sereneseasonsplus$setSurfaceHeight(surfaceHeightCache);
+                }
                 int surfaceHeight = tracked.sereneseasonsplus$getSurfaceHeight();
-                SnowLogic.evaluate(level, currentSeason, seasonState, tracked, chunk.getPos(), false, surfaceHeight);
+                SnowLogic.evaluate(level, currentSeason, seasonState, tracked, cpos, false, surfaceHeight);
+            }
             }
         }
 
@@ -81,14 +92,8 @@ public class ServerLevelMixin {
             BlockPos blockPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(j, 0, k, 15));
             BlockPos blockPos2 = blockPos.below();
             Biome biome = level.getBiome(blockPos).value();
-
-            // Ice freeze (vanilla cold freeze or snow-precip freeze for water biomes)
-            if (biome.shouldFreeze(level, blockPos2)) {
-                BlockState ice = Blocks.ICE.defaultBlockState();
-                if (level.setBlockAndUpdate(blockPos2, ice)) {
-                    CommonSnowBlockFeature.accumulateColumnUpdate(blockPos2, ice);
-                }
-            } else if (EnvironmentHelper.isRainning(level, blockPos)
+            // Freeze water only during cold precipitation (do not duplicate vanilla cold-freeze)
+            if (EnvironmentHelper.isRainning(level, blockPos)
                     && CommonSnowBlockFeature.HANDLER.isColdEnoughForSnow(level, blockPos)) {
                 CommonSnowBlockFeature.tryFreezeWaterAt(level, blockPos2);
             }
@@ -96,7 +101,7 @@ public class ServerLevelMixin {
             // Snow accumulation (uses your helper instead of vanilla "bl")
             if (EnvironmentHelper.isRainning(level, blockPos)) {
                 int maxSnow = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
-                if (maxSnow > 0 && biome.shouldSnow(level, blockPos)) {
+                if (maxSnow > 0 && sereneseasons.season.SeasonHooks.shouldSnowHook(biome, level, blockPos)) {
                     BlockState state = level.getBlockState(blockPos);
 
                     if (state.is(Blocks.SNOW)) {
@@ -125,9 +130,31 @@ public class ServerLevelMixin {
             }
         }
 
-        // Cancel vanilla handling since we replaced it
-        ci.cancel();
+        // Do not cancel the rest of tickChunk to avoid skipping other chunk work
     }
+
+//    // Suppress vanilla snow/ice placement decisions inside tickChunk; our logic above replaces them
+//    @Redirect(
+//            method = "tickChunk",
+//            at = @At(
+//                    value = "INVOKE",
+//                    target = "Lnet/minecraft/world/level/biome/Biome;shouldSnow(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;)Z"
+//            )
+//    )
+//    private boolean ssp$redirectShouldSnow(Biome biome, LevelReader levelReader, BlockPos pos) {
+//        return false;
+//    }
+//
+//    @Redirect(
+//            method = "tickChunk",
+//            at = @At(
+//                    value = "INVOKE",
+//                    target = "Lnet/minecraft/world/level/biome/Biome;shouldFreeze(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;)Z"
+//            )
+//    )
+//    private boolean ssp$redirectShouldFreeze(Biome biome, LevelReader levelReader, BlockPos pos) {
+//        return false;
+//    }
 
 
 

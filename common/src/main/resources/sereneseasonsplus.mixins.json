@@ -5,6 +5,7 @@
   "refmap": "sereneseasonsplus-refmap.json",
   "mixins": [
     "ChunkSerializerSnowMixin",
+    "ProtoChunkSnowMixin",
     "LevelChunkSnowMixin",
     "MinecraftServerMixin",
     "SeasonHooksMixin",

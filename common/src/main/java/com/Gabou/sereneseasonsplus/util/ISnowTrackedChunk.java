@@ -3,6 +3,7 @@ package com.Gabou.sereneseasonsplus.util;
 import net.minecraft.core.BlockPos;
 
 import java.util.Map;
+import java.util.Set;
 
 public interface ISnowTrackedChunk {
     int sereneseasonsplus$getLastWinterId();
@@ -39,4 +40,7 @@ public interface ISnowTrackedChunk {
     // Last tick count when progress was updated; used to scale by time
     int sereneseasonsplus$getLastProgressTick();
     void sereneseasonsplus$setLastProgressTick(int tick);
+
+    // Positions of ice we froze (rivers/oceans) to thaw efficiently later
+    Set<BlockPos> sereneseasonsplus$getIceColumns();
 }

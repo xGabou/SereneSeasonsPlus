@@ -44,6 +44,15 @@ public abstract class ChunkSerializerSnowMixin {
             }
             tag.put("SnowColumns", list);
 
+            // Persist ice columns as list of Pos: long
+            ListTag iceList = new ListTag();
+            for (net.minecraft.core.BlockPos p : tracked.sereneseasonsplus$getIceColumns()) {
+                CompoundTag entry = new CompoundTag();
+                entry.putLong("Pos", p.asLong());
+                iceList.add(entry);
+            }
+            tag.put("IceColumns", iceList);
+
             root.put(SSP, tag);
             cir.setReturnValue(root);
         }
@@ -83,6 +92,16 @@ public abstract class ChunkSerializerSnowMixin {
                     int layers = entry.getInt("Layers");
                     net.minecraft.core.BlockPos bp = net.minecraft.core.BlockPos.of(posLong);
                     tracked.sereneseasonsplus$getSnowColumns().put(bp.immutable(), layers);
+                }
+
+                // Load ice columns
+                tracked.sereneseasonsplus$getIceColumns().clear();
+                ListTag iceList = tag.getList("IceColumns", 10);
+                for (int i = 0; i < iceList.size(); i++) {
+                    CompoundTag entry = iceList.getCompound(i);
+                    long posLong = entry.getLong("Pos");
+                    net.minecraft.core.BlockPos bp = net.minecraft.core.BlockPos.of(posLong);
+                    tracked.sereneseasonsplus$getIceColumns().add(bp.immutable());
                 }
             }
         }

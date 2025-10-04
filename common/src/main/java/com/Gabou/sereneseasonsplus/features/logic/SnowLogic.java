@@ -25,7 +25,7 @@ public final class SnowLogic {
                                 ChunkPos chunkPos,
                                 boolean isLoadEvent,
                                 int maxHeight) {
-        if(chunkPos.equals(new ChunkPos(-328,355))){
+        if (chunkPos.equals(new ChunkPos(-328, 355))) {
             CommonSnowBlockFeature.LOGGER.info("test");
         }
 
@@ -34,7 +34,6 @@ public final class SnowLogic {
         boolean coldEnough = CommonSnowBlockFeature.HANDLER.isColdEnoughForSnow(level, samplePos);
         boolean snowingNow = EnvironmentHelper.isRainning(level, samplePos);
         boolean allowApply = snowingNow || isLoadEvent;
-
 
         // --- Case 1: Cold enough => pile snow ---
         if (coldEnough) {
@@ -69,22 +68,22 @@ public final class SnowLogic {
                 ChunkQueue.enqueueApply(chunkPos, currentSeason);
             }
 
-            // --- Case 2: Too warm => melt snow ---
-            else {
-                // Fonte inconditionnelle en saison chaude
-                boolean inWarmSeason = currentSeason.ordinal() >= Season.SubSeason.LATE_SPRING.ordinal()
-                        && currentSeason.ordinal() < Season.SubSeason.EARLY_WINTER.ordinal();
+        }
+        // --- Case 2: Too warm => melt snow ---
+        else {
+            // Unconditional melt in warm sub-seasons
+            boolean inWarmSeason = currentSeason.ordinal() >= Season.SubSeason.LATE_SPRING.ordinal()
+                    && currentSeason.ordinal() < Season.SubSeason.EARLY_WINTER.ordinal();
 
-                // Fonte conditionnelle seulement en début d’hiver (si aucune tempête encore)
-                boolean inEarlyWinterNoStorm = currentSeason == Season.SubSeason.EARLY_WINTER
-                        && CommonSnowBlockFeature.HANDLER.getSnowStormsThisWinter(level) == 0;
+            // Conditional melt only at start of winter if no storms occurred
+            boolean inEarlyWinterNoStorm = currentSeason == Season.SubSeason.EARLY_WINTER
+                    && CommonSnowBlockFeature.HANDLER.getSnowStormsThisWinter(level) == 0;
 
-                if (inWarmSeason || inEarlyWinterNoStorm) {
-                    // melt all tracked snow columns until ground
-                    ChunkQueue.enqueueMelt(chunkPos, false);
-                }
+            if (inWarmSeason || inEarlyWinterNoStorm) {
+                // melt all tracked snow columns until ground
+                ChunkQueue.enqueueMelt(chunkPos, false);
             }
-
         }
     }
 }
+

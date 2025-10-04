@@ -35,6 +35,7 @@ import sereneseasons.api.season.SeasonHelper;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class CommonSnowBlockFeature {
 
@@ -55,6 +56,8 @@ public class CommonSnowBlockFeature {
 
     // Accumulate per-chunk snow column updates to avoid repeated chunk lookups
     static final Map<ChunkPos, Map<BlockPos, Integer>> pendingColumnMapUpdates = new HashMap<>();
+    // Accumulate per-chunk ice adds (rivers/oceans) to thaw efficiently later
+    static final Map<ChunkPos, java.util.Set<BlockPos>> pendingIceAdds = new HashMap<>();
 
     // restored for visibility or metrics during a batch
     static final List<BlockPos> snowPill = new ArrayList<>();
@@ -81,7 +84,11 @@ public class CommonSnowBlockFeature {
 
         ++tickCounter;
 
-        if (level.random.nextInt(16) == 0 || (EnvironmentHelper.isHotSeason()&&level.random.nextInt(2) == 0)) {
+        if(!snowQueue.isEmpty()){
+            chunkHandler(level);
+        }
+
+        if (level.random.nextInt(16) == 0 || (EnvironmentHelper.isHotSeason() && level.random.nextInt(2) == 0)) {
             updatePlayerPositions(level.players());
             passifSnowBlocks(level);
             EnvironmentHelper.checkAndUpdate(level);
@@ -158,24 +165,28 @@ public class CommonSnowBlockFeature {
             }
         }
     }
+    private static final Queue<LevelChunk> snowQueue = new ConcurrentLinkedQueue<>();
 
-    public static void handleOnChunkLoad(LevelChunk chunk, ServerLevel level) {
-        ISnowTrackedChunk tracked = (ISnowTrackedChunk) chunk;
-        if (tracked == null) return;
-        if(tracked.sereneseasonsplus$getSurfaceHeight() != -1){
-            return;
+    // On chunk load, only cache surface height; do not enqueue or modify snow lists
+    public static void handleOnChunkLoad(LevelChunk chunk) {
+        snowQueue.add(chunk);
+    }
+
+    private static void chunkHandler(ServerLevel level)
+    {
+        LevelChunk chunk;
+        while ((chunk = snowQueue.poll()) != null) {
+            if (!(chunk instanceof ISnowTrackedChunk tracked)) return;
+            if (tracked.sereneseasonsplus$getSurfaceHeight() != -1) return;
+            int centerX = chunk.getPos().getMiddleBlockX();
+            int centerZ = chunk.getPos().getMiddleBlockZ();
+            int surfaceHeight = level.getHeight(
+                    net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE,
+                    centerX,
+                    centerZ
+            );
+            tracked.sereneseasonsplus$setSurfaceHeight(surfaceHeight);
         }
-        int centerX = chunk.getPos().getMiddleBlockX();
-        int centerZ = chunk.getPos().getMiddleBlockZ();
-
-        int surfaceHeight = level.getHeight(
-                net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE,
-                centerX,
-                centerZ
-        );
-
-        // cache it
-        tracked.sereneseasonsplus$setSurfaceHeight(surfaceHeight);
 
     }
 
@@ -690,7 +701,8 @@ public class CommonSnowBlockFeature {
 
         Map<BlockPos, Integer> columns = tracked.sereneseasonsplus$getSnowColumns();
         if (columns == null || columns.isEmpty()) {
-            return false;
+            // Still try to thaw ice even if no snow is tracked
+            return meltTrackedIce(level, tracked);
         }
 
         boolean changed = false;
@@ -756,6 +768,26 @@ public class CommonSnowBlockFeature {
             // Each melt tick only reduces the topmost stack by 1 layer.
         }
 
+        // Also thaw tracked ice to water
+        changed |= meltTrackedIce(level, tracked);
+
+        return changed;
+    }
+
+    private static boolean meltTrackedIce(ServerLevel level, ISnowTrackedChunk tracked) {
+        boolean changed = false;
+        java.util.Set<BlockPos> copy = new java.util.HashSet<>(tracked.sereneseasonsplus$getIceColumns());
+        for (BlockPos p : copy) {
+            BlockState st = level.getBlockState(p);
+            if (st.is(Blocks.ICE)) {
+                queueChange(p, Blocks.WATER.defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
+                tracked.sereneseasonsplus$getIceColumns().remove(p);
+                changed = true;
+            } else {
+                // cleanup stale
+                tracked.sereneseasonsplus$getIceColumns().remove(p);
+            }
+        }
         return changed;
     }
 
@@ -881,6 +913,12 @@ public class CommonSnowBlockFeature {
 
     // Record a snow column map change to be applied at batch end
     public static void accumulateColumnUpdate(BlockPos pos, BlockState state) {
+        ChunkPos cp = new ChunkPos(pos.getX() >> 4, pos.getZ() >> 4);
+        if (state.is(Blocks.ICE)) {
+            pendingIceAdds.computeIfAbsent(cp, k -> new java.util.HashSet<>()).add(pos.immutable());
+            chunksToDirty.add(cp);
+            return;
+        }
         int val;
         if (state.is(Blocks.SNOW) && state.hasProperty(SnowLayerBlock.LAYERS)) {
             val = state.getValue(SnowLayerBlock.LAYERS);
@@ -889,7 +927,6 @@ public class CommonSnowBlockFeature {
         } else {
             val = 0; // signal removal
         }
-        ChunkPos cp = new ChunkPos(pos.getX() >> 4, pos.getZ() >> 4);
         pendingColumnMapUpdates
                 .computeIfAbsent(cp, k -> new HashMap<>())
                 .put(pos.immutable(), val);
@@ -939,6 +976,21 @@ public class CommonSnowBlockFeature {
                 }
             }
             pendingColumnMapUpdates.clear();
+        }
+
+        // Flush accumulated ice adds per chunk (track where we froze water)
+        if (!pendingIceAdds.isEmpty()) {
+            for (Map.Entry<ChunkPos, java.util.Set<BlockPos>> e : pendingIceAdds.entrySet()) {
+                ChunkPos cp = e.getKey();
+                if (!level.hasChunk(cp.x, cp.z)) continue;
+                LevelChunk chunk = level.getChunkSource().getChunk(cp.x, cp.z, false);
+                if (!(chunk instanceof ISnowTrackedChunk tracked)) continue;
+                java.util.Set<BlockPos> set = tracked.sereneseasonsplus$getIceColumns();
+                for (BlockPos p : e.getValue()) {
+                    if (level.getBlockState(p).is(Blocks.ICE)) set.add(p.immutable());
+                }
+            }
+            pendingIceAdds.clear();
         }
 
         for (ChunkPos cp : chunksToDirty) {

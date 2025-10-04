@@ -1,7 +1,7 @@
 plugins {
     id "fabric-loom" version "1.10-SNAPSHOT"
 }
-base.archivesName.set("${mod_name}-fabric")
+base.archivesName.set("Fabric-Version-${mod_id}")
 
 loom {
     mixin {

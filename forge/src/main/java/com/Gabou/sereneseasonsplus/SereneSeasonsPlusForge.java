@@ -15,6 +15,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.level.ChunkEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -67,6 +68,11 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
         SereneService.HANDLER = new ForgeAsyncExecutorHandler();
         event.getServer().getGameRules().getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT).set(100, event.getServer());
         CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
+    }
+
+
+    @SubscribeEvent
+    public void onServerStarted(ServerStartedEvent event) {
         EnvironmentHelper.onServerStarted(event.getServer().getLevel(Level.OVERWORLD));
     }
 
@@ -141,7 +147,8 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
         var level = chunk.getLevel();
         if (level.isClientSide()) return;
         if (level.dimension() != Level.OVERWORLD) return;
-        CommonSnowBlockFeature.handleOnChunkLoad(chunk, (ServerLevel) level);
+        // Cache surface height only; no enqueue to avoid dual input
+        CommonSnowBlockFeature.handleOnChunkLoad(chunk);
     }
 
 

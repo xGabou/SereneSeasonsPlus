@@ -10,6 +10,7 @@ import com.Gabou.sereneseasonsplus.util.FabricEnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.SereneService;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -28,7 +29,11 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         ServerLifecycleEvents.SERVER_STOPPING.register(this::onServerStopping);
         EnvironmentHelper.init(new FabricEnvironmentHelper());
         SeasonChangeEvent.register();
+        // Register chunk load to cache surface height only (no enqueue)
+        ServerChunkEvents.CHUNK_LOAD.register(this::onChunkLoad);
         SereneExtendedConfig.registerReloadListener(this::onConfigReload);
+
+
 
         // Server tick hook
         ServerTickEvents.START_WORLD_TICK.register(this::onWorldTick);
@@ -71,7 +76,8 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         if (!(chunkAccess instanceof net.minecraft.world.level.chunk.LevelChunk chunk)) return;
         if (level.isClientSide()) return;
         if (level.dimension() != Level.OVERWORLD) return;
-        CommonSnowBlockFeature.handleOnChunkLoad(chunk,level);
+        // Cache surface height only; no enqueue to avoid dual input
+        CommonSnowBlockFeature.handleOnChunkLoad(chunk);
     }
 
 }
