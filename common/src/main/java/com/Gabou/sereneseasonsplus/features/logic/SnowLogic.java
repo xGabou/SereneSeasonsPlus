@@ -2,6 +2,7 @@ package com.Gabou.sereneseasonsplus.features.logic;
 
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
+import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import net.minecraft.core.BlockPos;
@@ -73,7 +74,7 @@ public final class SnowLogic {
             }
 
             // If a storm is currently active, drive a random piling pass using the active storm record
-            com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get(level);
+            SnowHistorySavedData sd = SnowHistorySavedData.get(level);
             if (sd != null && sd.currentStormId > 0) {
                 ChunkQueue.enqueueApply(chunkPos, currentSeason);
             }
