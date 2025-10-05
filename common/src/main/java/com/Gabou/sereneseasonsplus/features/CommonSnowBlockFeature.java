@@ -105,8 +105,10 @@ public class CommonSnowBlockFeature {
             if (ChunkQueue.isEmpty()) ChunkQueue.shuffle();
 
             while ((entry = ChunkQueue.poll()) != null) {
-                boolean timeUp = !((MinecraftServerAccess) server).sereneseasonsplus$tempsEcoule() || processed >= 40;
-                if (timeUp && processed >= 10) {
+                boolean timeUp = (
+                        ((MinecraftServerAccess) server).sereneseasonsplus$tempsEcoule() && processed >= 5
+                ) || processed >= 20;
+                if (timeUp) {
                     if (entry.type() == ChunkQueue.TaskType.APPLY_SNOW) {
                         enqueueChunkForSnowApply(entry.pos(), entry.subSeason());
                     } else {
