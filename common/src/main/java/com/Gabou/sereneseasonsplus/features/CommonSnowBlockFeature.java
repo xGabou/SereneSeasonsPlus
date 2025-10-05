@@ -17,6 +17,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
@@ -105,8 +106,11 @@ public class CommonSnowBlockFeature {
             if (ChunkQueue.isEmpty()) ChunkQueue.shuffle();
 
             while ((entry = ChunkQueue.poll()) != null) {
-                boolean timeUp = !((MinecraftServerAccess) server).sereneseasonsplus$tempsEcoule() || processed >= 40;
-                if (timeUp && processed >= 10) {
+                boolean timeUp = (
+                        ((MinecraftServerAccess) server).sereneseasonsplus$tempsEcoule() && processed >= 5
+                ) || processed >= 20;
+
+                if (timeUp) {
                     if (entry.type() == ChunkQueue.TaskType.APPLY_SNOW) {
                         enqueueChunkForSnowApply(entry.pos(), entry.subSeason());
                     } else {
@@ -119,7 +123,7 @@ public class CommonSnowBlockFeature {
                 ChunkPos chunkPos = entry.pos();
                 if (!level.hasChunk(chunkPos.x, chunkPos.z)) { continue; }
 
-                if(chunkPos.equals(new ChunkPos(23,-39))){
+                if(chunkPos.equals(new ChunkPos(-20,-16))){
                     LOGGER.info("Processing chunk -7,-5 for task {} (fullClear={})", entry.type(), entry.fullClear());
                 }
                 LevelChunk chunk = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
@@ -176,7 +180,8 @@ public class CommonSnowBlockFeature {
     private static void chunkHandler(ServerLevel level)
     {
         LevelChunk chunk;
-        while ((chunk = snowQueue.poll()) != null) {
+        int counter = 0;
+        while ((chunk = snowQueue.poll()) != null && counter < 30) {
             if (!(chunk instanceof ISnowTrackedChunk tracked)) return;
             if (tracked.sereneseasonsplus$getSurfaceHeight() != -1) return;
             int centerX = chunk.getPos().getMiddleBlockX();
@@ -187,6 +192,7 @@ public class CommonSnowBlockFeature {
                     centerZ
             );
             tracked.sereneseasonsplus$setSurfaceHeight(surfaceHeight);
+            counter++;
         }
 
     }
@@ -799,7 +805,7 @@ public class CommonSnowBlockFeature {
         BlockState at = level.getBlockState(base);
 
         BlockState snow = Blocks.SNOW.defaultBlockState();
-        if ((level.isEmptyBlock(base) || at.canBeReplaced()) && snow.canSurvive(level, base)) {
+        if ((level.isEmptyBlock(base) || at.canBeReplaced() || at.is(BlockTags.FLOWERS)) && snow.canSurvive(level, base)) {
             return base;
         }
 
@@ -835,7 +841,7 @@ public class CommonSnowBlockFeature {
             if (targetLayers == 8) return false;
             BlockState newState = Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, targetLayers);
             return level.setBlock(pos, newState, Block.UPDATE_CLIENTS);
-        } else if (allowPlace && (level.isEmptyBlock(pos) || state.canBeReplaced())) {
+        } else if (allowPlace && (level.isEmptyBlock(pos) || state.canBeReplaced() || state.is(BlockTags.FLOWERS))) {
             BlockState snow = Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, targetLayers);
             if (!snow.canSurvive(level, pos)) return false;
             return level.setBlock(pos, snow, Block.UPDATE_CLIENTS);
@@ -861,7 +867,7 @@ public class CommonSnowBlockFeature {
             queueChange(pos, newState, Block.UPDATE_CLIENTS);
             snowPill.add(pos.immutable());
             return true;
-        } else if (allowPlace && (level.isEmptyBlock(pos) || state.canBeReplaced())) {
+        } else if (allowPlace && (level.isEmptyBlock(pos) || state.canBeReplaced()  || state.is(BlockTags.FLOWERS))) {
             BlockState snow = Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, targetLayers);
             if (!snow.canSurvive(level, pos)) return false;
             queueChange(pos, snow, Block.UPDATE_CLIENTS);

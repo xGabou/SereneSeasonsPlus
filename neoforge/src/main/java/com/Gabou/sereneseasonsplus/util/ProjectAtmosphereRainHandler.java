@@ -1,36 +1,78 @@
 package com.Gabou.sereneseasonsplus.util;
 
+import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
+import net.Gabou.projectatmosphere.api.AtmoApi;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
- * Rain handler for Project Atmosphere: use per-position precipitation checks.
+ * Rain handler for Project Atmosphere: driven by cloud spawn/despawn events.
  */
-public class ProjectAtmosphereRainHandler implements IRainHandler {
+public class ProjectAtmosphereRainHandler extends DefaultRainHandler {
 
-    private static final int CACHE_INTERVAL_TICKS = 100;
-
-    private static final class CacheEntry {
-        int lastTick;
-        boolean lastValue;
-    }
-
-    private final Map<ServerLevel, CacheEntry> cache = new HashMap<>();
-
+    private final Map<ServerLevel, PaState> states = new HashMap<>();
 
     @Override
     public boolean isRainingAt(ServerLevel level, BlockPos pos) {
-        CacheEntry e = cache.computeIfAbsent(level, k -> new CacheEntry());
-        int tick = com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.getTickCounter();
-        if (tick - e.lastTick >= CACHE_INTERVAL_TICKS) {
-            e.lastValue = level.isRainingAt(pos); // vanilla: global precipitation
-            e.lastTick = tick;
+        PaState s = states.get(level);
+        // If we never tracked this level yet, fallback to AtmoApi check
+        if (s == null) {
+            return AtmoApi.getInstance().isRainingOrThundering(level, pos);
         }
-        return e.lastValue;
+        return !s.activeRainClouds.isEmpty();
+    }
 
+    /**
+     * Not used: rain state is driven by cloud events.
+     */
+    @Override
+    public void checkAndUpdate(ServerLevel level) {
+        // NO-OP
+    }
+
+    /**
+     * Called when a cloud spawns.
+     * If it's rainy, add it to the active set and update rain state.
+     */
+    public void onSimpleCloudsSpawned(ServerLevel level, int cloudId) {
+        PaState s = states.computeIfAbsent(level, k -> new PaState());
+
+        boolean wasRaining = !s.activeRainClouds.isEmpty();
+        s.activeRainClouds.add(cloudId);
+
+        if (!wasRaining && !s.activeRainClouds.isEmpty()) {
+            // transitioned from dry → raining
+            CommonSnowBlockFeature.HANDLER.onRainCloudSpawned(level, cloudId);
+            s.lastValue = true;
+        }
+    }
+
+    /**
+     * Called when a cloud despawns.
+     * If it was rainy, remove it and update rain state.
+     */
+    public void onSimpleCloudsDespawned(ServerLevel level, int cloudId) {
+        PaState s = states.get(level);
+        if (s == null) return;
+
+        boolean wasRaining = !s.activeRainClouds.isEmpty();
+        s.activeRainClouds.remove(cloudId);
+
+        if (wasRaining && s.activeRainClouds.isEmpty()) {
+            // transitioned from raining → dry
+            CommonSnowBlockFeature.HANDLER.onRainCloudDespawned(level, cloudId);
+            s.lastValue = false;
+
+        }
+    }
+
+    protected final class PaState {
+        boolean lastValue; // last global raining state
+        final Set<Integer> activeRainClouds = new HashSet<>(); // currently rainy clouds
     }
 }
-

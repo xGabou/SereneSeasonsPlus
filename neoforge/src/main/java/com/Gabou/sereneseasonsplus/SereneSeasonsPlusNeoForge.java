@@ -16,6 +16,7 @@ import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.ChunkEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
@@ -60,6 +61,11 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
         SereneService.HANDLER = new NeoForgeAsyncExecutorHandler();
         event.getServer().getGameRules().getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT).set(999, event.getServer());
         CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
+    }
+
+
+    @SubscribeEvent
+    public void onServerStarted(ServerStartedEvent event) {
         EnvironmentHelper.onServerStarted(event.getServer().getLevel(Level.OVERWORLD));
     }
 
@@ -112,7 +118,7 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
         var level = chunk.getLevel();
         if (level == null || level.isClientSide()) return;
         if (level.dimension() != Level.OVERWORLD) return;
-        CommonSnowBlockFeature.handleOnChunkLoad(chunk, (ServerLevel) level);
+        CommonSnowBlockFeature.handleOnChunkLoad(chunk);
     }
 
 

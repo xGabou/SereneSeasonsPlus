@@ -81,13 +81,5 @@ public class NeoForgeEnvironmentHelper implements IEnvironmentHelper{
         CommonSnowBlockFeature.onSeasonChange(serverLevel);
     }
 
-    @Override
-    public boolean isRainingAt(ServerLevel level, BlockPos pos) {
-        if(SereneSeasonsPlusNeoForge.isProjectAtmosphereLoaded)
-            return level.isRainingAt(pos);
-        else
-            return level.isRaining();
-    }
-
 
 }

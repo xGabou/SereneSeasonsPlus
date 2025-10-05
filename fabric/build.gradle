@@ -66,18 +66,18 @@ dependencies {
     modImplementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_range}"
     //modImplementation "curse.maven:sodium-394468:5092261"
 }
-tasks.named("remapJar") {
-    doLast {
-        def jarFile = archiveFile.get().asFile
-        def tmpDir = new File(jarFile.parentFile, jarFile.name + ".tmpdir")
-        if (tmpDir.exists()) tmpDir.deleteDir()
-        copy {
-            from zipTree(jarFile)
-            into tmpDir
-            exclude("client-*-refmap.json")
-        }
-        jarFile.delete()
-        ant.zip(destfile: jarFile, basedir: tmpDir)
-        tmpDir.deleteDir()
-    }
-}
+//tasks.named("remapJar") {
+//    doLast {
+//        def jarFile = archiveFile.get().asFile
+//        def tmpDir = new File(jarFile.parentFile, jarFile.name + ".tmpdir")
+//        if (tmpDir.exists()) tmpDir.deleteDir()
+//        copy {
+//            from zipTree(jarFile)
+//            into tmpDir
+//            exclude("client-*-refmap.json")
+//        }
+//        jarFile.delete()
+//        ant.zip(destfile: jarFile, basedir: tmpDir)
+//        tmpDir.deleteDir()
+//    }
+//}
