@@ -71,7 +71,10 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
 
     private void onServerStarted(MinecraftServer server) {
         EnvironmentHelper.onServerStarted(server.getLevel(Level.OVERWORLD));
-        server.getGameRules().getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT).set(999, server);
+        // Apply configured maximum snow accumulation (in layers)
+        server.getGameRules()
+                .getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT)
+                .set(SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get(), server);
     }
 
     private void onChunkLoad(ServerLevel level, ChunkAccess chunkAccess) {

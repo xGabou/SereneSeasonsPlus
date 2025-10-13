@@ -99,7 +99,7 @@ public class ServerLevelMixin {
             }
 
             // Snow accumulation (uses your helper instead of vanilla "bl")
-            if (EnvironmentHelper.isRainning(level, blockPos)) {
+            if (EnvironmentHelper.isRainning(level, blockPos) && level.canSeeSkyFromBelowWater(blockPos)) {
                 int maxSnow = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
                 if (maxSnow > 0 && sereneseasons.season.SeasonHooks.shouldSnowHook(biome, level, blockPos)) {
                     BlockState state = level.getBlockState(blockPos);
@@ -114,12 +114,12 @@ public class ServerLevelMixin {
                             }
                         }
                     } else {
-                        BlockState snow = Blocks.SNOW.defaultBlockState();
-                        if (level.setBlockAndUpdate(blockPos, snow)) {
-                            CommonSnowBlockFeature.accumulateColumnUpdate(blockPos, snow);
-                        }
+                    BlockState snow = Blocks.SNOW.defaultBlockState();
+                    if (level.setBlockAndUpdate(blockPos, snow)) {
+                        CommonSnowBlockFeature.accumulateColumnUpdate(blockPos, snow);
                     }
                 }
+            }
 
                 // Precipitation hook
                 Biome.Precipitation precipitation = biome.getPrecipitationAt(blockPos2);

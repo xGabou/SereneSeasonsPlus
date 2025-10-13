@@ -66,7 +66,10 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("Serene Seasons Extended is loading!");
         SereneService.HANDLER = new ForgeAsyncExecutorHandler();
-        event.getServer().getGameRules().getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT).set(100, event.getServer());
+        // Apply configured maximum snow accumulation (in layers)
+        event.getServer().getGameRules()
+                .getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT)
+                .set(SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get(), event.getServer());
         CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
     }
 

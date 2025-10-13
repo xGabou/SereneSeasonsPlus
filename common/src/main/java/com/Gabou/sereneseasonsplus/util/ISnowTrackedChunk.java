@@ -29,6 +29,10 @@ public interface ISnowTrackedChunk {
 
     void sereneseasonsplus$setSurfaceHeight(int height);
 
+    // Estimated number of columns in this chunk where snow can accumulate (0..256). -1 = unknown
+    int sereneseasonsplus$getAvailableSnowColumns();
+    void sereneseasonsplus$setAvailableSnowColumns(int count);
+
     // Active-storm progress tracking per chunk (0..1)
     float sereneseasonsplus$getStormProgress();
     void sereneseasonsplus$setStormProgress(float progress);

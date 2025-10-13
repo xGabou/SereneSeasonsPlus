@@ -26,7 +26,7 @@ public final class SnowLogic {
                                 ChunkPos chunkPos,
                                 boolean isLoadEvent,
                                 int maxHeight) {
-//        if (chunkPos.equals(new ChunkPos(6, 5))) {
+//        if (chunkPos.equals(new ChunkPos(-6, -8))) {
 //            CommonSnowBlockFeature.LOGGER.info("test");
 //        }
 
@@ -44,12 +44,17 @@ public final class SnowLogic {
             // 1️⃣ Global baseline balance (macro-scale)
             int baseline = CommonSnowBlockFeature.computeGlobalMinSum(level);
             if (baseline > 0) {
-                int baselineTotal = baseline * 256; // 16×16 columns
+                int estimatedCols = tracked.sereneseasonsplus$getAvailableSnowColumns();
+                if (estimatedCols <= 0) estimatedCols = 256; // fallback if not yet computed
+                int baselineTotal = baseline * estimatedCols; // scale to real available columns
                 int trackedTotal = tracked.sereneseasonsplus$getTotalSnowLayers();
 
                 // Only react if the chunk differs by ±25 % or more from baseline
                 float ratio = trackedTotal / (float) baselineTotal;
                 if ((ratio < 0.75f) && allowApply) {
+//                    if (chunkPos.equals(new ChunkPos(-5, -8))) {
+//                        CommonSnowBlockFeature.LOGGER.info("test");
+//                    }
                     ChunkQueue.enqueueApply(chunkPos, currentSeason);
                     return;
                 }
@@ -66,15 +71,10 @@ public final class SnowLogic {
                 // Compute proportional tolerance (e.g. ±20 % of global average, minimum 2 layers)
                 float tolerance = Math.max(2.0f, globalAvg * 0.20f);
 
-                if (Math.abs(currentAvg - globalAvg) > tolerance && allowApply) {
+                if ((globalAvg - currentAvg) > tolerance && allowApply) {
                     ChunkQueue.enqueueApply(chunkPos, currentSeason);
                 }
-            }
 
-            // If a storm is currently active, drive a random piling pass using the active storm record
-            SnowHistorySavedData sd = SnowHistorySavedData.get(level);
-            if (sd != null && sd.currentStormId > 0) {
-                ChunkQueue.enqueueApply(chunkPos, currentSeason);
             }
 
         }
@@ -95,4 +95,3 @@ public final class SnowLogic {
         }
     }
 }
-

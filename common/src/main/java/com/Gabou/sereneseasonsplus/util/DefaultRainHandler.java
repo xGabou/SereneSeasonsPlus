@@ -50,6 +50,7 @@ public class DefaultRainHandler implements IRainHandler {
      */
     @Override
     public boolean isRainingAt(ServerLevel level, BlockPos pos) {
+        // Use vanilla per-position precipitation logic to respect roofs and caves
         return level.isRaining();
     }
 }

@@ -26,7 +26,9 @@ public abstract class SeasonHooksMixin {
 
             if (pos.getY() >= levelReader.getMinBuildHeight()
                     && pos.getY() < levelReader.getMaxBuildHeight()
-                    && levelReader.getBrightness(LightLayer.BLOCK, pos) < 10) {
+                    && levelReader.getBrightness(LightLayer.BLOCK, pos) < 10
+                    // extra guard: do not allow snow in covered interiors
+                    && levelReader.canSeeSkyFromBelowWater(pos)) {
 
                 // Only check if snow can survive here, no air requirement
                 if (Blocks.SNOW.defaultBlockState().canSurvive(levelReader, pos)) {

@@ -25,6 +25,9 @@ public class ProtoChunkSnowMixin implements ISnowTrackedChunk {
     private int sereneseasonsplus$surfaceHeight = -1;
 
     @Unique
+    private int sereneseasonsplus$availableColumns = -1;
+
+    @Unique
     private float sereneseasonsplus$stormProgress = 0f;
     @Unique
     private int sereneseasonsplus$stormIdApplied = 0;
@@ -59,6 +62,16 @@ public class ProtoChunkSnowMixin implements ISnowTrackedChunk {
     @Override
     public void sereneseasonsplus$setSurfaceHeight(int height) {
         sereneseasonsplus$surfaceHeight = height;
+    }
+
+    @Override
+    public int sereneseasonsplus$getAvailableSnowColumns() {
+        return sereneseasonsplus$availableColumns;
+    }
+
+    @Override
+    public void sereneseasonsplus$setAvailableSnowColumns(int count) {
+        sereneseasonsplus$availableColumns = Math.max(-1, Math.min(256, count));
     }
 
     @Override
