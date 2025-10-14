@@ -127,6 +127,8 @@ public class EnvironmentHelper {
 
     public static void onServerStarted(ServerLevel level)
     {
+        // Store overworld reference for no-level accessors
+        WorldContext.setOverworld(level);
         onWorldLoad(level);
         onSeasonChange(level,false);
         CommonSnowBlockFeature.HANDLER.resetWinterState(level, currentWinterId);
@@ -152,7 +154,7 @@ public class EnvironmentHelper {
 
         // If we enter a hot season, reset snow history so future winters don't inherit it
         if (HotSeason.isHotSeason(current)) {
-            SnowHistorySavedData hist = SnowHistorySavedData.get(serverLevel);
+            SnowHistorySavedData hist = SnowHistorySavedData.get();
             hist.currentStormId = 0;
             hist.snowHistory.clear();
             hist.setDirty();
@@ -166,6 +168,11 @@ public class EnvironmentHelper {
     public static void onServerStopping(ServerLevel level) {
         onWorldSave(level);
         CommonSnowBlockFeature.HANDLER.clear(level);
+        // Clear overworld reference
+        WorldContext.clear();
+        // Drop cached singletons bound to the previous world
+        com.Gabou.sereneseasonsplus.storage.SnowSavedData.clearCachedInstance();
+        com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.clearCachedInstance();
     }
 
 }

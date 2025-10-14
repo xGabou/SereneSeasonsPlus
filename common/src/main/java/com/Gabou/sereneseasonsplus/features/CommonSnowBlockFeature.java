@@ -438,7 +438,7 @@ public class CommonSnowBlockFeature {
         }
 
         // After baseline, add distribution either from active storm or combined finished storms
-        SnowHistorySavedData sd = SnowHistorySavedData.get(level);
+        SnowHistorySavedData sd = SnowHistorySavedData.get();
         if (sd != null) {
             if (sd.currentStormId > 0) {
                 SnowRecord rec = sd.snowHistory.get(sd.currentStormId);
@@ -493,7 +493,7 @@ public class CommonSnowBlockFeature {
 
     private static boolean applySnowPatternFromActiveRecord(ServerLevel level, LevelChunk chunk) {
         SnowHistorySavedData sd =
-                SnowHistorySavedData.get(level);
+                SnowHistorySavedData.get();
 
         if (sd != null && sd.currentStormId > 0) {
             SnowRecord rec = sd.snowHistory.get(sd.currentStormId);
@@ -529,7 +529,7 @@ public class CommonSnowBlockFeature {
         float progress = 1.0f;
         int currentTick = getTickCounter();
         if (!FAST_PILING_MODE) {
-            com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get(level);
+            com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get();
             int activeId = (sd != null) ? sd.currentStormId : 0;
             if (activeId > 0) {
                 if (tracked.sereneseasonsplus$getStormIdApplied() != activeId) {
@@ -549,10 +549,27 @@ public class CommonSnowBlockFeature {
             }
         }
 
+        // Determine active storm id once
+        int activeId = 0;
+        com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sdLocal = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get();
+        if (sdLocal != null) activeId = sdLocal.currentStormId;
+
         for (int dx = 0; dx < 16; dx++) {
             for (int dz = 0; dz < 16; dz++) {
                 int x = baseX + dx;
                 int z = baseZ + dz;
+
+                // If this column was destroyed during this active storm, skip entirely
+                if (activeId > 0) {
+                    if (tracked.sereneseasonsplus$getDestroyedStormId() != activeId) {
+                        tracked.sereneseasonsplus$getDestroyedColumns().clear();
+                        tracked.sereneseasonsplus$setDestroyedStormId(activeId);
+                    }
+                    long xz = (((long) x) << 32) ^ (z & 0xffffffffL);
+                    if (tracked.sereneseasonsplus$getDestroyedColumns().contains(xz)) {
+                        continue;
+                    }
+                }
 
                 float white = rng.nextFloat();
                 double wave = Math.sin((x * 0.12D) + (z * 0.12D));
@@ -925,6 +942,23 @@ public class CommonSnowBlockFeature {
      * If queue is false we set immediately
      */
     private static boolean placeOrQueueLayers(ServerLevel level, BlockPos pos, int targetLayers, boolean allowPlace, boolean queue) {
+        // Skip placement if this column was destroyed during the current storm
+        com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get();
+        int activeId = (sd != null) ? sd.currentStormId : 0;
+        if (activeId > 0) {
+            net.minecraft.world.level.chunk.LevelChunk chunk = level.getChunkSource().getChunk(pos.getX() >> 4, pos.getZ() >> 4, false);
+            if (chunk instanceof com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk tracked) {
+                if (tracked.sereneseasonsplus$getDestroyedStormId() != activeId) {
+                    // Different storm than what was recorded: reset tracking lazily
+                    tracked.sereneseasonsplus$getDestroyedColumns().clear();
+                    tracked.sereneseasonsplus$setDestroyedStormId(activeId);
+                }
+                long xz = (((long) pos.getX()) << 32) ^ (pos.getZ() & 0xffffffffL);
+                if (tracked.sereneseasonsplus$getDestroyedColumns().contains(xz)) {
+                    return false;
+                }
+            }
+        }
         if (queue) {
             return queueSnowLayersIfNeeded(level, pos, targetLayers, allowPlace);
         }
@@ -1131,7 +1165,7 @@ public class CommonSnowBlockFeature {
     }
 
     public static int computeGlobalAvg(ServerLevel level) {
-        SnowHistorySavedData sd = SnowHistorySavedData.get(level);
+        SnowHistorySavedData sd = SnowHistorySavedData.get();
         if (sd == null || sd.snowHistory.isEmpty()) return 0;
 
         int excludeId = sd.currentStormId;
@@ -1155,7 +1189,7 @@ public class CommonSnowBlockFeature {
      * This baseline should exist at every possible snow column.
      */
     public static int computeGlobalMinSum(ServerLevel level) {
-        SnowHistorySavedData sd = SnowHistorySavedData.get(level);
+        SnowHistorySavedData sd = SnowHistorySavedData.get();
         if (sd == null || sd.snowHistory.isEmpty()) return 0;
 
         int excludeId = sd.currentStormId;
@@ -1171,7 +1205,7 @@ public class CommonSnowBlockFeature {
 
     private static SnowRecord aggregateFinishedStormMinMax(ServerLevel level) {
         SnowHistorySavedData sd =
-                SnowHistorySavedData.get(level);
+                SnowHistorySavedData.get();
         if (sd == null || sd.snowHistory.isEmpty()) return null;
 
         int excludeId = sd.currentStormId;
@@ -1191,7 +1225,7 @@ public class CommonSnowBlockFeature {
     }
 
     private static SnowRecord aggregateFinishedStormSums(ServerLevel level) {
-        SnowHistorySavedData sd = SnowHistorySavedData.get(level);
+        SnowHistorySavedData sd = SnowHistorySavedData.get();
         if (sd == null || sd.snowHistory.isEmpty()) return null;
         int excludeId = sd.currentStormId;
         float sumMin = 0f, sumAvg = 0f, sumMax = 0f;

@@ -3,6 +3,7 @@ package com.Gabou.sereneseasonsplus.storage;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
+import com.Gabou.sereneseasonsplus.util.WorldContext;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -11,6 +12,7 @@ import java.util.Set;
  * Persists per-level snow environment state across world reloads.
  */
 public class SnowSavedData extends SavedData {
+    private static volatile SnowSavedData INSTANCE;
     public int winterId = -1;
     public int stormCount = 0;
     public boolean stormActive = false;
@@ -57,7 +59,28 @@ public class SnowSavedData extends SavedData {
         return tag;
     }
 
-    public static SnowSavedData get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(SnowSavedData::load, SnowSavedData::new, "ssp_snow_data");
+    /**
+     * Returns the singleton SnowSavedData for the overworld. No Level parameter needed.
+     * If the overworld is available, this binds to and persists via the world's DataStorage.
+     * If not yet available, returns a temporary in-memory instance until the overworld is set.
+     */
+    public static SnowSavedData get() {
+        SnowSavedData inst = INSTANCE;
+        if (inst != null) return inst;
+        synchronized (SnowSavedData.class) {
+            if (INSTANCE != null) return INSTANCE;
+            ServerLevel overworld = WorldContext.getOverworld();
+            if (overworld != null) {
+                INSTANCE = overworld.getDataStorage().computeIfAbsent(SnowSavedData::load, SnowSavedData::new, "ssp_snow_data");
+            } else {
+                INSTANCE = new SnowSavedData();
+            }
+            return INSTANCE;
+        }
+    }
+
+    /** Clears the cached singleton (called on server stop). */
+    public static void clearCachedInstance() {
+        INSTANCE = null;
     }
 }

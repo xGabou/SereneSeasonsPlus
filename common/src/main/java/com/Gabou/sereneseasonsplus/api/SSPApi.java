@@ -7,6 +7,7 @@ import com.Gabou.sereneseasonsplus.storage.SnowSavedData;
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import net.minecraft.server.level.ServerLevel;
+import com.Gabou.sereneseasonsplus.util.WorldContext;
 
 /**
  * Public API for tuning SereneSeasonsPlus snow storm behavior at runtime.
@@ -76,7 +77,7 @@ public final class SSPApi {
      */
     public static boolean setCurrentStormLayers(ServerLevel level, float min, float avg, float max) {
         if (level == null || level.isClientSide()) return false;
-        SnowHistorySavedData sd = SnowHistorySavedData.get(level);
+        SnowHistorySavedData sd = SnowHistorySavedData.get();
         if (sd == null || sd.currentStormId <= 0) return false;
 
         int id = sd.currentStormId;
@@ -98,6 +99,12 @@ public final class SSPApi {
         return true;
     }
 
+    /** Overworld-only convenience: updates active storm layers without a level. */
+    public static boolean setCurrentStormLayers(float min, float avg, float max) {
+        ServerLevel overworld = WorldContext.getOverworld();
+        return overworld != null && setCurrentStormLayers(overworld, min, avg, max);
+    }
+
     /** Sets only the min layer target for the active storm. */
     public static boolean setCurrentStormMin(ServerLevel level, float min) {
         SnowRecord rec = getOrCreateActiveRecord(level);
@@ -106,8 +113,14 @@ public final class SSPApi {
         rec.minLayers = clampedMin;
         if (rec.maxLayers < clampedMin) rec.maxLayers = clampedMin;
         if (rec.avgLayers < clampedMin) rec.avgLayers = clampedMin;
-        SnowHistorySavedData.get(level).setDirty();
+        SnowHistorySavedData.get().setDirty();
         return true;
+    }
+
+    /** Overworld-only convenience: sets min without a level. */
+    public static boolean setCurrentStormMin(float min) {
+        ServerLevel overworld = WorldContext.getOverworld();
+        return overworld != null && setCurrentStormMin(overworld, min);
     }
 
     /** Sets only the avg layer target for the active storm. */
@@ -116,8 +129,14 @@ public final class SSPApi {
         if (rec == null) return false;
         float clamped = Math.max(rec.minLayers, Math.min(rec.maxLayers, avg));
         rec.avgLayers = clamped;
-        SnowHistorySavedData.get(level).setDirty();
+        SnowHistorySavedData.get().setDirty();
         return true;
+    }
+
+    /** Overworld-only convenience: sets avg without a level. */
+    public static boolean setCurrentStormAvg(float avg) {
+        ServerLevel overworld = WorldContext.getOverworld();
+        return overworld != null && setCurrentStormAvg(overworld, avg);
     }
 
     /** Sets only the max layer target for the active storm. */
@@ -127,22 +146,34 @@ public final class SSPApi {
         float clamped = Math.max(rec.minLayers, max);
         rec.maxLayers = clamped;
         if (rec.avgLayers > rec.maxLayers) rec.avgLayers = rec.maxLayers;
-        SnowHistorySavedData.get(level).setDirty();
+        SnowHistorySavedData.get().setDirty();
         return true;
+    }
+
+    /** Overworld-only convenience: sets max without a level. */
+    public static boolean setCurrentStormMax(float max) {
+        ServerLevel overworld = WorldContext.getOverworld();
+        return overworld != null && setCurrentStormMax(overworld, max);
     }
 
     /** Returns the active storm's SnowRecord, or null if none is active. */
     public static SnowRecord getCurrentStormRecord(ServerLevel level) {
         if (level == null || level.isClientSide()) return null;
-        SnowHistorySavedData sd = SnowHistorySavedData.get(level);
+        SnowHistorySavedData sd = SnowHistorySavedData.get();
         if (sd == null || sd.currentStormId <= 0) return null;
         return sd.snowHistory.get(sd.currentStormId);
+    }
+
+    /** Overworld-only convenience: gets current storm record without a level. */
+    public static SnowRecord getCurrentStormRecord() {
+        ServerLevel overworld = WorldContext.getOverworld();
+        return overworld != null ? getCurrentStormRecord(overworld) : null;
     }
 
     // Helpers
     private static SnowRecord getOrCreateActiveRecord(ServerLevel level) {
         if (level == null || level.isClientSide()) return null;
-        SnowHistorySavedData sd = SnowHistorySavedData.get(level);
+        SnowHistorySavedData sd = SnowHistorySavedData.get();
         if (sd == null || sd.currentStormId <= 0) return null;
         SnowRecord rec = sd.snowHistory.get(sd.currentStormId);
         if (rec == null) {
@@ -166,10 +197,16 @@ public final class SSPApi {
     /** Clears the active storm flag and history records for this level. */
     public static void resetSnowHistory(ServerLevel level) {
         if (level == null || level.isClientSide()) return;
-        SnowHistorySavedData hist = SnowHistorySavedData.get(level);
+        SnowHistorySavedData hist = SnowHistorySavedData.get();
         hist.currentStormId = 0;
         hist.snowHistory.clear();
         hist.setDirty();
+    }
+
+    /** Overworld-only convenience: clears snow history without a level. */
+    public static void resetSnowHistory() {
+        ServerLevel overworld = WorldContext.getOverworld();
+        if (overworld != null) resetSnowHistory(overworld);
     }
 
     /**
@@ -178,7 +215,7 @@ public final class SSPApi {
      */
     public static void resetEnvironmentState(ServerLevel level) {
         if (level == null || level.isClientSide()) return;
-        SnowSavedData env = SnowSavedData.get(level);
+        SnowSavedData env = SnowSavedData.get();
         env.stormCount = 0;
         env.stormActive = false;
         env.pendingChunks.clear();
@@ -187,6 +224,12 @@ public final class SSPApi {
         env.setDirty();
         // Clear handler cache so it reloads from SnowSavedData
         CommonSnowBlockFeature.HANDLER.clear(level);
+    }
+
+    /** Overworld-only convenience: resets environment state without a level. */
+    public static void resetEnvironmentState() {
+        ServerLevel overworld = WorldContext.getOverworld();
+        if (overworld != null) resetEnvironmentState(overworld);
     }
 
     /** Resets progress tracking for a specific loaded chunk, if present. */
@@ -218,10 +261,22 @@ public final class SSPApi {
         }
     }
 
+    /** Overworld-only convenience: resets loaded chunk progress without a level. */
+    public static void resetLoadedChunkProgress() {
+        ServerLevel overworld = WorldContext.getOverworld();
+        if (overworld != null) resetLoadedChunkProgress(overworld);
+    }
+
     /** Convenience: clears history, environment counters and loaded chunk progress. */
     public static void resetAllStormData(ServerLevel level) {
         resetSnowHistory(level);
         resetEnvironmentState(level);
         resetLoadedChunkProgress(level);
+    }
+
+    /** Overworld-only convenience: resets all storm data without a level. */
+    public static void resetAllStormData() {
+        ServerLevel overworld = WorldContext.getOverworld();
+        if (overworld != null) resetAllStormData(overworld);
     }
 }

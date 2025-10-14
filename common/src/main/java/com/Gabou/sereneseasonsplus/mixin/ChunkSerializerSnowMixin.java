@@ -37,6 +37,7 @@ public abstract class ChunkSerializerSnowMixin {
         tag.putInt("StormIdApplied", tracked.sereneseasonsplus$getStormIdApplied());
         tag.putInt("LastProgressTick", tracked.sereneseasonsplus$getLastProgressTick());
         tag.putInt("AvailableColumns", tracked.sereneseasonsplus$getAvailableSnowColumns());
+        tag.putInt("DestroyedStormId", tracked.sereneseasonsplus$getDestroyedStormId());
 
         // Snow columns
         ListTag snowList = new ListTag();
@@ -56,6 +57,15 @@ public abstract class ChunkSerializerSnowMixin {
             iceList.add(entry);
         }
         tag.put("IceColumns", iceList);
+
+        // Destroyed columns (per-storm, xz-packed longs)
+        ListTag destroyedList = new ListTag();
+        for (Long key : tracked.sereneseasonsplus$getDestroyedColumns()) {
+            CompoundTag entry = new CompoundTag();
+            entry.putLong("XZ", key);
+            destroyedList.add(entry);
+        }
+        tag.put("DestroyedColumns", destroyedList);
 
         // Add all of it under your namespace
         root.put("SereneSeasonsPlus", tag);
@@ -99,6 +109,7 @@ public abstract class ChunkSerializerSnowMixin {
         if (tag.contains("StormIdApplied")) tracked.sereneseasonsplus$setStormIdApplied(tag.getInt("StormIdApplied"));
         if (tag.contains("LastProgressTick")) tracked.sereneseasonsplus$setLastProgressTick(tag.getInt("LastProgressTick"));
         if (tag.contains("AvailableColumns")) tracked.sereneseasonsplus$setAvailableSnowColumns(tag.getInt("AvailableColumns"));
+        if (tag.contains("DestroyedStormId")) tracked.sereneseasonsplus$setDestroyedStormId(tag.getInt("DestroyedStormId"));
 
         // Snow columns
         tracked.sereneseasonsplus$getSnowColumns().clear();
@@ -119,6 +130,14 @@ public abstract class ChunkSerializerSnowMixin {
             tracked.sereneseasonsplus$getIceColumns().add(
                     net.minecraft.core.BlockPos.of(e.getLong("Pos")).immutable()
             );
+        }
+
+        // Destroyed columns
+        tracked.sereneseasonsplus$getDestroyedColumns().clear();
+        ListTag destroyed = tag.getList("DestroyedColumns", 10);
+        for (int i = 0; i < destroyed.size(); i++) {
+            CompoundTag e = destroyed.getCompound(i);
+            tracked.sereneseasonsplus$getDestroyedColumns().add(e.getLong("XZ"));
         }
 
         // optional debug
@@ -153,6 +172,9 @@ public abstract class ChunkSerializerSnowMixin {
                 if (tag.contains("AvailableColumns")) {
                     tracked.sereneseasonsplus$setAvailableSnowColumns(tag.getInt("AvailableColumns"));
                 }
+                if (tag.contains("DestroyedStormId")) {
+                    tracked.sereneseasonsplus$setDestroyedStormId(tag.getInt("DestroyedStormId"));
+                }
 
                 // Load snow columns
                 tracked.sereneseasonsplus$getSnowColumns().clear();
@@ -173,6 +195,15 @@ public abstract class ChunkSerializerSnowMixin {
                     long posLong = entry.getLong("Pos");
                     net.minecraft.core.BlockPos bp = net.minecraft.core.BlockPos.of(posLong);
                     tracked.sereneseasonsplus$getIceColumns().add(bp.immutable());
+                }
+
+                // Load destroyed columns
+                tracked.sereneseasonsplus$getDestroyedColumns().clear();
+                ListTag destroyedList = tag.getList("DestroyedColumns", 10);
+                for (int i = 0; i < destroyedList.size(); i++) {
+                    CompoundTag entry = destroyedList.getCompound(i);
+                    long xz = entry.getLong("XZ");
+                    tracked.sereneseasonsplus$getDestroyedColumns().add(xz);
                 }
             }
         }

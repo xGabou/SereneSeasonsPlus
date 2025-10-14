@@ -30,6 +30,11 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     @Unique
     private final Set<BlockPos> sereneseasonsplus$iceColumns = new HashSet<>();
 
+    @Unique
+    private int sereneseasonsplus$destroyedStormId = 0;
+    @Unique
+    private final java.util.Set<Long> sereneseasonsplus$destroyedColumns = new java.util.HashSet<>();
+
     /**
      * Cached surface height (first available, not average)
      */
@@ -68,6 +73,21 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     @Override
     public Set<BlockPos> sereneseasonsplus$getIceColumns() {
         return sereneseasonsplus$iceColumns;
+    }
+
+    @Override
+    public int sereneseasonsplus$getDestroyedStormId() {
+        return sereneseasonsplus$destroyedStormId;
+    }
+
+    @Override
+    public void sereneseasonsplus$setDestroyedStormId(int id) {
+        sereneseasonsplus$destroyedStormId = id;
+    }
+
+    @Override
+    public java.util.Set<Long> sereneseasonsplus$getDestroyedColumns() {
+        return sereneseasonsplus$destroyedColumns;
     }
 
     /**
@@ -144,6 +164,9 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
             target.sereneseasonsplus$setLastProgressTick(src.sereneseasonsplus$getLastProgressTick());
             target.sereneseasonsplus$setSurfaceHeight(src.sereneseasonsplus$getSurfaceHeight());
             target.sereneseasonsplus$setAvailableSnowColumns(src.sereneseasonsplus$getAvailableSnowColumns());
+            target.sereneseasonsplus$setDestroyedStormId(src.sereneseasonsplus$getDestroyedStormId());
+            target.sereneseasonsplus$getDestroyedColumns().clear();
+            target.sereneseasonsplus$getDestroyedColumns().addAll(src.sereneseasonsplus$getDestroyedColumns());
             // Debug
              LOGGER.info("[SS+] Copied {} snow columns from proto {}", target.sereneseasonsplus$getSnowColumns().size(), proto.getPos());
         }

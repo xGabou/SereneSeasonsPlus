@@ -24,6 +24,11 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.event.level.BlockEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
 
 import static com.Gabou.sereneseasonsplus.SereneSeasonsPlusForge.MODID;
 
@@ -153,6 +158,37 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
         CommonSnowBlockFeature.handleOnChunkLoad(chunk);
     }
 
+    /**
+     * When a player breaks a snow block/layer during an active storm, mark the column as destroyed
+     * for this storm so our accumulation logic will not repopulate it until the next storm.
+     */
+    @SubscribeEvent
+    public void onBlockBreak(BlockEvent.BreakEvent event) {
+        if (!(event.getLevel() instanceof ServerLevel level)) return;
+        if (level.dimension() != Level.OVERWORLD) return;
+
+        BlockPos pos = event.getPos();
+        BlockState state = event.getState();
+        if (!state.is(Blocks.SNOW) && !state.is(Blocks.SNOW_BLOCK)) return;
+
+        com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get();
+        int activeId = (sd != null) ? sd.currentStormId : 0;
+        if (activeId <= 0) return; // only track during active storm
+
+        LevelChunk chunk = level.getChunkSource().getChunk(pos.getX() >> 4, pos.getZ() >> 4, false);
+        if (!(chunk instanceof com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk tracked)) return;
+
+        if (tracked.sereneseasonsplus$getDestroyedStormId() != activeId) {
+            tracked.sereneseasonsplus$getDestroyedColumns().clear();
+            tracked.sereneseasonsplus$setDestroyedStormId(activeId);
+        }
+        long xz = (((long) pos.getX()) << 32) ^ (pos.getZ() & 0xffffffffL);
+        tracked.sereneseasonsplus$getDestroyedColumns().add(xz);
+
+        // Remove any tracked snow column entries for this X/Z so sync won't try to re-add this storm
+        tracked.sereneseasonsplus$getSnowColumns().keySet().removeIf(p -> p.getX() == pos.getX() && p.getZ() == pos.getZ());
+        chunk.setUnsaved(true);
+    }
+
 
 }
-

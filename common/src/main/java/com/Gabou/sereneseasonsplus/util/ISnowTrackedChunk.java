@@ -47,4 +47,10 @@ public interface ISnowTrackedChunk {
 
     // Positions of ice we froze (rivers/oceans) to thaw efficiently later
     Set<BlockPos> sereneseasonsplus$getIceColumns();
+
+    // Per-storm: columns (x,z) where snow was destroyed by players during the active storm
+    // Encoded as a set of packed longs: (x << 32) ^ (z & 0xffffffffL)
+    int sereneseasonsplus$getDestroyedStormId();
+    void sereneseasonsplus$setDestroyedStormId(int id);
+    java.util.Set<Long> sereneseasonsplus$getDestroyedColumns();
 }
