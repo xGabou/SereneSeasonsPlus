@@ -167,8 +167,6 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
             target.sereneseasonsplus$setDestroyedStormId(src.sereneseasonsplus$getDestroyedStormId());
             target.sereneseasonsplus$getDestroyedColumns().clear();
             target.sereneseasonsplus$getDestroyedColumns().addAll(src.sereneseasonsplus$getDestroyedColumns());
-            // Debug
-             LOGGER.info("[SS+] Copied {} snow columns from proto {}", target.sereneseasonsplus$getSnowColumns().size(), proto.getPos());
         }
     }
 

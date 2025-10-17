@@ -1,19 +1,16 @@
-### ❄️ Serene Seasons Plus — v4.0.4
+### ❄️ Serene Seasons Plus — v4.0.5
 **Game Versions:** 1.20.1 (Forge & Fabric)
 
 ---
 
 #### 🆕 Added
-- `snowToggle` option for chunk-based snow features
-- Config option for `snowHeight`
+
 
 #### 🛠️ Fixed
-- Snow immediately respawning right after being broken by the player
-- Tick crash with **Project Atmosphere (PA)**
+
 
 #### ⚙️ Changed / Removed
-- Removed outdated asynchronous snow logic (no longer viable or in use)
-
+- Log spamming
 ---
 
 **Release type:** Stable  
