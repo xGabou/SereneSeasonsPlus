@@ -43,7 +43,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
     }
 
     private void onConfigReload() {
-        CommonSnowBlockFeature.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
+        CommonSnowBlockFeature.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get(), SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get());
         SereneService.reloadConfig();
     }
 
@@ -53,7 +53,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
     private void onServerStarting(MinecraftServer server) {
         LOGGER.info("Serene Seasons Plus server starting!");
         SereneService.HANDLER = new FabricAsyncExecutorHandler();
-        CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
+        CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get(), SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get());
     }
 
     private void onServerStopping(MinecraftServer server) {

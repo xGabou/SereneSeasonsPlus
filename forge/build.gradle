@@ -1,6 +1,8 @@
 plugins {
     id "net.minecraftforge.gradle" version "[6.0.16,6.2)"
     id "org.spongepowered.mixin" version "0.7.+"
+    id 'com.matthewprenger.cursegradle' version '1.4.0' // CurseForge uploader
+    id "com.modrinth.minotaur"
 }
 
 base.archivesName.set("Forge-Version-${mod_id}")
@@ -99,3 +101,34 @@ dependencies {
     implementation fg.deobf("curse.maven:rubidium-extra-654373:6101745")
     //runtimeOnly fg.deobf("curse.maven:simple-clouds-1121215:6928978")
 }
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "4Al4H3t9" // from your Modrinth project URL
+    versionNumber = "Forge-${project.version}"
+    versionName = "Serene Seasons Plus ${mod_version}"
+    changelog = rootProject.file("SSPchangelog.md").text
+    gameVersions = ["1.20.1"]
+    loaders = ["forge"]
+    versionType = "release"
+    dependencies {
+        required.project "e0bNACJD"
+        required.project "tPLE214j"
+        optional.project "qIWoLcKJ"
+    }
+    uploadFile = file("build/libs/${archivesBaseName}-${version}.jar")
+}
+curseforge {
+    apiKey = System.getenv("CURSEFORGE_TOKEN")
+
+    project {
+        id = "1288843"
+        changelog = rootProject.file("SSPchangelog.md")
+        releaseType = "release" // options: alpha, beta, release
+        addGameVersion "1.20.1"
+        addGameVersion "Forge"
+        mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {
+            displayName = "Forge-${version}"
+        }
+    }
+}
+

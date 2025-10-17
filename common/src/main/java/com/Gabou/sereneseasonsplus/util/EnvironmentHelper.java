@@ -2,6 +2,7 @@ package com.Gabou.sereneseasonsplus.util;
 
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
+import com.Gabou.sereneseasonsplus.storage.SnowSavedData;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -167,12 +168,13 @@ public class EnvironmentHelper {
 
     public static void onServerStopping(ServerLevel level) {
         onWorldSave(level);
+        CommonSnowBlockFeature.onServerStopping();
         CommonSnowBlockFeature.HANDLER.clear(level);
         // Clear overworld reference
         WorldContext.clear();
         // Drop cached singletons bound to the previous world
-        com.Gabou.sereneseasonsplus.storage.SnowSavedData.clearCachedInstance();
-        com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.clearCachedInstance();
+        SnowSavedData.clearCachedInstance();
+        SnowHistorySavedData.clearCachedInstance();
     }
 
 }

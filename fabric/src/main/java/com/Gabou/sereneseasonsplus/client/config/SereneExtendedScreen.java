@@ -12,13 +12,13 @@ import net.minecraft.network.chat.Component;
  */
 public class SereneExtendedScreen extends Screen {
     private final Screen parent;
-    private boolean useAsync;
-    private int tickSnowPillerThreshold;
+    // Snow feature toggle and settings
+    private boolean snowFeatureEnabled;
     private int tickSnowReplacerThreshold;
-
-    private EditBox maxPillerBox;
+    private int maxSnowHeight;
 
     private EditBox maxReplacerBox;
+    private EditBox maxSnowHeightBox;
 
     private EditBox dayLengthBox;
 
@@ -32,8 +32,8 @@ public class SereneExtendedScreen extends Screen {
 
     private double customNightLength;
 
-    private Component replacerLabel = Component.literal("Tick Threshold Snow Replacer:");
-    private Component pillerLabel = Component.literal("Tick Threshold Snow Piller:");
+    private Component replacerLabel = Component.literal("Common Feature Threshold:");
+    private Component snowHeightLabel = Component.literal("Max Snow Height (layers):");
     private Component nightLabel = Component.literal("Custom Night Speed:");
     private Component dayLabel = Component.literal("Custom Day Speed:");
 
@@ -57,9 +57,9 @@ public class SereneExtendedScreen extends Screen {
     @Override
     protected void init() {
         
-        this.useAsync = SereneExtendedConfig.USE_ASYNC.get();
-        this.tickSnowPillerThreshold = SereneExtendedConfig.TICK_SNOW_PILLER.get();
+        this.snowFeatureEnabled = SereneExtendedConfig.SNOWSTORM_ENABLED.get();
         this.tickSnowReplacerThreshold = SereneExtendedConfig.TICK_SNOW_REPLACER.get();
+        this.maxSnowHeight = SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get();
         this.seasonalDaylightCycle = SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get();
         this.customDayCycle = SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get();
         this.customDayLength = SereneExtendedConfig.CUSTOM_DAY_LENGTH.get();
@@ -76,17 +76,12 @@ public class SereneExtendedScreen extends Screen {
         this.addRenderableWidget(this.list);
 
         
-        var asyncBtn = Button.builder(toggleLabel("Use Asynchronous Service", useAsync), b -> {
-            int cores = Runtime.getRuntime().availableProcessors();
-            int minCores = SereneExtendedConfig.MIN_CORES_FOR_ASYNC;
-            if (cores < minCores) {
-                b.setMessage(Component.literal("Need " + minCores + "+ cores for Async"));
-                return;
-            }
-            useAsync = !useAsync;
-            b.setMessage(toggleLabel("Use Asynchronous Service", useAsync));
+        // Snow feature toggle
+        var snowFeatureBtn = Button.builder(toggleLabel("Snow Features", snowFeatureEnabled), b -> {
+            snowFeatureEnabled = !snowFeatureEnabled;
+            b.setMessage(toggleLabel("Snow Features", snowFeatureEnabled));
         }).bounds(0,0,200,20).build();
-        this.list.addRow(Component.literal("Asynchronous Service"), asyncBtn);
+        this.list.addRow(Component.literal("Snow Features"), snowFeatureBtn);
 
         var seasonBtn = Button.builder(toggleLabel("Seasonal Daylight Cycle", seasonalDaylightCycle), b -> {
             seasonalDaylightCycle = !seasonalDaylightCycle;
@@ -105,11 +100,14 @@ public class SereneExtendedScreen extends Screen {
         
         this.maxReplacerBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
         this.maxReplacerBox.setValue(Integer.toString(tickSnowReplacerThreshold));
-        this.list.addRow(Component.literal("Tick Threshold Snow Replacer"), this.maxReplacerBox);
+        this.list.addRow(Component.literal("Common Feature Threshold"), this.maxReplacerBox);
 
-        this.maxPillerBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
-        this.maxPillerBox.setValue(Integer.toString(tickSnowPillerThreshold));
-        this.list.addRow(Component.literal("Tick Threshold Snow Piller"), this.maxPillerBox);
+        // Max snow height (layers)
+        this.maxSnowHeightBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
+        this.maxSnowHeightBox.setValue(Integer.toString(maxSnowHeight));
+        this.list.addRow(Component.literal("Max Snow Height (layers)"), this.maxSnowHeightBox);
+
+        // Removed pillar threshold in favor of common feature threshold
 
         this.nightLengthBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
         this.nightLengthBox.setValue(Double.toString(customNightLength));
@@ -166,17 +164,17 @@ public class SereneExtendedScreen extends Screen {
      */
     private void saveChanges() {
         Component errorMessage;
-        int parsed = this.tickSnowPillerThreshold;
         int parsed2 = this.tickSnowReplacerThreshold;
+        int parsedSnowHeight = this.maxSnowHeight;
         double parsed3 = this.customDayLength;
         double parsed4 = this.customNightLength;
 
         try {
-            parsed = Integer.parseInt(this.maxPillerBox.getValue());
             parsed2 = Integer.parseInt(this.maxReplacerBox.getValue());
+            parsedSnowHeight = Integer.parseInt(this.maxSnowHeightBox.getValue());
             errorMessage = null;
         } catch (NumberFormatException ignored) {
-            errorMessage = Component.literal("Invalid number for one of the Snow Tickers.");
+            errorMessage = Component.literal("Invalid number for a Snow setting.");
         }
 
         try {
@@ -186,9 +184,9 @@ public class SereneExtendedScreen extends Screen {
         } catch (NumberFormatException ignored) {
             errorMessage = Component.literal("Invalid number for one of the DayCycle Speeds.");
         }
-        SereneExtendedConfig.USE_ASYNC.set(useAsync);
-        SereneExtendedConfig.TICK_SNOW_PILLER.set(parsed);
         SereneExtendedConfig.TICK_SNOW_REPLACER.set(parsed2);
+        SereneExtendedConfig.SNOWSTORM_ENABLED.set(snowFeatureEnabled);
+        SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.set(parsedSnowHeight);
         SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.set(seasonalDaylightCycle);
         SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.set(customDayCycle);
         SereneExtendedConfig.CUSTOM_DAY_LENGTH.set(parsed3);
@@ -226,7 +224,7 @@ public class SereneExtendedScreen extends Screen {
 
         
         if (this.maxReplacerBox != null && this.maxReplacerBox.keyPressed(key, sc, mods)) return true;
-        if (this.maxPillerBox   != null && this.maxPillerBox.keyPressed(key, sc, mods)) return true;
+        if (this.maxSnowHeightBox   != null && this.maxSnowHeightBox.keyPressed(key, sc, mods)) return true;
         if (this.nightLengthBox != null && this.nightLengthBox.keyPressed(key, sc, mods)) return true;
         if (this.dayLengthBox   != null && this.dayLengthBox.keyPressed(key, sc, mods)) return true;
 
@@ -241,7 +239,7 @@ public class SereneExtendedScreen extends Screen {
         if (this.list != null && this.list.charTyped(c, mods)) return true;
 
         if (this.maxReplacerBox != null && this.maxReplacerBox.charTyped(c, mods)) return true;
-        if (this.maxPillerBox   != null && this.maxPillerBox.charTyped(c, mods)) return true;
+        if (this.maxSnowHeightBox   != null && this.maxSnowHeightBox.charTyped(c, mods)) return true;
         if (this.nightLengthBox != null && this.nightLengthBox.charTyped(c, mods)) return true;
         if (this.dayLengthBox   != null && this.dayLengthBox.charTyped(c, mods)) return true;
 

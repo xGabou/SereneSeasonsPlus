@@ -75,7 +75,7 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
         event.getServer().getGameRules()
                 .getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT)
                 .set(SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get(), event.getServer());
-        CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
+        CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get(), SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get());
     }
 
 
@@ -139,7 +139,7 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
      */
     @SubscribeEvent
     public void onConfigReload(TickEvent.ServerTickEvent event) {
-        CommonSnowBlockFeature.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
+        CommonSnowBlockFeature.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get(), SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get());
         SereneService.reloadConfig();
     }
 

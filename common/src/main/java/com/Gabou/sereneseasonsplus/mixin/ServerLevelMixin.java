@@ -62,7 +62,7 @@ public class ServerLevelMixin {
         ProfilerFiller profiler = level.getProfiler();
 
         // ✅ Run your seasonal snow queue logic first
-        if (level.dimension() == Level.OVERWORLD) {
+        if (level.dimension() == Level.OVERWORLD && CommonSnowBlockFeature.isSnowFeatureEnabled()) {
             int t = CommonSnowBlockFeature.getTickCounter();
             ChunkPos cpos = chunk.getPos();
             boolean doEval = ((cpos.x ^ cpos.z ^ t) & 15) == 0; // ~once per 16 ticks per ticking chunk
