@@ -1,4 +1,4 @@
-### ❄️ Serene Seasons Plus — v4.0.4
+### ❄️ Serene Seasons Plus — v4.0.6
 **Game Versions:** 1.20.1 (Forge & Fabric)
 
 ---

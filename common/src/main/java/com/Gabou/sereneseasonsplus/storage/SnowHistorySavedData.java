@@ -61,4 +61,5 @@ public class SnowHistorySavedData extends SavedData {
     public static void clearCachedInstance() {
         INSTANCE = null;
     }
+
 }

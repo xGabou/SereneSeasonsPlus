@@ -1,6 +1,5 @@
 package com.Gabou.sereneseasonsplus.util;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import sereneseasons.api.season.Season;
 
@@ -11,4 +10,5 @@ public interface IEnvironmentHelper {
     boolean isSnowySeason();
     Season.SubSeason getCurrentSeason();
     void onSeasonChange(ServerLevel serverLevel);
+    int getGrassChance(boolean force);
 }

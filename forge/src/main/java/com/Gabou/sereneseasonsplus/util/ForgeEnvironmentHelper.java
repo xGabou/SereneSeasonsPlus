@@ -1,10 +1,7 @@
 package com.Gabou.sereneseasonsplus.util;
 
-import com.Gabou.sereneseasonsplus.SereneSeasonsPlusForge;
-import net.Gabou.projectatmosphere.ProjectAtmosphere;
-import net.Gabou.projectatmosphere.api.AtmoApi;
+
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
@@ -12,10 +9,13 @@ import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 
+
+
 public class ForgeEnvironmentHelper implements IEnvironmentHelper {
     private static final Logger LOGGER = LogManager.getLogger("ForgeEnvironmentHelper");
     private Season.SubSeason season;
     private boolean isHotSeason;
+    private int baseChance = -1;
 
     private boolean isSnowySeason;
 
@@ -51,6 +51,22 @@ public class ForgeEnvironmentHelper implements IEnvironmentHelper {
         LOGGER.info("Season changed to: {}", season);
         isHotSeason = HotSeason.isHotSeason(season);
         isSnowySeason = SnowySeason.isSnowySeason(season);
+        baseChance = getGrassChance(true);
 
+    }
+    @Override
+    public int getGrassChance(boolean force) {
+        if(baseChance != -1 || force) {
+            return baseChance;
+        }
+        switch (season) {
+            case EARLY_SUMMER, LATE_SUMMER -> baseChance = 300; // faster
+            case MID_SUMMER -> baseChance = 200;   // fastest
+            case EARLY_SPRING, LATE_AUTUMN ->  baseChance = 1200; // slowest
+            case MID_SPRING, MID_AUTUMN -> baseChance = 800;    // slower
+            case LATE_SPRING, EARLY_AUTUMN -> baseChance = 600;   // slow
+        }
+
+        return baseChance;
     }
 }
