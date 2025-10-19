@@ -29,6 +29,10 @@ public interface ISnowTrackedChunk {
 
     void sereneseasonsplus$setSurfaceHeight(int height);
 
+    // Estimated number of columns in this chunk where snow can accumulate (0..256). -1 = unknown
+    int sereneseasonsplus$getAvailableSnowColumns();
+    void sereneseasonsplus$setAvailableSnowColumns(int count);
+
     // Active-storm progress tracking per chunk (0..1)
     float sereneseasonsplus$getStormProgress();
     void sereneseasonsplus$setStormProgress(float progress);
@@ -43,4 +47,10 @@ public interface ISnowTrackedChunk {
 
     // Positions of ice we froze (rivers/oceans) to thaw efficiently later
     Set<BlockPos> sereneseasonsplus$getIceColumns();
+
+    // Per-storm: columns (x,z) where snow was destroyed by players during the active storm
+    // Encoded as a set of packed longs: (x << 32) ^ (z & 0xffffffffL)
+    int sereneseasonsplus$getDestroyedStormId();
+    void sereneseasonsplus$setDestroyedStormId(int id);
+    java.util.Set<Long> sereneseasonsplus$getDestroyedColumns();
 }

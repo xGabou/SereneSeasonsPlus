@@ -70,13 +70,13 @@ public class NeoForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandle
 
         data.activeStorms.remove(hashCode);
 
-        SnowHistorySavedData hist = SnowHistorySavedData.get(level);
+        SnowHistorySavedData hist = SnowHistorySavedData.get();
         SnowRecord rec = SnowGenerator.generateStormRecord(level.random);
 
         data.stormCount++;
         hist.currentStormId = data.stormCount;
         hist.snowHistory.put(hist.currentStormId, rec);
-        SnowHistorySavedData.get(level).snowHistory.put(hist.currentStormId, rec);
+        SnowHistorySavedData.get().snowHistory.put(hist.currentStormId, rec);
 
         hist.setDirty();
         persist(level, data);

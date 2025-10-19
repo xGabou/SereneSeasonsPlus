@@ -13,7 +13,7 @@ public class SereneExtendedConfig {
     public static final ModConfigSpec.DoubleValue CUSTOM_NIGHT_LENGTH;
     public static final ModConfigSpec.BooleanValue CUSTOM_CYCLE_LENGTH;
     public static final ModConfigSpec.BooleanValue SNOWSTORM_ENABLED;
-    public static final ModConfigSpec.IntValue SNOWSTORM_INTENSITY;
+    public static final ModConfigSpec.IntValue MAX_SNOW_ACCUMULATION_LAYERS;
 
     public static final int MIN_CORES_FOR_ASYNC = 6;
 
@@ -36,9 +36,12 @@ public class SereneExtendedConfig {
         SNOWSTORM_ENABLED = builder
                 .comment("Enable snowstorm mode which increases snow pilling intensity.")
                 .define("enabled", false);
-        SNOWSTORM_INTENSITY = builder
-                .comment("Snowstorm intensity value used by external integrations.")
-                .defineInRange("intensity", 0, 0, 100);
+        builder.pop();
+
+        builder.push("snow");
+        MAX_SNOW_ACCUMULATION_LAYERS = builder
+                .comment("Maximum total snow layers allowed per column (8 layers = 1 block). Default 24 = 3 blocks.")
+                .defineInRange("maxSnowAccumulationLayers", 24, 0, 512);
         builder.pop();
         builder.push("seasonalDaylightCycle");
         ENABLE_SEASONAL_DAYLIGHT_CYCLE = builder

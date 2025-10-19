@@ -1,6 +1,7 @@
 plugins {
     id "fabric-loom" version "1.9-SNAPSHOT"
-    id "com.matthewprenger.cursegradle" version "1.4.0"
+    id 'com.matthewprenger.cursegradle' version '1.4.0' // CurseForge uploader
+    id "com.modrinth.minotaur"
 }
 base.archivesName.set("Fabric-Version-${mod_id}")
 
@@ -81,3 +82,34 @@ dependencies {
 //        tmpDir.deleteDir()
 //    }
 //}
+
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "4Al4H3t9" // from your Modrinth project URL
+    versionNumber = "Fabric-${project.version}"
+    versionName = "Serene Seasons Plus ${mod_version}"
+    changelog = rootProject.file("SSPchangelog.md").text
+    gameVersions = ["1.21.1"]
+    loaders = ["fabric"]
+    versionType = "release"
+    dependencies {
+        required.project "e0bNACJD"
+        required.project "tPLE214j"
+        required.project "mOgUt4GM"
+    }
+    uploadFile = file("build/libs/${archivesBaseName}-${version}.jar")
+}
+curseforge {
+    apiKey = System.getenv("CURSEFORGE_TOKEN")
+
+    project {
+        id = "1288843"
+        changelog = rootProject.file("SSPchangelog.md")
+        releaseType = "release" // options: alpha, beta, release
+        addGameVersion "1.21.1"
+        addGameVersion "Fabric"
+        mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {
+            displayName = "Fabric-${version}"
+        }
+    }
+}

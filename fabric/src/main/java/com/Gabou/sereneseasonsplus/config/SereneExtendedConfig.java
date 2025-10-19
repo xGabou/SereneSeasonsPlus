@@ -25,7 +25,7 @@ public class SereneExtendedConfig {
     public static final DoubleValue CUSTOM_NIGHT_LENGTH;
     public static final BooleanValue CUSTOM_CYCLE_LENGTH;
     public static final BooleanValue SNOWSTORM_ENABLED;
-    public static final IntValue SNOWSTORM_INTENSITY;
+    public static final IntValue MAX_SNOW_ACCUMULATION_LAYERS;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("sereneseasonsplus.json");
@@ -42,7 +42,8 @@ public class SereneExtendedConfig {
         TICK_SNOW_REPLACER = new IntValue("tickSnowReplacer", 100, 1, Integer.MAX_VALUE);
 
         SNOWSTORM_ENABLED = new BooleanValue("snowstormEnabled", false);
-        SNOWSTORM_INTENSITY = new IntValue("snowstormIntensity", 0, 0, 100);
+        // Maximum total layers allowed per snow column (8 layers = 1 block). Default 24 = 3 blocks.
+        MAX_SNOW_ACCUMULATION_LAYERS = new IntValue("maxSnowAccumulationLayers", 24, 0, 512);
 
         ENABLE_SEASONAL_DAYLIGHT_CYCLE = new BooleanValue("enableSeasonalDaylightCycle", true);
         CUSTOM_CYCLE_LENGTH = new BooleanValue("customCycleLength", false);
@@ -52,27 +53,6 @@ public class SereneExtendedConfig {
         load();
     }
 
-    public static void load() {
-        if (!Files.exists(CONFIG_PATH)) {
-            save();
-            return;
-        }
-        try (Reader reader = Files.newBufferedReader(CONFIG_PATH)) {
-            JsonObject obj = GSON.fromJson(reader, JsonObject.class);
-            if (obj == null) return;
-
-            USE_ASYNC.load(obj);
-            TICK_SNOW_PILLER.load(obj);
-            TICK_SNOW_REPLACER.load(obj);
-            SNOWSTORM_ENABLED.load(obj);
-            SNOWSTORM_INTENSITY.load(obj);
-            ENABLE_SEASONAL_DAYLIGHT_CYCLE.load(obj);
-            CUSTOM_CYCLE_LENGTH.load(obj);
-            CUSTOM_DAY_LENGTH.load(obj);
-            CUSTOM_NIGHT_LENGTH.load(obj);
-        } catch (Exception ignored) {
-        }
-    }
     /**
      * Call this after load() finishes to notify listeners.
      */
@@ -93,6 +73,29 @@ public class SereneExtendedConfig {
         reloadListeners.add(listener);
     }
 
+    public static void load() {
+        if (!Files.exists(CONFIG_PATH)) {
+            save();
+            notifyReloadListeners();
+            return;
+        }
+        try (Reader reader = Files.newBufferedReader(CONFIG_PATH)) {
+            JsonObject obj = GSON.fromJson(reader, JsonObject.class);
+            if (obj == null) return;
+
+            USE_ASYNC.load(obj);
+            TICK_SNOW_PILLER.load(obj);
+            TICK_SNOW_REPLACER.load(obj);
+            SNOWSTORM_ENABLED.load(obj);
+            MAX_SNOW_ACCUMULATION_LAYERS.load(obj);
+            ENABLE_SEASONAL_DAYLIGHT_CYCLE.load(obj);
+            CUSTOM_CYCLE_LENGTH.load(obj);
+            CUSTOM_DAY_LENGTH.load(obj);
+            CUSTOM_NIGHT_LENGTH.load(obj);
+        } catch (Exception ignored) {
+        }
+        notifyReloadListeners();
+    }
 
     public static void save() {
         try {
@@ -104,7 +107,7 @@ public class SereneExtendedConfig {
             TICK_SNOW_PILLER.save(obj);
             TICK_SNOW_REPLACER.save(obj);
             SNOWSTORM_ENABLED.save(obj);
-            SNOWSTORM_INTENSITY.save(obj);
+            MAX_SNOW_ACCUMULATION_LAYERS.save(obj);
             ENABLE_SEASONAL_DAYLIGHT_CYCLE.save(obj);
             CUSTOM_CYCLE_LENGTH.save(obj);
             CUSTOM_DAY_LENGTH.save(obj);
@@ -120,17 +123,28 @@ public class SereneExtendedConfig {
         private final String key;
         private boolean value;
         private final boolean def;
+
         public BooleanValue(String key, boolean def) {
             this.key = key;
             this.value = def;
             this.def = def;
         }
-        public boolean get() { return value; }
-        public void set(boolean v) { this.value = v; }
+
+        public boolean get() {
+            return value;
+        }
+
+        public void set(boolean v) {
+            this.value = v;
+        }
+
         void load(JsonObject obj) {
             if (obj.has(key)) this.value = obj.get(key).getAsBoolean();
         }
-        void save(JsonObject obj) { obj.addProperty(key, value); }
+
+        void save(JsonObject obj) {
+            obj.addProperty(key, value);
+        }
     }
 
     public static final class IntValue {
@@ -138,18 +152,29 @@ public class SereneExtendedConfig {
         private int value;
         private final int min;
         private final int max;
+
         public IntValue(String key, int def, int min, int max) {
             this.key = key;
             this.value = def;
             this.min = min;
             this.max = max;
         }
-        public int get() { return value; }
-        public void set(int v) { this.value = Math.max(min, Math.min(max, v)); }
+
+        public int get() {
+            return value;
+        }
+
+        public void set(int v) {
+            this.value = Math.max(min, Math.min(max, v));
+        }
+
         void load(JsonObject obj) {
             if (obj.has(key)) set(obj.get(key).getAsInt());
         }
-        void save(JsonObject obj) { obj.addProperty(key, value); }
+
+        void save(JsonObject obj) {
+            obj.addProperty(key, value);
+        }
     }
 
     public static final class DoubleValue {
@@ -157,18 +182,29 @@ public class SereneExtendedConfig {
         private double value;
         private final double min;
         private final double max;
+
         public DoubleValue(String key, double def, double min, double max) {
             this.key = key;
             this.value = def;
             this.min = min;
             this.max = max;
         }
-        public double get() { return value; }
-        public void set(double v) { this.value = Math.max(min, Math.min(max, v)); }
+
+        public double get() {
+            return value;
+        }
+
+        public void set(double v) {
+            this.value = Math.max(min, Math.min(max, v));
+        }
+
         void load(JsonObject obj) {
             if (obj.has(key)) set(obj.get(key).getAsDouble());
         }
-        void save(JsonObject obj) { obj.addProperty(key, value); }
+
+        void save(JsonObject obj) {
+            obj.addProperty(key, value);
+        }
     }
 }
 

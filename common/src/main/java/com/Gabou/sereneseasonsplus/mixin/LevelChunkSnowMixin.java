@@ -18,6 +18,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.LOGGER;
+
 @Mixin(LevelChunk.class)
 public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     @Unique
@@ -28,11 +30,22 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     @Unique
     private final Set<BlockPos> sereneseasonsplus$iceColumns = new HashSet<>();
 
+    @Unique
+    private int sereneseasonsplus$destroyedStormId = 0;
+    @Unique
+    private final java.util.Set<Long> sereneseasonsplus$destroyedColumns = new java.util.HashSet<>();
+
     /**
      * Cached surface height (first available, not average)
      */
     @Unique
     private int sereneseasonsplus$surfaceHeight = -1;
+
+    /**
+     * Estimated number of snow-placeable columns in this chunk (0..256). -1 until computed.
+     */
+    @Unique
+    private int sereneseasonsplus$availableColumns = -1;
 
     // Active storm progress (0..1), storm id bound to this progress, and last tick progressed
     @Unique
@@ -62,6 +75,21 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
         return sereneseasonsplus$iceColumns;
     }
 
+    @Override
+    public int sereneseasonsplus$getDestroyedStormId() {
+        return sereneseasonsplus$destroyedStormId;
+    }
+
+    @Override
+    public void sereneseasonsplus$setDestroyedStormId(int id) {
+        sereneseasonsplus$destroyedStormId = id;
+    }
+
+    @Override
+    public java.util.Set<Long> sereneseasonsplus$getDestroyedColumns() {
+        return sereneseasonsplus$destroyedColumns;
+    }
+
     /**
      * Getter for cached surface height
      */
@@ -76,6 +104,16 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     @Override
     public void sereneseasonsplus$setSurfaceHeight(int height) {
         sereneseasonsplus$surfaceHeight = height;
+    }
+
+    @Override
+    public int sereneseasonsplus$getAvailableSnowColumns() {
+        return sereneseasonsplus$availableColumns;
+    }
+
+    @Override
+    public void sereneseasonsplus$setAvailableSnowColumns(int count) {
+        sereneseasonsplus$availableColumns = Math.max(-1, Math.min(256, count));
     }
 
     @Override
@@ -110,24 +148,26 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
 
     @Inject(
             method = "<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;)V",
-            at = @At("TAIL")
-    )
+            at = @At("TAIL"))
     private void ssp$copy(ServerLevel level,
                           ProtoChunk proto,
                           @Nullable LevelChunk.PostLoadProcessor post,
                           CallbackInfo ci) {
-        if ((Object) this instanceof ISnowTrackedChunk target && proto instanceof ISnowTrackedChunk src) {
+        if (proto instanceof ISnowTrackedChunk src && (Object)this instanceof ISnowTrackedChunk target) {
             target.sereneseasonsplus$setLastWinterId(src.sereneseasonsplus$getLastWinterId());
-            this.sereneseasonsplus$snowColumns.clear();
-            this.sereneseasonsplus$snowColumns.putAll(src.sereneseasonsplus$getSnowColumns());
-            // Copy ice positions
-            this.sereneseasonsplus$iceColumns.clear();
-            this.sereneseasonsplus$iceColumns.addAll(src.sereneseasonsplus$getIceColumns());
-            // Copy progress fields across proto->level chunk transition
+            target.sereneseasonsplus$getSnowColumns().clear();
+            target.sereneseasonsplus$getSnowColumns().putAll(src.sereneseasonsplus$getSnowColumns());
+            target.sereneseasonsplus$getIceColumns().clear();
+            target.sereneseasonsplus$getIceColumns().addAll(src.sereneseasonsplus$getIceColumns());
             target.sereneseasonsplus$setStormProgress(src.sereneseasonsplus$getStormProgress());
             target.sereneseasonsplus$setStormIdApplied(src.sereneseasonsplus$getStormIdApplied());
             target.sereneseasonsplus$setLastProgressTick(src.sereneseasonsplus$getLastProgressTick());
+            target.sereneseasonsplus$setSurfaceHeight(src.sereneseasonsplus$getSurfaceHeight());
+            target.sereneseasonsplus$setAvailableSnowColumns(src.sereneseasonsplus$getAvailableSnowColumns());
+            target.sereneseasonsplus$setDestroyedStormId(src.sereneseasonsplus$getDestroyedStormId());
+            target.sereneseasonsplus$getDestroyedColumns().clear();
+            target.sereneseasonsplus$getDestroyedColumns().addAll(src.sereneseasonsplus$getDestroyedColumns());
         }
-
     }
+
 }

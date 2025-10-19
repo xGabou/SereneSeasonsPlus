@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus.storage;
 
+import com.Gabou.sereneseasonsplus.util.WorldContext;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -11,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SnowHistorySavedData extends SavedData {
+    private static volatile SnowHistorySavedData INSTANCE;
     public int currentStormId = 0;
     public final Map<Integer, SnowRecord> snowHistory = new HashMap<>();
 
@@ -30,14 +32,23 @@ public class SnowHistorySavedData extends SavedData {
     }
 
 
-
-    public static SnowHistorySavedData get(ServerLevel level) {
-        SavedData.Factory<SnowHistorySavedData> factory = new SavedData.Factory<>(
-                SnowHistorySavedData::new,          // Supplier<T>
-                SnowHistorySavedData::load,         // BiFunction<CompoundTag, HolderLookup.Provider, T>
-                DataFixTypes.LEVEL     // pick the generic saved data type
-        );
-        return level.getDataStorage().computeIfAbsent(factory, "ssp_snow_history");
+    public static SnowHistorySavedData get() {
+        SnowHistorySavedData inst = INSTANCE;
+        if (inst != null) return inst;
+        synchronized (SnowHistorySavedData.class) {
+            if (INSTANCE != null) return INSTANCE;
+            ServerLevel overworld = WorldContext.getOverworld();
+            if (overworld != null) {
+                INSTANCE = overworld.getDataStorage().computeIfAbsent(new SavedData.Factory<>(
+                        SnowHistorySavedData::new,          // Supplier<T>
+                        SnowHistorySavedData::load,         // BiFunction<CompoundTag, HolderLookup.Provider, T>
+                        DataFixTypes.LEVEL     // pick the generic saved data type
+                ),"ssp_snow_history");
+            } else {
+                INSTANCE = new SnowHistorySavedData();
+            }
+            return INSTANCE;
+        }
     }
 
     @Override
@@ -52,5 +63,8 @@ public class SnowHistorySavedData extends SavedData {
         }
         tag.put("SnowHistory", list);
         return tag;
+    }
+    public static void clearCachedInstance() {
+        INSTANCE = null;
     }
 }

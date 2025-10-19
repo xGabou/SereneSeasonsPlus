@@ -2,6 +2,7 @@ package com.Gabou.sereneseasonsplus.util;
 
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
+import com.Gabou.sereneseasonsplus.storage.SnowSavedData;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -127,6 +128,8 @@ public class EnvironmentHelper {
 
     public static void onServerStarted(ServerLevel level)
     {
+        // Store overworld reference for no-level accessors
+        WorldContext.setOverworld(level);
         onWorldLoad(level);
         onSeasonChange(level,false);
         CommonSnowBlockFeature.HANDLER.resetWinterState(level, currentWinterId);
@@ -152,7 +155,7 @@ public class EnvironmentHelper {
 
         // If we enter a hot season, reset snow history so future winters don't inherit it
         if (HotSeason.isHotSeason(current)) {
-            SnowHistorySavedData hist = SnowHistorySavedData.get(serverLevel);
+            SnowHistorySavedData hist = SnowHistorySavedData.get();
             hist.currentStormId = 0;
             hist.snowHistory.clear();
             hist.setDirty();
@@ -165,7 +168,13 @@ public class EnvironmentHelper {
 
     public static void onServerStopping(ServerLevel level) {
         onWorldSave(level);
+        CommonSnowBlockFeature.onServerStopping();
         CommonSnowBlockFeature.HANDLER.clear(level);
+        // Clear overworld reference
+        WorldContext.clear();
+        // Drop cached singletons bound to the previous world
+        SnowSavedData.clearCachedInstance();
+        SnowHistorySavedData.clearCachedInstance();
     }
 
 }

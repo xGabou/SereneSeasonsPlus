@@ -62,7 +62,7 @@ public class ServerLevelMixin {
         ProfilerFiller profiler = level.getProfiler();
 
         // ✅ Run your seasonal snow queue logic first
-        if (level.dimension() == Level.OVERWORLD) {
+        if (level.dimension() == Level.OVERWORLD && CommonSnowBlockFeature.isSnowFeatureEnabled()) {
             int t = CommonSnowBlockFeature.getTickCounter();
             ChunkPos cpos = chunk.getPos();
             boolean doEval = ((cpos.x ^ cpos.z ^ t) & 15) == 0; // ~once per 16 ticks per ticking chunk
@@ -99,10 +99,28 @@ public class ServerLevelMixin {
             }
 
             // Snow accumulation (uses your helper instead of vanilla "bl")
-            if (EnvironmentHelper.isRainning(level, blockPos)) {
+            if (EnvironmentHelper.isRainning(level, blockPos) && level.canSeeSkyFromBelowWater(blockPos)) {
                 int maxSnow = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
                 if (maxSnow > 0 && sereneseasons.season.SeasonHooks.shouldSnowHook(biome, level, blockPos)) {
                     BlockState state = level.getBlockState(blockPos);
+                    // Skip if this column was marked destroyed for the current storm
+                    boolean skipDueToDestroyed = false;
+                    com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get();
+                    int activeId = (sd != null) ? sd.currentStormId : 0;
+                    if (activeId > 0) {
+                        net.minecraft.world.level.chunk.LevelChunk lc = chunk;
+                        if (lc instanceof ISnowTrackedChunk tracked) {
+                            if (tracked.sereneseasonsplus$getDestroyedStormId() != activeId) {
+                                tracked.sereneseasonsplus$getDestroyedColumns().clear();
+                                tracked.sereneseasonsplus$setDestroyedStormId(activeId);
+                            }
+                            long xz = (((long) blockPos.getX()) << 32) ^ (blockPos.getZ() & 0xffffffffL);
+                            if (tracked.sereneseasonsplus$getDestroyedColumns().contains(xz)) {
+                                skipDueToDestroyed = true;
+                            }
+                        }
+                    }
+                    if (skipDueToDestroyed) return; // abort vanilla-like snow add in this column
 
                     if (state.is(Blocks.SNOW)) {
                         int layers = state.getValue(SnowLayerBlock.LAYERS);

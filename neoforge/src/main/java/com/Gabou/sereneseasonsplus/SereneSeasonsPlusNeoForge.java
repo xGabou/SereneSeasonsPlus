@@ -5,9 +5,13 @@ import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.features.NeoForgeSnowEnvironmentHandler;
 import com.Gabou.sereneseasonsplus.util.*;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -15,6 +19,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
@@ -58,9 +63,10 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
      */
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("Serene Seasons Extended is loading!");
-        SereneService.HANDLER = new NeoForgeAsyncExecutorHandler();
-        event.getServer().getGameRules().getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT).set(999, event.getServer());
-        CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
+        event.getServer().getGameRules()
+                .getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT)
+                .set(SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get(), event.getServer());
+        CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get(), SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get());
     }
 
 
@@ -124,7 +130,7 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
 
     @SubscribeEvent
     public void onConfigReload(ServerTickEvent.Pre event) {
-        CommonSnowBlockFeature.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
+        CommonSnowBlockFeature.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get(), SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get());
         SereneService.reloadConfig();
     }
 
@@ -133,5 +139,36 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
         DebugCommands.registerTo(event.getDispatcher());
     }
 
+    /**
+     * When a player breaks a snow block/layer during an active storm, mark the column as destroyed
+     * for this storm so our accumulation logic will not repopulate it until the next storm.
+     */
+    @SubscribeEvent
+    public void onBlockBreak(BlockEvent.BreakEvent event) {
+        if (!(event.getLevel() instanceof ServerLevel level)) return;
+        if (level.dimension() != Level.OVERWORLD) return;
+
+        BlockPos pos = event.getPos();
+        BlockState state = event.getState();
+        if (!state.is(Blocks.SNOW) && !state.is(Blocks.SNOW_BLOCK)) return;
+
+        com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get();
+        int activeId = (sd != null) ? sd.currentStormId : 0;
+        if (activeId <= 0) return; // only track during active storm
+
+        LevelChunk chunk = level.getChunkSource().getChunk(pos.getX() >> 4, pos.getZ() >> 4, false);
+        if (!(chunk instanceof com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk tracked)) return;
+
+        if (tracked.sereneseasonsplus$getDestroyedStormId() != activeId) {
+            tracked.sereneseasonsplus$getDestroyedColumns().clear();
+            tracked.sereneseasonsplus$setDestroyedStormId(activeId);
+        }
+        long xz = (((long) pos.getX()) << 32) ^ (pos.getZ() & 0xffffffffL);
+        tracked.sereneseasonsplus$getDestroyedColumns().add(xz);
+
+        // Remove any tracked snow column entries for this X/Z so sync won't try to re-add this storm
+        tracked.sereneseasonsplus$getSnowColumns().keySet().removeIf(p -> p.getX() == pos.getX() && p.getZ() == pos.getZ());
+        chunk.setUnsaved(true);
+    }
 
 }

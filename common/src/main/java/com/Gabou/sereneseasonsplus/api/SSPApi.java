@@ -76,7 +76,7 @@ public final class SSPApi {
      */
     public static boolean setCurrentStormLayers(ServerLevel level, float min, float avg, float max) {
         if (level == null || level.isClientSide()) return false;
-        SnowHistorySavedData sd = SnowHistorySavedData.get(level);
+        SnowHistorySavedData sd = SnowHistorySavedData.get();
         if (sd == null || sd.currentStormId <= 0) return false;
 
         int id = sd.currentStormId;
@@ -106,7 +106,7 @@ public final class SSPApi {
         rec.minLayers = clampedMin;
         if (rec.maxLayers < clampedMin) rec.maxLayers = clampedMin;
         if (rec.avgLayers < clampedMin) rec.avgLayers = clampedMin;
-        SnowHistorySavedData.get(level).setDirty();
+        SnowHistorySavedData.get().setDirty();
         return true;
     }
 
@@ -116,7 +116,7 @@ public final class SSPApi {
         if (rec == null) return false;
         float clamped = Math.max(rec.minLayers, Math.min(rec.maxLayers, avg));
         rec.avgLayers = clamped;
-        SnowHistorySavedData.get(level).setDirty();
+        SnowHistorySavedData.get().setDirty();
         return true;
     }
 
@@ -127,14 +127,14 @@ public final class SSPApi {
         float clamped = Math.max(rec.minLayers, max);
         rec.maxLayers = clamped;
         if (rec.avgLayers > rec.maxLayers) rec.avgLayers = rec.maxLayers;
-        SnowHistorySavedData.get(level).setDirty();
+        SnowHistorySavedData.get().setDirty();
         return true;
     }
 
     /** Returns the active storm's SnowRecord, or null if none is active. */
     public static SnowRecord getCurrentStormRecord(ServerLevel level) {
         if (level == null || level.isClientSide()) return null;
-        SnowHistorySavedData sd = SnowHistorySavedData.get(level);
+        SnowHistorySavedData sd = SnowHistorySavedData.get();
         if (sd == null || sd.currentStormId <= 0) return null;
         return sd.snowHistory.get(sd.currentStormId);
     }
@@ -142,7 +142,7 @@ public final class SSPApi {
     // Helpers
     private static SnowRecord getOrCreateActiveRecord(ServerLevel level) {
         if (level == null || level.isClientSide()) return null;
-        SnowHistorySavedData sd = SnowHistorySavedData.get(level);
+        SnowHistorySavedData sd = SnowHistorySavedData.get();
         if (sd == null || sd.currentStormId <= 0) return null;
         SnowRecord rec = sd.snowHistory.get(sd.currentStormId);
         if (rec == null) {
@@ -166,7 +166,7 @@ public final class SSPApi {
     /** Clears the active storm flag and history records for this level. */
     public static void resetSnowHistory(ServerLevel level) {
         if (level == null || level.isClientSide()) return;
-        SnowHistorySavedData hist = SnowHistorySavedData.get(level);
+        SnowHistorySavedData hist = SnowHistorySavedData.get();
         hist.currentStormId = 0;
         hist.snowHistory.clear();
         hist.setDirty();
@@ -178,7 +178,7 @@ public final class SSPApi {
      */
     public static void resetEnvironmentState(ServerLevel level) {
         if (level == null || level.isClientSide()) return;
-        SnowSavedData env = SnowSavedData.get(level);
+        SnowSavedData env = SnowSavedData.get();
         env.stormCount = 0;
         env.stormActive = false;
         env.pendingChunks.clear();

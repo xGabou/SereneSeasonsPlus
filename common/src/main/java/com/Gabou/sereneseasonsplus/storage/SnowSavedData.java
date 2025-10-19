@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus.storage;
 
+import com.Gabou.sereneseasonsplus.util.WorldContext;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -13,6 +14,7 @@ import java.util.Set;
  * Persists per-level snow environment state across world reloads.
  */
 public class SnowSavedData extends SavedData {
+    private static volatile SnowSavedData INSTANCE;
     public int winterId = -1;
     public int stormCount = 0;
     public boolean stormActive = false;
@@ -21,7 +23,6 @@ public class SnowSavedData extends SavedData {
     public int lastBlanketStormCount = 0;
 
     public SnowSavedData() {}
-
     public static SnowSavedData load(CompoundTag tag, HolderLookup.Provider provider) {
         SnowSavedData data = new SnowSavedData();
         if (tag == null) return data;
@@ -39,7 +40,6 @@ public class SnowSavedData extends SavedData {
 
         return data;
     }
-
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider provider) {
         tag.putInt("WinterId", winterId);
@@ -59,12 +59,26 @@ public class SnowSavedData extends SavedData {
         return tag;
     }
 
-    public static SnowSavedData get(ServerLevel level) {
-        SavedData.Factory<SnowSavedData> factory = new SavedData.Factory<>(
-                SnowSavedData::new,          // Supplier<T>
-                SnowSavedData::load,         // BiFunction<CompoundTag, HolderLookup.Provider, T>
-                DataFixTypes.LEVEL     // pick the generic saved data type
-        );
-        return level.getDataStorage().computeIfAbsent(factory, "ssp_snow_data");
+    public static SnowSavedData get() {
+        SnowSavedData inst = INSTANCE;
+        if (inst != null) return inst;
+        synchronized (SnowSavedData.class) {
+            if (INSTANCE != null) return INSTANCE;
+            ServerLevel overworld = WorldContext.getOverworld();
+            if (overworld != null) {
+                INSTANCE = overworld.getDataStorage().computeIfAbsent(new SavedData.Factory<>(
+                        SnowSavedData::new,          // Supplier<T>
+                        SnowSavedData::load,         // BiFunction<CompoundTag, HolderLookup.Provider, T>
+                        DataFixTypes.LEVEL     // pick the generic saved data type
+                ), "ssp_snow_data");
+            } else {
+                INSTANCE = new SnowSavedData();
+            }
+        }
+        return INSTANCE;
     }
+        /** Clears the cached singleton (called on server stop). */
+        public static void clearCachedInstance() {
+            INSTANCE = null;
+        }
 }

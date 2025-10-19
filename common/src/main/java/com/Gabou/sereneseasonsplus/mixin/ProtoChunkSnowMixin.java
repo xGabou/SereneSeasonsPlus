@@ -22,7 +22,15 @@ public class ProtoChunkSnowMixin implements ISnowTrackedChunk {
     private final Set<BlockPos> sereneseasonsplus$iceColumns = new HashSet<>();
 
     @Unique
+    private int sereneseasonsplus$destroyedStormId = 0;
+    @Unique
+    private final java.util.Set<Long> sereneseasonsplus$destroyedColumns = new java.util.HashSet<>();
+
+    @Unique
     private int sereneseasonsplus$surfaceHeight = -1;
+
+    @Unique
+    private int sereneseasonsplus$availableColumns = -1;
 
     @Unique
     private float sereneseasonsplus$stormProgress = 0f;
@@ -52,6 +60,21 @@ public class ProtoChunkSnowMixin implements ISnowTrackedChunk {
     }
 
     @Override
+    public int sereneseasonsplus$getDestroyedStormId() {
+        return sereneseasonsplus$destroyedStormId;
+    }
+
+    @Override
+    public void sereneseasonsplus$setDestroyedStormId(int id) {
+        sereneseasonsplus$destroyedStormId = id;
+    }
+
+    @Override
+    public java.util.Set<Long> sereneseasonsplus$getDestroyedColumns() {
+        return sereneseasonsplus$destroyedColumns;
+    }
+
+    @Override
     public int sereneseasonsplus$getSurfaceHeight() {
         return sereneseasonsplus$surfaceHeight;
     }
@@ -59,6 +82,16 @@ public class ProtoChunkSnowMixin implements ISnowTrackedChunk {
     @Override
     public void sereneseasonsplus$setSurfaceHeight(int height) {
         sereneseasonsplus$surfaceHeight = height;
+    }
+
+    @Override
+    public int sereneseasonsplus$getAvailableSnowColumns() {
+        return sereneseasonsplus$availableColumns;
+    }
+
+    @Override
+    public void sereneseasonsplus$setAvailableSnowColumns(int count) {
+        sereneseasonsplus$availableColumns = Math.max(-1, Math.min(256, count));
     }
 
     @Override

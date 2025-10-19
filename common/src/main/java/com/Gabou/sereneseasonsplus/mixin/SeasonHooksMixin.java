@@ -1,14 +1,15 @@
 package com.Gabou.sereneseasonsplus.mixin;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-import sereneseasons.init.ModConfig;
 import sereneseasons.season.SeasonHooks;
+import sereneseasons.init.ModConfig;
 
 @Mixin(SeasonHooks.class)
 public abstract class SeasonHooksMixin {
@@ -25,7 +26,9 @@ public abstract class SeasonHooksMixin {
 
             if (pos.getY() >= levelReader.getMinBuildHeight()
                     && pos.getY() < levelReader.getMaxBuildHeight()
-                    && levelReader.getBrightness(LightLayer.BLOCK, pos) < 10) {
+                    && levelReader.getBrightness(LightLayer.BLOCK, pos) < 10
+                    // extra guard: do not allow snow in covered interiors
+                    && levelReader.canSeeSkyFromBelowWater(pos)) {
 
                 // Only check if snow can survive here, no air requirement
                 if (Blocks.SNOW.defaultBlockState().canSurvive(levelReader, pos)) {

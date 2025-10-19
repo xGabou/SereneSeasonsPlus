@@ -1,7 +1,8 @@
 plugins {
     id "net.neoforged.gradle.userdev" version "7.+"
     id "net.neoforged.gradle.mixin" version "7.+"
-    id "com.matthewprenger.cursegradle" version "1.4.0"
+    id 'com.matthewprenger.cursegradle' version '1.4.0' // CurseForge uploader
+    id "com.modrinth.minotaur"
 }
 
 base.archivesName.set("NeoForge-Version-${mod_name}")
@@ -56,7 +57,7 @@ dependencies {
     implementation "curse.maven:glitchcore-955399:5660740"
     implementation "curse.maven:betterdays-895618:7015564"
     runtimeOnly "me.djtheredstoner:DevAuth-neoforge:1.2.1"
-    compileOnly files("../libs/projectatmosphere-0.3.9-3.jar")
+    compileOnly "curse.maven:project-atmosphere-1258344:7070436"
     implementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-neoforge", version: "${whitenoise_version}"
     //runtimeOnly "curse.maven:rubidium-extra-654373:5176872"
     //runtimeOnly "curse.maven:embeddium-908741:5521869"
@@ -80,6 +81,37 @@ tasks.withType(ProcessResources).excludingNeoTasks().configureEach {
         expand "refmap_target": "sereneseasonplus."
     }
 }
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "4Al4H3t9" // from your Modrinth project URL
+    versionNumber = "NeoForge-${project.version}"
+    versionName = "Serene Seasons Plus ${mod_version}"
+    changelog = rootProject.file("SSPchangelog.md").text
+    gameVersions = ["1.21.1"]
+    loaders = ["neoforge"]
+    versionType = "release"
+    dependencies {
+        required.project "e0bNACJD"
+        required.project "tPLE214j"
+        optional.project "qIWoLcKJ"
+    }
+    uploadFile = file("build/libs/${archivesBaseName}-${version}.jar")
+}
+curseforge {
+    apiKey = System.getenv("CURSEFORGE_TOKEN")
+
+    project {
+        id = "1288843"
+        changelog = rootProject.file("SSPchangelog.md")
+        releaseType = "release" // options: alpha, beta, release
+        addGameVersion "1.21.1"
+        addGameVersion "NeoForge"
+        mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {
+            displayName = "NeoForge-${version}"
+        }
+    }
+}
+
 
 
 
