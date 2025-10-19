@@ -9,6 +9,8 @@ public class SSPTags {
     public static class Blocks {
         public static final TagKey<Block> MELTABLE =
                 TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("sereneseasonsplus", "meltable"));
+        public static final TagKey<Block> FLOWERS =
+                TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("sereneseasonsplus", "flowers"));
     }
 }
 

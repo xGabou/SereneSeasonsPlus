@@ -1,17 +1,13 @@
-### ❄️ Serene Seasons Plus — v4.0.6
-**Game Versions:** 1.21.1 (NeoForge & Fabric)
+# ❄️ Serene Seasons Plus — v4.0.7
 
----
+## Changelog
+### 🆕 Added
+- Lukewarm oceans to tropical biomes list.
+- Added into random tick a chance to grow grass and flowers on grass blocks during hot seasons the hotter the season is the more chance there is to grow grass and flowers.
 
-#### 🆕 Added
-
-
-#### 🛠️ Fixed
-- Fixed Blurred Screens
-
-#### ⚙️ Changed / Removed
+### 🛠️ Fixed
 
 
-**Release type:** Stable  
-**Build date:** *17 octobre 2025*  
-**Maintainer:** Gabou  
+### ⚙️ Changed / Removed
+- Removed all overwrites related to snowy biomes.
+

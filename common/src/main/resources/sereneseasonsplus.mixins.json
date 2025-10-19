@@ -9,7 +9,8 @@
     "MinecraftServerMixin",
     "ProtoChunkSnowMixin",
     "SeasonHooksMixin",
-    "ServerLevelMixin"
+    "ServerLevelMixin",
+    "SpreadingSnowyDirtBlockMixin"
   ],
   "client": [
     "ScreenMixin"

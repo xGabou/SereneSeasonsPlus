@@ -176,5 +176,8 @@ public class EnvironmentHelper {
         SnowSavedData.clearCachedInstance();
         SnowHistorySavedData.clearCachedInstance();
     }
+    public static int getGrassChance() {
+        return delegate.getGrassChance(false);
+    }
 
 }

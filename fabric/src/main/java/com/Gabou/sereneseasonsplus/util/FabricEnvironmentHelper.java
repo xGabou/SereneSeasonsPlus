@@ -13,6 +13,7 @@ public class FabricEnvironmentHelper implements IEnvironmentHelper {
     private Season.SubSeason season;
     private boolean isHotSeason;
     private boolean isSnowySeason;
+    private int baseChance = -1;
 
     @Override
     public boolean isClient() {
@@ -45,5 +46,21 @@ public class FabricEnvironmentHelper implements IEnvironmentHelper {
         LOGGER.info("Season changed to: {}", season);
         isHotSeason = HotSeason.isHotSeason(season);
         isSnowySeason = SnowySeason.isSnowySeason(season);
+        baseChance = getGrassChance(true);
+    }
+    @Override
+    public int getGrassChance(boolean force) {
+        if(baseChance != -1 || force) {
+            return baseChance;
+        }
+        switch (season) {
+            case EARLY_SUMMER, LATE_SUMMER -> baseChance = 300; // faster
+            case MID_SUMMER -> baseChance = 200;   // fastest
+            case EARLY_SPRING, LATE_AUTUMN ->  baseChance = 1200; // slowest
+            case MID_SPRING, MID_AUTUMN -> baseChance = 800;    // slower
+            case LATE_SPRING, EARLY_AUTUMN -> baseChance = 600;   // slow
+        }
+
+        return baseChance;
     }
 }
