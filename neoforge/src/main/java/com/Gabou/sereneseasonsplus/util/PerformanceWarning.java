@@ -13,7 +13,7 @@ public class PerformanceWarning extends Screen {
 
     @Override
     protected void init() {
-        String text = "I Understand and I will not bother the devs with performance issues";
+        String text = "I Understand and I will not bother the devs with performance issues from SS+";
         int textWidth = this.font.width(text) + 20; // +20 for padding
 
         this.addRenderableWidget(
@@ -27,7 +27,7 @@ public class PerformanceWarning extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(graphics, mouseX, mouseY, partialTick); // new signature
+        this.renderBackground(graphics, mouseX, mouseY, partialTick);
         graphics.drawCenteredString(this.font,
                 "This mod is optimized to work on the Sodium or Embeddium renderer",
                 this.width / 2, this.height / 2 - 50, 0xFFFFFF);

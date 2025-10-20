@@ -25,7 +25,7 @@ public class SereneExtendedConfig {
     public static final DoubleValue CUSTOM_NIGHT_LENGTH;
     public static final BooleanValue CUSTOM_CYCLE_LENGTH;
     public static final BooleanValue SNOWSTORM_ENABLED;
-    public static final IntValue SNOWSTORM_INTENSITY;
+    public static final IntValue MAX_SNOW_ACCUMULATION_LAYERS;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("sereneseasonsplus.json");
@@ -42,7 +42,8 @@ public class SereneExtendedConfig {
         TICK_SNOW_REPLACER = new IntValue("tickSnowReplacer", 100, 1, Integer.MAX_VALUE);
 
         SNOWSTORM_ENABLED = new BooleanValue("snowstormEnabled", false);
-        SNOWSTORM_INTENSITY = new IntValue("snowstormIntensity", 0, 0, 100);
+        // Maximum total layers allowed per snow column (8 layers = 1 block). Default 24 = 3 blocks.
+        MAX_SNOW_ACCUMULATION_LAYERS = new IntValue("maxSnowAccumulationLayers", 24, 0, 512);
 
         ENABLE_SEASONAL_DAYLIGHT_CYCLE = new BooleanValue("enableSeasonalDaylightCycle", true);
         CUSTOM_CYCLE_LENGTH = new BooleanValue("customCycleLength", false);
@@ -86,7 +87,7 @@ public class SereneExtendedConfig {
             TICK_SNOW_PILLER.load(obj);
             TICK_SNOW_REPLACER.load(obj);
             SNOWSTORM_ENABLED.load(obj);
-            SNOWSTORM_INTENSITY.load(obj);
+            MAX_SNOW_ACCUMULATION_LAYERS.load(obj);
             ENABLE_SEASONAL_DAYLIGHT_CYCLE.load(obj);
             CUSTOM_CYCLE_LENGTH.load(obj);
             CUSTOM_DAY_LENGTH.load(obj);
@@ -106,7 +107,7 @@ public class SereneExtendedConfig {
             TICK_SNOW_PILLER.save(obj);
             TICK_SNOW_REPLACER.save(obj);
             SNOWSTORM_ENABLED.save(obj);
-            SNOWSTORM_INTENSITY.save(obj);
+            MAX_SNOW_ACCUMULATION_LAYERS.save(obj);
             ENABLE_SEASONAL_DAYLIGHT_CYCLE.save(obj);
             CUSTOM_CYCLE_LENGTH.save(obj);
             CUSTOM_DAY_LENGTH.save(obj);
@@ -116,6 +117,7 @@ public class SereneExtendedConfig {
             }
         } catch (IOException ignored) {
         }
+        notifyReloadListeners();
     }
 
     public static final class BooleanValue {

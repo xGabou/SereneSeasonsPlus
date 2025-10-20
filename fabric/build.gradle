@@ -1,18 +1,17 @@
 plugins {
-    id 'fabric-loom' version '1.7-SNAPSHOT'
+    id "fabric-loom" version "1.10-SNAPSHOT"
+    id 'com.matthewprenger.cursegradle' version '1.4.0' // CurseForge uploader
+    id "com.modrinth.minotaur"
 }
-base.archivesName.set("${mod_name}-fabric")
+base.archivesName.set("Fabric-Version-${mod_id}")
 
 loom {
-    // Sépare les sources client et serveur
-    splitEnvironmentSourceSets()
     mixin {
-        defaultRefmapName.set("${mod_id}.refmap.json")
+        defaultRefmapName.set("sereneseasonsplus-refmap.json")
     }
     mods {
         "${mod_id}" {
             sourceSet sourceSets.main
-            sourceSet sourceSets.client
         }
     }
     runs {
@@ -39,6 +38,13 @@ loom {
 processResources {
     from project(":Common").sourceSets.main.resources
 }
+tasks.withType(JavaCompile) {
+    source(project(":Common").sourceSets.main.allSource)
+}
+tasks.withType(Jar) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
@@ -61,3 +67,52 @@ dependencies {
     modImplementation "curse.maven:spark-361579:4950610"
     //modImplementation "curse.maven:sodium-394468:5092261"
 }
+tasks.named("remapJar") {
+    doLast {
+        def jarFile = archiveFile.get().asFile
+        def tmpDir = new File(jarFile.parentFile, jarFile.name + ".tmpdir")
+        if (tmpDir.exists()) tmpDir.deleteDir()
+        copy {
+            from zipTree(jarFile)
+            into tmpDir
+            exclude("client-*-refmap.json")
+        }
+        jarFile.delete()
+        ant.zip(destfile: jarFile, basedir: tmpDir)
+        tmpDir.deleteDir()
+    }
+}
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "4Al4H3t9" // from your Modrinth project URL
+    versionNumber = "Fabric-${project.version}"
+    versionName = "Serene Seasons Plus ${mod_version}"
+    changelog = rootProject.file("SSPchangelog.md").text
+    gameVersions = ["1.20.4"]
+    loaders = ["fabric"]
+    versionType = "release"
+    dependencies {
+        required.project "e0bNACJD"
+        required.project "tPLE214j"
+        required.project "mOgUt4GM"
+    }
+    uploadFile = file("build/libs/${archivesBaseName}-${version}.jar")
+}
+curseforge {
+    apiKey = System.getenv("CURSEFORGE_TOKEN")
+
+    project {
+        id = "1288843"
+        changelog = rootProject.file("SSPchangelog.md")
+        releaseType = "release" // options: alpha, beta, release
+        addGameVersion "1.20.4"
+        addGameVersion "Fabric"
+        mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {
+            displayName = "Fabric-${version}"
+        }
+    }
+}
+
+
+
+

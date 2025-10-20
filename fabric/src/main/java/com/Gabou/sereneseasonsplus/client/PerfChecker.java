@@ -1,4 +1,4 @@
-package net.Gabou.sereneseasonsplus.client;
+package com.Gabou.sereneseasonsplus.client;
 
 import net.fabricmc.loader.api.FabricLoader;
 

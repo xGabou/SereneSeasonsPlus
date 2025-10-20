@@ -1,11 +1,6 @@
 package com.Gabou.sereneseasonsplus.util;
 
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class FabricAsyncExecutorHandler extends DefaultAsyncExecutorHandler {
 

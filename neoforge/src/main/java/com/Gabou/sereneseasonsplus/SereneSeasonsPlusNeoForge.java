@@ -3,7 +3,6 @@ package com.Gabou.sereneseasonsplus;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
-import com.Gabou.sereneseasonsplus.mixin.MinecraftServerInvoker;
 import com.Gabou.sereneseasonsplus.util.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.level.ServerLevel;
@@ -25,6 +24,8 @@ import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 
 @Mod(SereneSeasonsPlusNeoForge.MODID)
 public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
+
+    public static boolean isProjectAtmosphereLoaded = false;
     /**
      * Constructs the mod entry point, registers event handlers, and config.
      *
@@ -52,7 +53,7 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
         LOGGER.info("Serene Seasons Extended is loading!");
         SereneService.HANDLER = new NeoForgeAsyncExecutorHandler();
         event.getServer().getGameRules().getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT).set(999, event.getServer());
-        CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
+        CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get(), SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get());
     }
 
     /**
@@ -63,7 +64,7 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
      */
     private void clientSetup(final FMLClientSetupEvent event, ModLoadingContext modContainer) {
         LOGGER.info("Setting up Serene Seasons Plus (Client)");
-        event.enqueueWork(() -> SereneSeasonsPlusNeoForgeClient.init(modContainer));
+        SereneSeasonsPlusNeoForgeClient.init(modContainer);
         NeoForge.EVENT_BUS.register(SereneSeasonsPlusNeoForgeClient.class);
 
     }
@@ -92,7 +93,7 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
         ServerLevel level = (ServerLevel) event.level;
         if( level.dimension() != Level.OVERWORLD) return;
         this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
-        CommonSnowBlockFeature.handleServerTick((MinecraftServerInvoker) level.getServer(), level);
+        CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
 
     }
 
@@ -103,16 +104,15 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
      */
     public void onChunkLoad(ChunkEvent.Load event) {
         if (!(event.getChunk() instanceof net.minecraft.world.level.chunk.LevelChunk chunk)) return;
-        var level = chunk.getLevel();
-        if (level == null || level.isClientSide()) return;
-        if (level.dimension() != Level.OVERWORLD) return;
-        CommonSnowBlockFeature.handleOnChunkLoad(chunk, (ServerLevel) level);
+        if(!(event.getLevel() instanceof ServerLevel level)) return;
+        if( level.dimension() != Level.OVERWORLD) return;
+        CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
     }
 
 
     @SubscribeEvent
     public void onConfigReload(TickEvent.ServerTickEvent event) {
-        CommonSnowBlockFeature.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get());
+        CommonSnowBlockFeature.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get(), SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get());
         SereneService.reloadConfig();
     }
 

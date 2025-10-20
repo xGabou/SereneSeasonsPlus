@@ -6,14 +6,12 @@ import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sereneseasons.api.season.Season;
-import sereneseasons.api.season.SeasonHelper;
 
 public class SereneSeasonPlusCommon {
     protected int ticker = 0;
     protected Season.SubSeason lastSubSeason = null;
     public static final String MODID = "sereneseasonsplus";
     protected static final Logger LOGGER = LoggerFactory.getLogger(MODID);
-
 
     /**
      * Logs the active sub-season and the computed day/night speed multipliers.
@@ -73,17 +71,18 @@ public class SereneSeasonPlusCommon {
             case LATE_WINTER -> 0.78;
         };
     }
+
     /**
      * Internal tick handler running every few seconds to adjust time speeds
      * according to the current sub-season and configuration.
      *
      * @param level the overworld level
      */
-    protected void onTick(Level level,boolean ENABLE_SEASONAL_DAYLIGHT_CYCLE, boolean CUSTOM_CYCLE_LENGTH, double CUSTOM_DAY_LENGTH, double CUSTOM_NIGHT_LENGTH) {
+    protected void onTick(Level level, boolean ENABLE_SEASONAL_DAYLIGHT_CYCLE, boolean CUSTOM_CYCLE_LENGTH, double CUSTOM_DAY_LENGTH, double CUSTOM_NIGHT_LENGTH) {
         if (++this.ticker >= 400) {
             this.ticker = 0;
             if (EnvironmentHelper.shouldRunMod()) {
-                Season.SubSeason currentSubSeason = SeasonHelper.getSeasonState(level).getSubSeason();
+                Season.SubSeason currentSubSeason = EnvironmentHelper.getCurrentSeason();
                 if (currentSubSeason != this.lastSubSeason) {
                     this.lastSubSeason = currentSubSeason;
                     if (ENABLE_SEASONAL_DAYLIGHT_CYCLE) {
@@ -91,6 +90,7 @@ public class SereneSeasonPlusCommon {
                         double nightSpeed = this.getNightSpeedForSeason(currentSubSeason);
                         ConfigHacks.setTimeSpeeds(daySpeed, nightSpeed);
                         LogInfo(currentSubSeason, daySpeed, nightSpeed);
+                        //level.registryAccess().registryOrThrow(Registries.BIOME).getTagOrEmpty(ModTags.Biomes.BLACKLISTED_BIOMES).forEach((holder -> {LOGGER.info(holder.unwrapKey().get().location().toString());}));
                     } else if (CUSTOM_CYCLE_LENGTH) {
                         ConfigHacks.setTimeSpeeds(CUSTOM_DAY_LENGTH, CUSTOM_NIGHT_LENGTH);
                         LogInfo(currentSubSeason, CUSTOM_DAY_LENGTH, CUSTOM_NIGHT_LENGTH);

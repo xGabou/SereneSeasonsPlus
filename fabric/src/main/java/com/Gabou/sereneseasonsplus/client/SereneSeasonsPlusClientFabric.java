@@ -1,13 +1,11 @@
-package net.Gabou.sereneseasonsplus.client;
+package com.Gabou.sereneseasonsplus.client;
 
-import com.Gabou.sereneseasonsplus.util.PerformanceWarning;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.Minecraft;
 
 public class SereneSeasonsPlusClientFabric implements ClientModInitializer {
-    private static boolean shown = false;
 
+    private static boolean shown = false;
     @Override
     public void onInitializeClient() {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

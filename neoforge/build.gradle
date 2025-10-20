@@ -1,14 +1,12 @@
 plugins {
-    id "net.neoforged.gradle.userdev" version "7.0.140"
-    id "net.neoforged.gradle.mixin" version "7.0.140"
+    id 'net.neoforged.gradle.userdev' version '7.0.192'
+    id "net.neoforged.gradle.mixin" version "7.0.192"
+    id 'com.matthewprenger.cursegradle' version '1.4.0' // CurseForge uploader
+    id "com.modrinth.minotaur"
 }
 
-base.archivesName.set("${mod_name}-neoforge")
+base.archivesName.set("NeoForge-Version-${mod_name}")
 
-mixin {
-    config "${mod_id}.mixins.json"
-    config "${mod_id}.neoforge.mixins.json"
-}
 
 minecraft {
     mappings {
@@ -34,6 +32,9 @@ minecraft {
             systemProperty "neoforge.enabledGameTestNamespaces", mod_id
             jvmArguments.add("-Dlog4j2.level=DEBUG")
         }
+        data {
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', project(':Common').file('src/generated/resources/').getAbsolutePath(), '--existing', project(':Common').file('src/main/resources/').getAbsolutePath()
+        }
     }
 }
 configurations.all {
@@ -55,9 +56,11 @@ dependencies {
     implementation "curse.maven:serene-seasons-291874:5206533"
     implementation "curse.maven:glitchcore-955399:5088442"
     implementation "curse.maven:betterdays-895618:5477563"
-    implementation "curse.maven:spectrelib-993948:5217603"
     runtimeOnly "me.djtheredstoner:DevAuth-neoforge:1.2.1"
     runtimeOnly "curse.maven:spark-361579:5243943"
+    compileOnly "curse.maven:project-atmosphere-1258344:7127022"
+    implementation "curse.maven:spectrelib-993948:5217603"
+    runtimeOnly "curse.maven:spectrelib-993948:5217603"
     //runtimeOnly "curse.maven:rubidium-extra-654373:5176872"
     //runtimeOnly "curse.maven:embeddium-908741:5521869"
 }
@@ -77,9 +80,36 @@ tasks.named("sourcesJar", Jar) {
 tasks.withType(ProcessResources).excludingNeoTasks().configureEach {
     from project(":Common").sourceSets.main.resources
     filesMatching("${mod_id}.mixins.json") {
-        expand "refmap_target": "${mod_id}."
+        expand "refmap_target": "sereneseasonplus."
     }
 }
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "4Al4H3t9" // from your Modrinth project URL
+    versionNumber = "NeoForge-${project.version}"
+    versionName = "Serene Seasons Plus ${mod_version}"
+    changelog = rootProject.file("SSPchangelog.md").text
+    gameVersions = ["1.20.4"]
+    loaders = ["neoforge"]
+    versionType = "release"
+    dependencies {
+        required.project "e0bNACJD"
+        required.project "tPLE214j"
+        optional.project "qIWoLcKJ"
+    }
+    uploadFile = file("build/libs/${archivesBaseName}-${version}.jar")
+}
+curseforge {
+    apiKey = System.getenv("CURSEFORGE_TOKEN")
 
-
-
+    project {
+        id = "1288843"
+        changelog = rootProject.file("SSPchangelog.md")
+        releaseType = "release" // options: alpha, beta, release
+        addGameVersion "1.20.4"
+        addGameVersion "NeoForge"
+        mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {
+            displayName = "NeoForge-${version}"
+        }
+    }
+}

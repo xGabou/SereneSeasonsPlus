@@ -2,12 +2,15 @@
   "required": true,
   "package": "com.Gabou.sereneseasonsplus.mixin",
   "compatibilityLevel": "JAVA_17",
-  "refmap": "sereneseasonsplus.refmap.json",
+  "refmap": "sereneseasonsplus-refmap.json",
   "mixins": [
-    "ChunkMapInvoker",
+    "ChunkSerializerSnowMixin",
     "LevelChunkSnowMixin",
-    "MinecraftServerInvoker",
-    "ServerLevelMixin"
+    "MinecraftServerMixin",
+    "ProtoChunkSnowMixin",
+    "SeasonHooksMixin",
+    "ServerLevelMixin",
+    "SpreadingSnowyDirtBlockMixin"
   ],
   "client": [
   ],

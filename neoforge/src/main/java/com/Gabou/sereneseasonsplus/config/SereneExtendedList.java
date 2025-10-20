@@ -59,7 +59,7 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    public static class Row extends ObjectSelectionList.Entry<Row> {
+    public static class Row extends Entry<Row> {
         private final SereneExtendedList owner;
         private final Component label;
         private final List<AbstractWidget> widgets;
