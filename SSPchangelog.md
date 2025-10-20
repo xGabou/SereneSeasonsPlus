@@ -1,13 +1,13 @@
-# ❄️ Serene Seasons Plus — v4.0.7
+# ❄️ Serene Seasons Plus — v4.0.8
 
 ## Changelog
 ### 🆕 Added
-- Lukewarm oceans to tropical biomes list.
-- Added into random tick a chance to grow grass and flowers on grass blocks during hot seasons the hotter the season is the more chance there is to grow grass and flowers.
 
 ### 🛠️ Fixed
-
+- Serene wild incompatibility.
+- No man's land mod incompatibility.
+- Config options not saving properly.
 
 ### ⚙️ Changed / Removed
-- Removed all overwrites related to snowy biomes.
+
 

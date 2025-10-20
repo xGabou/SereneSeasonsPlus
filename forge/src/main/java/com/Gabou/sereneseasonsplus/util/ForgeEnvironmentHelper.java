@@ -3,6 +3,7 @@ package com.Gabou.sereneseasonsplus.util;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -68,5 +69,30 @@ public class ForgeEnvironmentHelper implements IEnvironmentHelper {
         }
 
         return baseChance;
+    }
+
+    /**
+     * @return if Serene Wild is loaded
+     */
+    @Override
+    public boolean isSereneWildLoaded() {
+        return ModList.get().isLoaded("serenewild");
+    }
+
+    /**
+     * @param modId the mod id
+     * @return if the mod is loaded
+     */
+    @Override
+    public boolean isModLoaded(String modId) {
+        return ModList.get().isLoaded(modId);
+    }
+
+    /**
+     * @return if Snow Real Magic is loaded
+     */
+    @Override
+    public boolean isSnowRealMagicLoaded() {
+        return ModList.get().isLoaded("snowrealmagic");
     }
 }

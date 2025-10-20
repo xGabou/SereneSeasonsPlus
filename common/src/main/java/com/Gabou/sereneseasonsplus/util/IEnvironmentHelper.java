@@ -11,4 +11,7 @@ public interface IEnvironmentHelper {
     Season.SubSeason getCurrentSeason();
     void onSeasonChange(ServerLevel serverLevel);
     int getGrassChance(boolean force);
+    boolean isSereneWildLoaded();
+    boolean isModLoaded(String modId);
+    boolean isSnowRealMagicLoaded();
 }

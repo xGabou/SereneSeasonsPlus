@@ -180,4 +180,15 @@ public class EnvironmentHelper {
     public static int getGrassChance() {
         return delegate.getGrassChance(false);
     }
+    public static boolean isSereneWildLoaded() {
+        return delegate.isSereneWildLoaded();
+    }
+    public static boolean isSnowRealMagicLoaded(){
+        return delegate.isSnowRealMagicLoaded();
+    }
+
+    public static boolean isModLoaded(String modId) {
+        return delegate.isModLoaded(modId);
+    }
+
 }
