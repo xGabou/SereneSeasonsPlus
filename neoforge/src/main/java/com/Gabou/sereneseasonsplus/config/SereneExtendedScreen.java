@@ -191,17 +191,31 @@ public class SereneExtendedScreen extends Screen {
      * Persists current settings to the TOML config using NightConfig.
      */
     private void saveToFile() {
-        var path = net.neoforged.fml.loading.FMLPaths.CONFIGDIR.get().resolve(SereneSeasonsPlusNeoForge.MODID + "-common.toml");
-        com.electronwill.nightconfig.core.file.CommentedFileConfig cfg = com.electronwill.nightconfig.core.file.CommentedFileConfig.builder(path).sync().autosave().build();
+        var path = net.neoforged.fml.loading.FMLPaths.CONFIGDIR
+                .get()
+                .resolve(SereneSeasonsPlusNeoForge.MODID + "-common.toml");
+
+        // Build & load config file safely
+        var cfg = com.electronwill.nightconfig.core.file.CommentedFileConfig.builder(path)
+                .sync()
+                .autosave()
+                .preserveInsertionOrder()
+                .build();
         cfg.load();
+
+        // Update only known keys
+        cfg.set("snowstorm.enabled", snowFeatureEnabled);
+        cfg.set("snowStorms.maxSnowAccumulationLayers", maxSnowHeight);
         cfg.set("snowPillerAndReplacer.tickSnowReplacer", tickSnowReplacerThreshold);
         cfg.set("seasonalDaylightCycle.enableSeasonalDaylightCycle", seasonalDaylightCycle);
         cfg.set("seasonalDaylightCycle.customCycleLength", customDayCycle);
         cfg.set("seasonalDaylightCycle.customDayLength", customDayLength);
         cfg.set("seasonalDaylightCycle.customNightLength", customNightLength);
+
         cfg.save();
         cfg.close();
     }
+
 
     @Override
     /**

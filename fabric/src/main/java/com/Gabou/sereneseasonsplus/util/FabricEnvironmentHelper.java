@@ -63,4 +63,28 @@ public class FabricEnvironmentHelper implements IEnvironmentHelper {
 
         return baseChance;
     }
+    /**
+     * @return if Serene Wild is loaded
+     */
+    @Override
+    public boolean isSereneWildLoaded() {
+        return FabricLoader.getInstance().isModLoaded("serenewild");
+    }
+
+    /**
+     * @param modId the mod id
+     * @return if the mod is loaded
+     */
+    @Override
+    public boolean isModLoaded(String modId) {
+        return FabricLoader.getInstance().isModLoaded(modId);
+    }
+
+    /**
+     * @return if Snow Real Magic is loaded
+     */
+    @Override
+    public boolean isSnowRealMagicLoaded() {
+        return FabricLoader.getInstance().isModLoaded("snowrealmagic");
+    }
 }
