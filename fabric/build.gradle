@@ -1,19 +1,18 @@
 plugins {
-    id 'fabric-loom' version '1.11-SNAPSHOT'
-    id "com.matthewprenger.cursegradle" version "1.4.0"
+    id "fabric-loom" version "1.9-SNAPSHOT"
+    id 'com.matthewprenger.cursegradle' version '1.4.0' // CurseForge uploader
+    id "com.modrinth.minotaur"
 }
-base.archivesName.set("${mod_name}-fabric")
+base.archivesName.set("Fabric-Version-${mod_id}")
 
 loom {
     // Sépare les sources client et serveur
-    splitEnvironmentSourceSets()
     mixin {
-        defaultRefmapName.set("${mod_id}.refmap.json")
+        defaultRefmapName.set("sereneseasonsplus-refmap.json")
     }
     mods {
         "${mod_id}" {
             sourceSet sourceSets.main
-            sourceSet sourceSets.client
         }
     }
     runs {
@@ -40,6 +39,12 @@ loom {
 processResources {
     from project(":Common").sourceSets.main.resources
 }
+tasks.withType(JavaCompile) {
+    source(project(":Common").sourceSets.main.allSource)
+}
+tasks.withType(Jar) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
@@ -54,7 +59,7 @@ dependencies {
     modImplementation "curse.maven:serene-seasons-291874:5420643"
     modImplementation "curse.maven:glitchcore-955399:5352265"
     modImplementation "curse.maven:modmenu-308702:5441532"
-    modImplementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_range}"
+    modImplementation "com.illusivesoulworks.spectrelib:spectrelib-fabric:0.16.1+1.20.6"
     include implementation("com.electronwill.night-config:toml:${nightconfig_version}")
     include implementation("com.electronwill.night-config:core:${nightconfig_version}")
     include implementation("net.jodah:typetools:0.6.3")
@@ -62,3 +67,34 @@ dependencies {
     modImplementation "curse.maven:spark-361579:4950610"
     //modImplementation "curse.maven:sodium-394468:5092261"
 }
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "4Al4H3t9" // from your Modrinth project URL
+    versionNumber = "Fabric-${project.version}"
+    versionName = "Serene Seasons Plus ${mod_version}"
+    changelog = rootProject.file("SSPchangelog.md").text
+    gameVersions = ["1.20.6"]
+    loaders = ["fabric"]
+    versionType = "release"
+    dependencies {
+        required.project "e0bNACJD"
+        required.project "tPLE214j"
+        required.project "mOgUt4GM"
+    }
+    uploadFile = file("build/libs/${archivesBaseName}-${version}.jar")
+}
+curseforge {
+    apiKey = System.getenv("CURSEFORGE_TOKEN")
+
+    project {
+        id = "1288843"
+        changelog = rootProject.file("SSPchangelog.md")
+        releaseType = "release" // options: alpha, beta, release
+        addGameVersion "1.20.6"
+        addGameVersion "Fabric"
+        mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {
+            displayName = "Fabric-${version}"
+        }
+    }
+}
+

@@ -16,10 +16,10 @@
       "com.Gabou.sereneseasonsplus.SereneSeasonsPlusFabric"
     ],
     "client": [
-      "net.Gabou.sereneseasonsplus.client.SereneSeasonsPlusClientFabric"
+      "com.Gabou.sereneseasonsplus.client.SereneSeasonsPlusClientFabric"
     ],
     "modmenu": [
-      "net.Gabou.sereneseasonsplus.client.SereneSeasonsPlusModMenu"
+      "com.Gabou.sereneseasonsplus.client.SereneSeasonsPlusModMenu"
     ]
   },
   "mixins": [

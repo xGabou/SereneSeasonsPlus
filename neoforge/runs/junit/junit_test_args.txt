@@ -16,7 +16,3 @@ C:\Users\matga\.gradle\caches\minecraft\assets
 1.20.6
 --fml.neoFormVersion
 20240627.102356
---fml.mixin
-sereneseasonsplus.mixins.json
---fml.mixin
-sereneseasonsplus.neoforge.mixins.json
