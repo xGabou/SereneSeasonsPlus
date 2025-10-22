@@ -60,9 +60,12 @@ public class ServerLevelMixin {
     private void ssp$handleSnowAndIce(LevelChunk chunk, int randomTickSpeed, CallbackInfo ci) {
         ServerLevel level = (ServerLevel)(Object)this;
         ProfilerFiller profiler = level.getProfiler();
+        if (level.dimension() != Level.OVERWORLD) {
+            return;
+        }
 
         // ✅ Run your seasonal snow queue logic first
-        if (level.dimension() == Level.OVERWORLD && CommonSnowBlockFeature.isSnowFeatureEnabled()) {
+        if (CommonSnowBlockFeature.isSnowFeatureEnabled()) {
             int t = CommonSnowBlockFeature.getTickCounter();
             ChunkPos cpos = chunk.getPos();
             boolean doEval = ((cpos.x ^ cpos.z ^ t) & 15) == 0; // ~once per 16 ticks per ticking chunk
