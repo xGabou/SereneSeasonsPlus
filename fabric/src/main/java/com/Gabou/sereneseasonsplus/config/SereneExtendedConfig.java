@@ -117,6 +117,7 @@ public class SereneExtendedConfig {
             }
         } catch (IOException ignored) {
         }
+        notifyReloadListeners();
     }
 
     public static final class BooleanValue {
