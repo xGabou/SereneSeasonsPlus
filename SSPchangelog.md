@@ -4,9 +4,8 @@
 ### 🆕 Added
 
 ### 🛠️ Fixed
-- Serene wild incompatibility.
-- No man's land mod incompatibility.
-- Config options not saving properly.
+- Added safeguards to prevent crashes due to being loaded in unsupported dimensions.
+
 
 ### ⚙️ Changed / Removed
 
