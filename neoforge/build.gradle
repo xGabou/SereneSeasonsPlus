@@ -65,13 +65,13 @@ configurations.all {
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
     implementation project(":Common") // gives you sources & resources
-    implementation "curse.maven:serene-seasons-291874:6747297"
-    implementation "curse.maven:glitchcore-955399:6398449"
-    implementation "curse.maven:betterdays-895618:6407892"
+    implementation "curse.maven:serene-seasons-291874:6812965"
+    implementation "curse.maven:glitchcore-955399:6812823"
+    implementation "curse.maven:betterdays-895618:7054149"
     runtimeOnly "me.djtheredstoner:DevAuth-neoforge:1.2.1"
     compileOnly "curse.maven:project-atmosphere-1258344:7070436"
-    implementation "com.illusivesoulworks.spectrelib:spectrelib-neoforge:0.17.2+1.21"
-    implementation "curse.maven:spark-361579:6569247"
+    implementation "curse.maven:spark-361579:6796745"
+    implementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-neoforge", version: "${whitenoise_version}"
     //runtimeOnly "curse.maven:rubidium-extra-654373:5176872"
     //runtimeOnly "curse.maven:embeddium-908741:5521869"
 }
