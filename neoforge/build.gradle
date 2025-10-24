@@ -1,0 +1,130 @@
+plugins {
+    id "net.neoforged.gradle.userdev" version '7.0.192'
+    id "net.neoforged.gradle.mixin" version '7.0.192'
+    id 'com.matthewprenger.cursegradle' version '1.4.0' // CurseForge uploader
+    id "com.modrinth.minotaur"
+}
+
+base.archivesName.set("NeoForge-Version-${mod_name}")
+
+
+minecraft {
+    mappings {
+        channel = official()
+        version.put "minecraft", minecraft_version
+    }
+
+    runs {
+        configureEach {
+            modSource project.sourceSets.main
+        }
+
+        client {
+            workingDirectory.set(project.file("run"))
+            systemProperty "neoforge.enabledGameTestNamespaces", mod_id
+            jvmArguments.add("-Ddevauth.enabled=true")
+            jvmArguments.add("-Ddevauth.account=main")
+            jvmArguments.add("-Dlog4j2.level=DEBUG")
+        }
+
+        server {
+            workingDirectory.set(project.file("run"))
+            systemProperty "neoforge.enabledGameTestNamespaces", mod_id
+            jvmArguments.add("-Dlog4j2.level=DEBUG")
+        }
+
+        // This run config launches GameTestServer and runs all registered gametests, then exits.
+        // By default, the server will crash when no gametests are provided.
+        // The gametest system is also enabled by default for other run configs under the /test command.
+        gameTestServer {
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        clientData {
+            // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
+            // workingDirectory project.file('run-data')
+
+            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
+            arguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+    }
+}
+configurations.all {
+    // Keep NeoForge's ASM 9.8
+    resolutionStrategy.force "org.ow2.asm:asm:9.8",
+            "org.ow2.asm:asm-commons:9.8",
+            "org.ow2.asm:asm-tree:9.8",
+            "org.ow2.asm:asm-util:9.8",
+            "org.ow2.asm:asm-analysis:9.8"
+
+    // Prevent older ASM from leaking in
+    exclude group: "org.ow2.asm", module: "asm-all"
+    exclude group: "org.ow2.asm", module: "asm-debug-all"
+}
+
+dependencies {
+    implementation "net.neoforged:neoforge:${neo_version}"
+    implementation project(":Common") // gives you sources & resources
+    implementation "curse.maven:serene-seasons-291874:6747297"
+    implementation "curse.maven:glitchcore-955399:6398449"
+    implementation "curse.maven:betterdays-895618:6407892"
+    runtimeOnly "me.djtheredstoner:DevAuth-neoforge:1.2.1"
+    compileOnly "curse.maven:project-atmosphere-1258344:7070436"
+    implementation "com.illusivesoulworks.spectrelib:spectrelib-neoforge:0.17.2+1.21"
+    implementation "curse.maven:spark-361579:6569247"
+    //runtimeOnly "curse.maven:rubidium-extra-654373:5176872"
+    //runtimeOnly "curse.maven:embeddium-908741:5521869"
+}
+TaskCollection.metaClass.excludingNeoTasks = { ->
+    delegate.matching { !it.name.startsWith("neo") }
+}
+tasks.withType(JavaCompile).excludingNeoTasks().configureEach {
+    source(project(":Common").sourceSets.main.allSource)
+}
+
+tasks.withType(Javadoc).excludingNeoTasks().configureEach {
+    source(project(":Common").sourceSets.main.allJava)
+}
+tasks.named("sourcesJar", Jar) {
+    from(project(":Common").sourceSets.main.allSource)
+}
+tasks.withType(ProcessResources).excludingNeoTasks().configureEach {
+    from project(":Common").sourceSets.main.resources
+    filesMatching("${mod_id}.mixins.json") {
+        expand "refmap_target": "sereneseasonplus."
+    }
+}
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "4Al4H3t9" // from your Modrinth project URL
+    versionNumber = "NeoForge-${project.version}"
+    versionName = "Serene Seasons Plus ${mod_version}"
+    changelog = rootProject.file("SSPchangelog.md").text
+    gameVersions = ["1.21.5"]
+    loaders = ["neoforge"]
+    versionType = "release"
+    dependencies {
+        required.project "e0bNACJD"
+        required.project "tPLE214j"
+        optional.project "qIWoLcKJ"
+    }
+    uploadFile = file("build/libs/${archivesBaseName}-${version}.jar")
+}
+curseforge {
+    apiKey = System.getenv("CURSEFORGE_TOKEN")
+
+    project {
+        id = "1288843"
+        changelog = rootProject.file("SSPchangelog.md")
+        releaseType = "release" // options: alpha, beta, release
+        addGameVersion "1.21.5"
+        addGameVersion "NeoForge"
+        mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {
+            displayName = "NeoForge-${version}"
+        }
+    }
+}
+
+
+
+

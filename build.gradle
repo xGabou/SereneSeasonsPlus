@@ -1,151 +1,150 @@
-plugins {
-    id 'fabric-loom' version '1.11-SNAPSHOT'
-    id 'maven-publish'
-}
+import groovy.json.JsonOutput
 
-version = project.mod_version
-group = project.maven_group
-
-base {
-    archivesName = project.archives_base_name
-}
-
-loom {
-    splitEnvironmentSourceSets()
-
-    mods {
-        "sereneseasonsplus" {
-            sourceSet sourceSets.main
-            sourceSet sourceSets.client
-        }
-    }
-}
-repositories {
-    maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
-    maven { url "https://maven.blamejared.com/" }
-    maven {
-        url "https://www.cursemaven.com"
-        content { includeGroup "curse.maven" }
-    }
-    maven {
-        name = 'GeckoLib'
-        url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
-        content {
-            includeGroupByRegex('software\\.bernie.*')
-            includeGroup("com.eliotlash.mclib")
-        }
-    }
-    maven { url = "https://api.modrinth.com/maven" }
-    maven {
-        name "nonamecrackers2Maven"
-        url "https://maven.nonamecrackers2.dev/releases"
-    }
-    maven {
-        name = "C4's Maven"
-        url = "https://maven.theillusivec4.top/"
-    }
-    flatDir { dir 'libs' }
-}
-
-dependencies {
-
-    modImplementation "curse.maven:betterdays-895618:6407891"
-    modImplementation "curse.maven:serene-seasons-291874:6747295"
-    modImplementation "curse.maven:glitchcore-955399:6398450"
-    modImplementation "curse.maven:modmenu-308702:6347337"
-// build.gradle
-    compileOnly "curse.maven:spectrelib-993948:5217601"
-
-
-//    implementation files('libs/hourglass-1.20-1.2.1.1.jar')
-    implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
-    implementation 'org.apache.logging.log4j:log4j-api:2.19.0'
-    // Specify the version of Minecraft to use.
-    // Any artifact can be supplied so long as it has a "userdev" classifier artifact and is a compatible patcher artifact.
-    // The "userdev" classifier will be requested and setup by ForgeGradle.
-    // If the group id is "net.minecraft" and the artifact id is one of ["client", "server", "joined"],
-    // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "com.electronwill.night-config:core:3.6.7"
-    modImplementation "com.electronwill.night-config:toml:3.6.7"
-
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modImplementation "net.jodah:typetools:0.6.3"
-
-    // Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
-    // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
-    // compileOnly fg.deobf("mezz.jei:jei-${mc_version}-common-api:${jei_version}")
-    // compileOnly fg.deobf("mezz.jei:jei-${mc_version}-forge-api:${jei_version}")
-    // runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}-forge:${jei_version}")
-
-    // Example mod dependency using a mod jar from ./libs with a flat dir repository
-    // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
-    // The group id is ignored when searching -- in this case, it is "blank"
-    // implementation fg.deobf("blank:coolmod-${mc_version}:${coolmod_version}")
-
-    // For more info:
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
-}
-
-processResources {
-    inputs.property "version", project.version
-    inputs.property "minecraft_version", project.minecraft_version
-    inputs.property "loader_version", project.loader_version
-    filteringCharset "UTF-8"
-
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version,
-                "minecraft_version": project.minecraft_version,
-                "loader_version": project.loader_version
-    }
-}
-
-def targetJavaVersion = 21
-tasks.withType(JavaCompile).configureEach {
-    // ensure that the encoding is set to UTF-8, no matter what the system default is
-    // this fixes some edge cases with special characters not displaying correctly
-    // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
-    // If Javadoc is generated, this must be specified in that task too.
-    it.options.encoding = "UTF-8"
-    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
-        it.options.release.set(targetJavaVersion)
-    }
-}
-
-java {
-    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
-    if (JavaVersion.current() < javaVersion) {
-        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
-    }
-    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-    // if it is present.
-    // If you remove this line, sources will not be generated.
-    withSourcesJar()
-}
-
-jar {
-    from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}" }
-    }
-}
-
-// configure the maven publication
-publishing {
-    publications {
-        create("mavenJava", MavenPublication) {
-            artifactId = project.archives_base_name
-            from components.java
-        }
-    }
-
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+buildscript {
     repositories {
-        // Add repositories to publish to here.
-        // Notice: This block does NOT have the same function as the block in the top level.
-        // The repositories here will be used for publishing your artifact, not for
-        // retrieving dependencies.
+        maven {
+            name = "Forge"
+            url = "https://maven.minecraftforge.net"
+        }
+
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+        gradlePluginPortal()
+
+    }
+    dependencies {
+        classpath 'com.modrinth.minotaur:Minotaur:2.+'
+        classpath 'gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:1.1.7'
+        classpath 'net.minecraftforge:gradleutils:2.2.0' // Required for changelog generation
     }
 }
+
+apply plugin: 'org.jetbrains.gradle.plugin.idea-ext'
+apply plugin: 'net.minecraftforge.gradleutils'
+
+ext {
+    mod_version = gradleutils.getTagOffsetVersion()
+    changelog_file = rootProject.file("build/changelog.txt")
+    trimChangelog = (String text) -> {
+        def m = text =~ /(?s) - (?:[0-9.]+) (.+?)(?=( - )|$)/
+        return '```\n' + m[0][1].replaceAll(/(?m)^ */, '')
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: 'maven-publish'
+
+    if (!project.name.equals("Common")) {
+        apply plugin: 'com.modrinth.minotaur'
+    }
+
+    version = "${minecraft_version}-${mod_version}"
+
+    java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+    java.withSourcesJar()
+
+    jar {
+        manifest {
+            attributes([
+                    'Specification-Title'     : mod_name,
+                    'Specification-Vendor'    : mod_authors,
+                    'Specification-Version'   : mod_version,
+                    'Implementation-Title'    : project.name,
+                    'Implementation-Version'  : mod_version,
+                    'Implementation-Vendor'   : mod_authors,
+                    'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                    'Timestamp'               : System.currentTimeMillis(),
+                    'Built-On-Java'           : "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
+                    'Build-On-Minecraft'      : minecraft_version
+            ])
+        }
+    }
+
+    repositories {
+        mavenCentral()
+        maven { name = 'Sponge / Mixin'; url = 'https://repo.spongepowered.org/repository/maven-public/' }
+        maven { name = 'Forge'; url = "https://maven.minecraftforge.net" }
+        maven { url "https://www.cursemaven.com"; content { includeGroup "curse.maven" } }
+        maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
+        maven { name = 'NeoForge'; url = 'https://maven.neoforged.net/releases' }
+        maven { url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1" }
+        maven { url "https://maven.theillusivec4.top/" }
+
+        maven {
+            name = 'WhiteNoise' // Library for wendall911 mods
+            url = 'https://raw.githubusercontent.com/wendall911/maven/main/'
+        }
+
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        it.options.encoding = 'UTF-8'
+        it.options.release.set(21)
+    }
+
+    processResources {
+        var expandProps = [
+                minecraft_version: minecraft_version,
+                neoforge_version : neo_version, neoforge_version_range: neoforge_version_range, neoforge_loader_version_range: neoforge_loader_version_range,
+                mod_id           : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
+                mod_authors      : mod_authors, mod_description: mod_description,
+        ]
+
+        // inclure seulement ce qui correspond au projet
+        if (project.name == "NeoForge") {
+            filesMatching(['META-INF/neoforge.mods.toml']) {
+                expand expandProps
+            }
+        } else if (project.name == "Fabric") {
+            filesMatching(['pack.mcmeta', 'fabric.mod.json']) {
+                expand expandProps
+            }
+        } else {
+            // Common : juste pack.mcmeta si besoin
+            filesMatching(['pack.mcmeta']) {
+                expand expandProps
+            }
+        }
+
+        inputs.properties(expandProps)
+
+        // fix dupliqués si jamais
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+
+    tasks.withType(GenerateModuleMetadata) {
+        enabled = false
+    }
+}
+tasks.register("discordWebhook") {
+    doLast {
+        def webhookUrl = System.getenv("DISCORD_WEBHOOK_URL")
+        def changelogText = rootProject.file("SSPchangelog.md").text
+
+        def payload = [
+                username: "Build Bot",
+                allowed_mentions: [ parse: ["roles"] ],
+                content: "**New release published!** 🎉\n" +
+                        "<@&1410734648832688229>\n" + // role mention
+                        "Project: ${mod_name}\n" +
+                        "Version: v${version}\n\n" +
+                        "${changelogText.take(1900)}"
+        ]
+
+        println "Sending release notification to Discord..."
+        def connection = new URL(webhookUrl).openConnection()
+        connection.with {
+            doOutput = true
+            requestMethod = "POST"
+            setRequestProperty("Content-Type", "application/json")
+            outputStream.withWriter("UTF-8") { it << JsonOutput.toJson(payload) }
+            println "Webhook sent with response code: ${responseCode}"
+        }
+    }
+}
+
+

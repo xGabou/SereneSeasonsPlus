@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${mod_version}",
+  "name": "${mod_name}",
+  "description": "Addon to Serene Seasons.",
+  "authors": [
+    "Gabou"
+  ],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "logo.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.Gabou.sereneseasonsplus.SereneSeasonsPlusFabric"
+    ],
+    "client": [
+      "com.Gabou.sereneseasonsplus.client.SereneSeasonsPlusClient"
+    ],
+    "modmenu": [
+      "com.Gabou.sereneseasonsplus.client.SereneSeasonsPlusModMenu"
+    ]
+  },
+  "mixins": [
+    "sereneseasonsplus.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.17.2",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}",
+    "betterdays": "*",
+    "sereneseasons": "*"
+  },
+  "suggests": {
+        "modmenu": ">=7.0.0"
+  }
+}
