@@ -1,11 +1,12 @@
 package com.Gabou.sereneseasonsplus.features;
 
 import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
-import com.Gabou.sereneseasonsplus.storage.SnowRecord;
+import net.Gabou.gaboulibs.storage.SnowRecord;
 import com.Gabou.sereneseasonsplus.storage.SnowSavedData;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
-import com.Gabou.sereneseasonsplus.util.SnowGenerator;
+import net.Gabou.gaboulibs.util.SnowGenerator;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;

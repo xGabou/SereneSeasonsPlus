@@ -10,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.storage.LevelResource;
 import sereneseasons.api.season.Season;
+import net.Gabou.gaboulibs.util.WorldContext;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +27,10 @@ public class EnvironmentHelper {
     /** Called by Fabric/Forge bootstrap to inject the correct impl */
     public static void init(IEnvironmentHelper impl) {
         delegate = impl;
+    }
+
+    public static boolean isGrassFloweringEnabled() {
+        return delegate.isGrassFloweringEnabled();
     }
 
     public static boolean isClient() {

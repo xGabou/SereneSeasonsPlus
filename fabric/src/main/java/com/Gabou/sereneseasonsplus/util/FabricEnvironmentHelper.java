@@ -1,11 +1,13 @@
 package com.Gabou.sereneseasonsplus.util;
 
+import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
+import net.Gabou.gaboulibs.util.SnowySeason;
 
 public class FabricEnvironmentHelper implements IEnvironmentHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger("FabricEnvironmentHelper");
@@ -86,5 +88,9 @@ public class FabricEnvironmentHelper implements IEnvironmentHelper {
     @Override
     public boolean isSnowRealMagicLoaded() {
         return FabricLoader.getInstance().isModLoaded("snowrealmagic");
+    }
+    @Override
+    public boolean isGrassFloweringEnabled() {
+        return SereneExtendedConfig.GRASSFLOWER_GROWTH_ENABLED.get();
     }
 }
