@@ -24,7 +24,7 @@ public abstract class SpreadingSnowyDirtBlockMixin {
 
     @Inject(method = "randomTick", at = @At("TAIL"))
     private void sereneseasonsplus$growVegetation(BlockState state, ServerLevel level, BlockPos pos, RandomSource random, CallbackInfo ci) {
-        if (!state.is(Blocks.GRASS_BLOCK)) return;
+        if(!EnvironmentHelper.isGrassFloweringEnabled()) return;
         if(!EnvironmentHelper.isHotSeason()) return;
 
         BlockPos above = pos.above();

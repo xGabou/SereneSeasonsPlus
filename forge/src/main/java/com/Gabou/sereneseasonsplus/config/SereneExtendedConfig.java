@@ -14,6 +14,7 @@ public class SereneExtendedConfig {
     public static final ForgeConfigSpec.BooleanValue CUSTOM_CYCLE_LENGTH;
     public static final ForgeConfigSpec.BooleanValue SNOWSTORM_ENABLED;
     public static final ForgeConfigSpec.IntValue MAX_SNOW_ACCUMULATION_LAYERS;
+    public static final ForgeConfigSpec.BooleanValue GRASS_FLOWER_GROWTH_ENABLED;
 
     public static final int MIN_CORES_FOR_ASYNC = 6;
 
@@ -36,6 +37,11 @@ public class SereneExtendedConfig {
         SNOWSTORM_ENABLED = builder
                 .comment("Enable snowstorm mode which increases snow pilling intensity.")
                 .define("enabled", false);
+        builder.pop();
+        builder.push("Grass and Flower Growth");
+        GRASS_FLOWER_GROWTH_ENABLED = builder
+                .comment("Enable enhanced grass and flower growth during warm seasons.")
+                .define("enabled", true);
         builder.pop();
 
         builder.push("snow");

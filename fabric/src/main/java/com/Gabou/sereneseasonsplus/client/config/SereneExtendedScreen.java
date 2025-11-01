@@ -32,6 +32,8 @@ public class SereneExtendedScreen extends Screen {
 
     private double customNightLength;
 
+    private boolean grassFlowersEnabled;
+
     private Component replacerLabel = Component.literal("Common Feature Threshold:");
     private Component snowHeightLabel = Component.literal("Max Snow Height (layers):");
     private Component nightLabel = Component.literal("Custom Night Speed:");
@@ -64,6 +66,7 @@ public class SereneExtendedScreen extends Screen {
         this.customDayCycle = SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get();
         this.customDayLength = SereneExtendedConfig.CUSTOM_DAY_LENGTH.get();
         this.customNightLength = SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get();
+        this.grassFlowersEnabled = SereneExtendedConfig.GRASSFLOWER_GROWTH_ENABLED.get();
 
         int panelW = 420;
         int panelX = (this.width - panelW) / 2;
@@ -96,6 +99,12 @@ public class SereneExtendedScreen extends Screen {
             b.setMessage(toggleLabel("Custom Daylight Cycle", customDayCycle));
         }).bounds(0,0,200,20).build();
         this.list.addRow(Component.literal("Custom Daylight Cycle"), customBtn);
+
+        var grassFlowersBtn = Button.builder(toggleLabel("Grass and Flower Growth", grassFlowersEnabled), b -> {
+            grassFlowersEnabled = !grassFlowersEnabled;
+            b.setMessage(toggleLabel("Grass and Flower Growth", grassFlowersEnabled));
+        }).bounds(0,0,200,20).build();
+        this.list.addRow(Component.literal("Grass and Flower Growth"), grassFlowersBtn);
 
         
         this.maxReplacerBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
@@ -168,6 +177,7 @@ public class SereneExtendedScreen extends Screen {
         int parsedSnowHeight = this.maxSnowHeight;
         double parsed3 = this.customDayLength;
         double parsed4 = this.customNightLength;
+        boolean parsed5 = this.grassFlowersEnabled;
 
         try {
             parsed2 = Integer.parseInt(this.maxReplacerBox.getValue());
@@ -191,6 +201,7 @@ public class SereneExtendedScreen extends Screen {
         SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.set(customDayCycle);
         SereneExtendedConfig.CUSTOM_DAY_LENGTH.set(parsed3);
         SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.set(parsed4);
+        SereneExtendedConfig.GRASSFLOWER_GROWTH_ENABLED.set(parsed5);
 
         // Persist to Fabric config JSON
         SereneExtendedConfig.save();

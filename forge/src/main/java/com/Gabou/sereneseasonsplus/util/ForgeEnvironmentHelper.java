@@ -1,6 +1,7 @@
 package com.Gabou.sereneseasonsplus.util;
 
 
+import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.fml.ModList;
@@ -9,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
+import net.Gabou.gaboulibs.util.SnowySeason;
 
 
 
@@ -94,5 +96,10 @@ public class ForgeEnvironmentHelper implements IEnvironmentHelper {
     @Override
     public boolean isSnowRealMagicLoaded() {
         return ModList.get().isLoaded("snowrealmagic");
+    }
+
+    @Override
+    public boolean isGrassFloweringEnabled() {
+        return SereneExtendedConfig.GRASS_FLOWER_GROWTH_ENABLED.get();
     }
 }

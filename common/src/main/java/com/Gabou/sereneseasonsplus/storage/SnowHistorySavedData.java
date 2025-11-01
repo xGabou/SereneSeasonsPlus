@@ -4,7 +4,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
-import com.Gabou.sereneseasonsplus.util.WorldContext;
+import net.Gabou.gaboulibs.util.WorldContext;
+import net.Gabou.gaboulibs.storage.SnowRecord;
 
 import java.util.HashMap;
 import java.util.Map;

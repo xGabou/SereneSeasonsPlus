@@ -3,7 +3,7 @@ package com.Gabou.sereneseasonsplus.storage;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
-import com.Gabou.sereneseasonsplus.util.WorldContext;
+import net.Gabou.gaboulibs.util.WorldContext;
 
 import java.util.HashSet;
 import java.util.Set;
