@@ -26,6 +26,7 @@ public class SereneExtendedConfig {
     public static final BooleanValue CUSTOM_CYCLE_LENGTH;
     public static final BooleanValue SNOWSTORM_ENABLED;
     public static final IntValue MAX_SNOW_ACCUMULATION_LAYERS;
+    public static final BooleanValue GRASSFLOWER_GROWTH_ENABLED;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("sereneseasonsplus.json");
@@ -37,6 +38,8 @@ public class SereneExtendedConfig {
 
     static {
         USE_ASYNC = new BooleanValue("useAsync", Runtime.getRuntime().availableProcessors() > MIN_CORES_FOR_ASYNC);
+
+        GRASSFLOWER_GROWTH_ENABLED = new BooleanValue("grassFlowerGrowthEnabled", true);
 
         TICK_SNOW_PILLER = new IntValue("tickSnowPiller", 20, 1, Integer.MAX_VALUE);
         TICK_SNOW_REPLACER = new IntValue("tickSnowReplacer", 100, 1, Integer.MAX_VALUE);
@@ -87,6 +90,7 @@ public class SereneExtendedConfig {
             TICK_SNOW_PILLER.load(obj);
             TICK_SNOW_REPLACER.load(obj);
             SNOWSTORM_ENABLED.load(obj);
+            GRASSFLOWER_GROWTH_ENABLED.load(obj);
             MAX_SNOW_ACCUMULATION_LAYERS.load(obj);
             ENABLE_SEASONAL_DAYLIGHT_CYCLE.load(obj);
             CUSTOM_CYCLE_LENGTH.load(obj);
@@ -109,6 +113,7 @@ public class SereneExtendedConfig {
             SNOWSTORM_ENABLED.save(obj);
             MAX_SNOW_ACCUMULATION_LAYERS.save(obj);
             ENABLE_SEASONAL_DAYLIGHT_CYCLE.save(obj);
+            GRASSFLOWER_GROWTH_ENABLED.save(obj);
             CUSTOM_CYCLE_LENGTH.save(obj);
             CUSTOM_DAY_LENGTH.save(obj);
             CUSTOM_NIGHT_LENGTH.save(obj);
@@ -117,7 +122,6 @@ public class SereneExtendedConfig {
             }
         } catch (IOException ignored) {
         }
-        notifyReloadListeners();
     }
 
     public static final class BooleanValue {

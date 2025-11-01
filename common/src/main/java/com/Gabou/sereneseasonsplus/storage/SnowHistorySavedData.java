@@ -1,12 +1,14 @@
 package com.Gabou.sereneseasonsplus.storage;
 
-import com.Gabou.sereneseasonsplus.util.WorldContext;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.Gabou.gaboulibs.util.WorldContext;
+import net.Gabou.gaboulibs.storage.SnowRecord;
+
 
 import java.util.HashMap;
 import java.util.Map;

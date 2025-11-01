@@ -1,6 +1,6 @@
 package com.Gabou.sereneseasonsplus.storage;
 
-import com.Gabou.sereneseasonsplus.util.WorldContext;
+import net.Gabou.gaboulibs.util.WorldContext;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;

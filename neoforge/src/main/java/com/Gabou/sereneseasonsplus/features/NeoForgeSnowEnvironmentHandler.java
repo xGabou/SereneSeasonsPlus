@@ -2,9 +2,9 @@ package com.Gabou.sereneseasonsplus.features;
 
 import com.Gabou.sereneseasonsplus.SereneSeasonsPlusNeoForge;
 import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
-import com.Gabou.sereneseasonsplus.storage.SnowRecord;
+import net.Gabou.gaboulibs.storage.SnowRecord;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
-import com.Gabou.sereneseasonsplus.util.SnowGenerator;
+import net.Gabou.gaboulibs.util.SnowGenerator;
 import net.Gabou.projectatmosphere.manager.ForecastOrchestrator;
 import net.Gabou.projectatmosphere.util.BiomeInstanceKey;
 import net.minecraft.core.BlockPos;

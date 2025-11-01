@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
+import net.Gabou.gaboulibs.util.SnowySeason;
 
 public class FabricEnvironmentHelper implements IEnvironmentHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger("FabricEnvironmentHelper");

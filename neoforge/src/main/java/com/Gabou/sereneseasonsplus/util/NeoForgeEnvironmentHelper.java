@@ -1,6 +1,7 @@
 package com.Gabou.sereneseasonsplus.util;
 
 import com.Gabou.sereneseasonsplus.SereneSeasonsPlusNeoForge;
+import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import net.Gabou.projectatmosphere.api.AtmoApi;
 import net.minecraft.client.Minecraft;
@@ -12,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
+import net.Gabou.gaboulibs.util.SnowySeason;
 
 public class NeoForgeEnvironmentHelper implements IEnvironmentHelper{
     private static final Logger LOGGER = LogManager.getLogger("EnvironmentHelper");
@@ -121,6 +123,12 @@ public class NeoForgeEnvironmentHelper implements IEnvironmentHelper{
     @Override
     public boolean isSnowRealMagicLoaded() {
         return ModList.get().isLoaded("snowrealmagic");
+    }
+
+
+    @Override
+    public boolean isGrassFloweringEnabled() {
+        return SereneExtendedConfig.GRASS_FLOWER_GROWTH_ENABLED.get();
     }
 
 

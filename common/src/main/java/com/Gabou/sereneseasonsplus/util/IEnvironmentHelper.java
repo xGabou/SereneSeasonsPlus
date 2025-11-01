@@ -14,4 +14,5 @@ public interface IEnvironmentHelper {
     boolean isSereneWildLoaded();
     boolean isModLoaded(String modId);
     boolean isSnowRealMagicLoaded();
+    boolean isGrassFloweringEnabled();
 }

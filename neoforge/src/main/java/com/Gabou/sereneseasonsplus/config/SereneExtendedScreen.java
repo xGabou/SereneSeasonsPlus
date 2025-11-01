@@ -32,6 +32,8 @@ public class SereneExtendedScreen extends Screen {
 
     private double customNightLength;
 
+    private boolean grassFlowerGrowth;
+
     private Component replacerLabel = Component.literal("Common Feature Threshold:");
     private Component pillerLabel = Component.literal("");
     private Component snowHeightLabel = Component.literal("Max Snow Height (layers):");
@@ -61,6 +63,8 @@ public class SereneExtendedScreen extends Screen {
         this.customDayCycle = SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get();
         this.customDayLength = SereneExtendedConfig.CUSTOM_DAY_LENGTH.get();
         this.customNightLength = SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get();
+        this.grassFlowerGrowth = SereneExtendedConfig.GRASS_FLOWER_GROWTH_ENABLED.get();
+
 
         int panelW = 420;
         int panelX = (this.width - panelW) / 2;
@@ -94,6 +98,12 @@ public class SereneExtendedScreen extends Screen {
             b.setMessage(toggleLabel("Custom Daylight Cycle", customDayCycle));
         }).bounds(0,0,200,20).build();
         this.list.addRow(Component.literal("Custom Daylight Cycle"), customBtn);
+
+        var grassFlowerBtn = Button.builder(toggleLabel("Grass and Flower Growth", grassFlowerGrowth), b -> {
+            grassFlowerGrowth = !grassFlowerGrowth;
+            b.setMessage(toggleLabel("Grass and Flower Growth", grassFlowerGrowth));
+        }).bounds(0,0,200,20).build();
+        this.list.addRow(Component.literal("Grass and Flower Growth"), grassFlowerBtn);
 
 
         this.maxReplacerBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
@@ -178,6 +188,8 @@ public class SereneExtendedScreen extends Screen {
         SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.set(customDayCycle);
         SereneExtendedConfig.CUSTOM_DAY_LENGTH.set(parsed3);
         SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.set(parsed4);
+        SereneExtendedConfig.GRASS_FLOWER_GROWTH_ENABLED.set(grassFlowerGrowth);
+
 
         try {
             saveToFile();
