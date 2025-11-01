@@ -64,6 +64,7 @@ dependencies {
     include implementation("net.jodah:typetools:0.6.3")
     runtimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.1")
     modImplementation "curse.maven:spark-361579:4950610"
+    modImplementation "curse.maven:gabous-libs-1367332:7174876"
     modImplementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_range}"
     //modImplementation "curse.maven:sodium-394468:5092261"
 }

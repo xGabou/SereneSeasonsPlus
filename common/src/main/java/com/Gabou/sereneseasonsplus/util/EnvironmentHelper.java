@@ -10,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.storage.LevelResource;
 import sereneseasons.api.season.Season;
+import net.Gabou.gaboulibs.util.WorldContext;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -48,6 +49,10 @@ public class EnvironmentHelper {
         rainHandler.onSimpleCloudsDespawned(level,hashcode);
     }
 
+
+    public static boolean isGrassFloweringEnabled() {
+        return delegate.isGrassFloweringEnabled();
+    }
     /**
      * Allows platform bootstrap to install a custom rain handler.
      */

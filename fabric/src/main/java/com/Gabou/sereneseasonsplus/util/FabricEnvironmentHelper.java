@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus.util;
 
+import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -86,5 +87,10 @@ public class FabricEnvironmentHelper implements IEnvironmentHelper {
     @Override
     public boolean isSnowRealMagicLoaded() {
         return FabricLoader.getInstance().isModLoaded("snowrealmagic");
+    }
+
+    @Override
+    public boolean isGrassFloweringEnabled() {
+        return SereneExtendedConfig.GRASSFLOWER_GROWTH_ENABLED.get();
     }
 }
