@@ -59,7 +59,8 @@ dependencies {
     runtimeOnly "me.djtheredstoner:DevAuth-neoforge:1.2.1"
     compileOnly "curse.maven:project-atmosphere-1258344:7070436"
     implementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-neoforge", version: "${whitenoise_version}"
-    implementation "curse.maven:gabous-libs-1367332:7174877"
+    implementation "curse.maven:gabous-libs-1367332:7183487"
+    implementation "curse.maven:architectury-api-419699:5786327"
     //runtimeOnly "curse.maven:rubidium-extra-654373:5176872"
     //runtimeOnly "curse.maven:embeddium-908741:5521869"
 }
