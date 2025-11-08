@@ -13,7 +13,6 @@
     "SpreadingSnowyDirtBlockMixin"
   ],
   "client": [
-    "ScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

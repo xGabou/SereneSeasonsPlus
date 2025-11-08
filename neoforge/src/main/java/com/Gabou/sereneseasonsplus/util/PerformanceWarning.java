@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus.util;
 
+import net.Gabou.gaboulibs.util.IScreen;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;

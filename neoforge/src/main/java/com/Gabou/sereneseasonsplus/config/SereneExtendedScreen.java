@@ -1,7 +1,7 @@
 package com.Gabou.sereneseasonsplus.config;
 
 import com.Gabou.sereneseasonsplus.SereneSeasonsPlusNeoForge;
-import com.Gabou.sereneseasonsplus.util.IScreen;
+import net.Gabou.gaboulibs.util.IScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
