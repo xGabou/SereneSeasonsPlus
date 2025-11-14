@@ -65,8 +65,13 @@ ordering = "NONE"
 # Side this dependency is applied on - BOTH, CLIENT, or SERVER
 side = "BOTH"
 
-# Features are specific properties of the game environment, that you may want to declare you require. This example declares
-# that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
-# stop your mod loading on the server for example.
-#[features."${mod_id}"]
-#openGLVersion="[3.2,)"
+[[dependencies."${mod_id}"]] #optional
+# the modid of the dependency
+modId = "sereneseasons" #mandatory
+type = "required" #mandatory
+
+[[dependencies."${mod_id}"]] #optional
+# the modid of the dependency
+modId = "gaboulibs" #mandatory
+type = "required" #mandatory
+
