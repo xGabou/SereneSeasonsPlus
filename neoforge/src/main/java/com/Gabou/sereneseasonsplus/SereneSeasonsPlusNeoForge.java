@@ -72,6 +72,7 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
 
     @SubscribeEvent
     public void onServerStarted(ServerStartedEvent event) {
+        SereneService.HANDLER = new NeoForgeAsyncExecutorHandler();
         EnvironmentHelper.onServerStarted(event.getServer().getLevel(Level.OVERWORLD));
     }
 
