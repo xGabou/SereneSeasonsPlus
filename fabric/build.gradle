@@ -96,6 +96,7 @@ modrinth {
         required.project "tPLE214j"
         required.project "N8aGZtvj"
         required.project "mOgUt4GM"
+         required.project "N8aGZtvj"
     }
     uploadFile = file("build/libs/${archivesBaseName}-${version}.jar")
 }
