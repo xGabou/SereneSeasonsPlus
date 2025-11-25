@@ -17,5 +17,5 @@ dependencies {
     compileOnly "curse.maven:betterdays-895618:5877548"
 
     compileOnly group:'org.spongepowered', name: 'mixin', version: '0.8.5'
-    compileOnly "curse.maven:gabous-libs-1367332:7163326"
+    compileOnly "curse.maven:gabous-libs-1367332:7261537"
 }

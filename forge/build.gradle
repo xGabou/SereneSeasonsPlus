@@ -99,7 +99,7 @@ dependencies {
     implementation fg.deobf("curse.maven:embeddium-908741:5681725")
     implementation fg.deobf("curse.maven:chloride-931925:6615986")
     implementation fg.deobf("curse.maven:rubidium-extra-654373:6101745")
-    implementation fg.deobf("curse.maven:gabous-libs-1367332:7163326")
+    implementation fg.deobf("curse.maven:gabous-libs-1367332:7261537")
     runtimeOnly fg.deobf("curse.maven:architectury-api-419699:5137938")
     //runtimeOnly fg.deobf("curse.maven:simple-clouds-1121215:6928978")
 }
@@ -115,6 +115,7 @@ modrinth {
     dependencies {
         required.project "e0bNACJD"
         required.project "tPLE214j"
+        required.project "N8aGZtvj"
         optional.project "qIWoLcKJ"
     }
     uploadFile = file("build/libs/${archivesBaseName}-${version}.jar")

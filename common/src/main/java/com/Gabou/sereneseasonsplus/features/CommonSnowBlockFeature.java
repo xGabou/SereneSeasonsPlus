@@ -2,7 +2,7 @@ package com.Gabou.sereneseasonsplus.features;
 
 
 import com.Gabou.sereneseasonsplus.features.logic.SnowLogic;
-import com.Gabou.sereneseasonsplus.features.snowstorm.ISnowStormLevel;
+import net.Gabou.gaboulibs.util.ISnowStormLevel;
 import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
 import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
 import net.Gabou.gaboulibs.storage.SnowRecord;
