@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.logging.Logger;
 
-@Mixin(ChunkSerializer.class)
+@Mixin(value = ChunkSerializer.class)
 public abstract class ChunkSerializerSnowMixin {
     private static final String SSP = "SereneSeasonsPlus";
 

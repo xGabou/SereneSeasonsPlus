@@ -55,7 +55,8 @@ dependencies {
     implementation project(":Common")
 
     // tes dépendances Fabric spécifiques
-    modImplementation "curse.maven:betterdays-895618:6998166"
+    modImplementation "curse.maven:betterdays-895618:7046760"
+    modImplementation "curse.maven:snow-real-magic-fabric-560441:6779484"
     modImplementation "curse.maven:serene-seasons-291874:6398228"
     modImplementation "curse.maven:glitchcore-955399:5787838"
     modImplementation "curse.maven:modmenu-308702:5162837"
@@ -90,7 +91,7 @@ modrinth {
     changelog = rootProject.file("SSPchangelog.md").text
     gameVersions = ["1.20.1"]
     loaders = ["fabric"]
-    versionType = "release"
+    versionType = "beta"
     dependencies {
         required.project "e0bNACJD"
         required.project "tPLE214j"
@@ -106,7 +107,7 @@ curseforge {
     project {
         id = "1288843"
         changelog = rootProject.file("SSPchangelog.md")
-        releaseType = "release" // options: alpha, beta, release
+        releaseType = "beta" // options: alpha, beta, release
         addGameVersion "1.20.1"
         addGameVersion "Fabric"
         mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {

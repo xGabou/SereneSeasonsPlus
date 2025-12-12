@@ -79,7 +79,7 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     compileOnly project(":Common")
     // tes dépendances Forge spécifiques
-    implementation fg.deobf("curse.maven:betterdays-895618:6998167")
+    implementation fg.deobf("curse.maven:betterdays-895618:7046761")
     //compileOnly fg.deobf("curse.maven:project-atmosphere-1258344:6994348")
     implementation fg.deobf("curse.maven:serene-seasons-291874:6398227")
     implementation fg.deobf("curse.maven:glitchcore-955399:5787839")
@@ -91,7 +91,7 @@ dependencies {
     runtimeOnly("me.djtheredstoner:DevAuth-forge-latest:1.2.1")
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     //runtimeOnly "curse.maven:embeddium-908741:5681725"
-    compileOnly fg.deobf("curse.maven:project-atmosphere-1258344:7059543")
+    compileOnly fg.deobf("curse.maven:project-atmosphere-1258344:7302025")
     implementation fg.deobf("curse.maven:spark-361579:4738952")
     //implementation fg.deobf("curse.maven:alltheleaks-1091339:6967574")
     implementation fg.deobf("curse.maven:ferritecore-429235:4810975")
@@ -101,6 +101,8 @@ dependencies {
     implementation fg.deobf("curse.maven:rubidium-extra-654373:6101745")
     implementation fg.deobf("curse.maven:gabous-libs-1367332:7261537")
     runtimeOnly fg.deobf("curse.maven:architectury-api-419699:5137938")
+    implementation fg.deobf("curse.maven:snow-real-magic-308663:6888541")
+    implementation fg.deobf("curse.maven:kiwi-303657:7289940")
     //runtimeOnly fg.deobf("curse.maven:simple-clouds-1121215:6928978")
 }
 modrinth {
@@ -111,7 +113,7 @@ modrinth {
     changelog = rootProject.file("SSPchangelog.md").text
     gameVersions = ["1.20.1"]
     loaders = ["forge"]
-    versionType = "release"
+    versionType = "beta"
     dependencies {
         required.project "e0bNACJD"
         required.project "tPLE214j"
@@ -126,7 +128,7 @@ curseforge {
     project {
         id = "1288843"
         changelog = rootProject.file("SSPchangelog.md")
-        releaseType = "release" // options: alpha, beta, release
+        releaseType = "beta" // options: alpha, beta, release
         addGameVersion "1.20.1"
         addGameVersion "Forge"
         mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {

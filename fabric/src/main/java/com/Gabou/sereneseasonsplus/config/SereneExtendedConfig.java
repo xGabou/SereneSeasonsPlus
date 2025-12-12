@@ -27,6 +27,8 @@ public class SereneExtendedConfig {
     public static final BooleanValue SNOWSTORM_ENABLED;
     public static final IntValue MAX_SNOW_ACCUMULATION_LAYERS;
     public static final BooleanValue GRASSFLOWER_GROWTH_ENABLED;
+    public static final BooleanValue REAL_TIME_CANADIAN_SEASONS;
+
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("sereneseasonsplus.json");
@@ -52,6 +54,8 @@ public class SereneExtendedConfig {
         CUSTOM_CYCLE_LENGTH = new BooleanValue("customCycleLength", false);
         CUSTOM_DAY_LENGTH = new DoubleValue("customDayLength", 1.0, 0.05, 100.0);
         CUSTOM_NIGHT_LENGTH = new DoubleValue("customNightLength", 1.0, 0.05, 100.0);
+        REAL_TIME_CANADIAN_SEASONS = new BooleanValue("realTimeCanadianSeasons", false);
+
 
         load();
     }

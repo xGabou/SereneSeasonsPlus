@@ -76,6 +76,7 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
                 .getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT)
                 .set(SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get(), event.getServer());
         CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get(), SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get());
+        RealTimeSeasonHelper.sync(event.getServer().getLevel(Level.OVERWORLD), SereneExtendedConfig.REAL_TIME_CANADIAN_SEASONS.get());
     }
 
 
@@ -126,6 +127,7 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
         if (event.side.isClient() || event.phase != TickEvent.Phase.END || !event.haveTime())return;
         ServerLevel level = (ServerLevel) event.level;
         if( level.dimension() != Level.OVERWORLD) return;
+        RealTimeSeasonHelper.sync(level, SereneExtendedConfig.REAL_TIME_CANADIAN_SEASONS.get());
         this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
         CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
 

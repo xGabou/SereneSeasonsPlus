@@ -12,14 +12,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import sereneseasons.init.ModConfig;
 import sereneseasons.season.SeasonHooks;
 
-@Mixin(SeasonHooks.class)
+@Mixin(value = SeasonHooks.class, remap = false )
 public abstract class SeasonHooksMixin {
 
     /**
      * Injects at RETURN instead of overwriting, preserving other mixins
      * (No Man’s Land, Serene Wild) while still replacing the final snow logic.
      */
-    @Inject(method = "shouldSnowHook", at = @At("RETURN"), cancellable = true, remap = false)
+    @Inject(method = "shouldSnowHook", at = @At("RETURN"), cancellable = true)
     private static void shouldSnowHook(
             Biome biome, LevelReader levelReader, BlockPos pos,
             CallbackInfoReturnable<Boolean> cir

@@ -14,8 +14,14 @@ dependencies {
     compileOnly "curse.maven:serene-seasons-291874:6398227"
     compileOnly "curse.maven:glitchcore-955399:5787839"      // BetterDays / GlitchCore
     compileOnly group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-common", version: "${whitenoise_version}"
-    compileOnly "curse.maven:betterdays-895618:5877548"
+    compileOnly "curse.maven:betterdays-895618:7046760"
+    compileOnly "curse.maven:snow-real-magic-308663:6888541"
 
     compileOnly group:'org.spongepowered', name: 'mixin', version: '0.8.5'
+    compileOnly "org.ow2.asm:asm:9.8"
+    compileOnly "org.ow2.asm:asm-commons:9.8"
+    compileOnly "org.ow2.asm:asm-tree:9.8"
+    compileOnly "org.ow2.asm:asm-util:9.8"
+    compileOnly "org.ow2.asm:asm-analysis:9.8"
     compileOnly "curse.maven:gabous-libs-1367332:7261537"
 }

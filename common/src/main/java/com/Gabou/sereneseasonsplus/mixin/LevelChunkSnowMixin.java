@@ -20,7 +20,7 @@ import java.util.Set;
 
 import static com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.LOGGER;
 
-@Mixin(LevelChunk.class)
+@Mixin(value = LevelChunk.class )
 public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     @Unique
     private int sereneseasonsplus$lastWinterId = -1;

@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-@Mixin(ProtoChunk.class)
+@Mixin(value = ProtoChunk.class )
 public class ProtoChunkSnowMixin implements ISnowTrackedChunk {
     @Unique
     private int sereneseasonsplus$lastWinterId = -1;
