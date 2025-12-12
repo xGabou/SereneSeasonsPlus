@@ -23,3 +23,24 @@ run
 
 # Files from Forge MDK
 forge*changelog.txt
+/neoforge/runs/data/logs/2025-12-12-1.log.gz
+/neoforge/runs/data/logs/2025-12-12-2.log.gz
+/neoforge/runs/data/logs/2025-12-12-3.log.gz
+/neoforge/runs/data/config/betterdays-client.toml
+/neoforge/runs/data/config/betterdays-common.toml
+/neoforge/runs/data/logs/debug.log
+/neoforge/runs/data/logs/debug-1.log.gz
+/neoforge/runs/data/logs/debug-2.log.gz
+/neoforge/runs/data/logs/debug-3.log.gz
+/neoforge/runs/data/config/sereneseasons/fertility.toml
+/neoforge/runs/data/config/fml.toml
+/neoforge/runs/data/config/fabric/indigo-renderer.properties
+/neoforge/runs/data/config/kiwi-client.yaml
+/neoforge/runs/data/config/kiwi-common.yaml
+/neoforge/runs/data/config/ksit-common.yaml
+/neoforge/runs/data/logs/latest.log
+/PrintSubs.java
+/neoforge/runs/data/config/sereneseasons/seasons.toml
+/neoforge/runs/data/config/snowrealmagic-client.yaml
+/neoforge/runs/data/config/snowrealmagic-common.yaml
+/neoforge/runs/data/config/whitenoise-client.toml
