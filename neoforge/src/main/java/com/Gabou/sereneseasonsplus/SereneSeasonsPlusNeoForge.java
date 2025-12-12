@@ -74,6 +74,7 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
     public void onServerStarted(ServerStartedEvent event) {
         SereneService.HANDLER = new NeoForgeAsyncExecutorHandler();
         EnvironmentHelper.onServerStarted(event.getServer().getLevel(Level.OVERWORLD));
+        RealTimeSeasonHelper.sync(event.getServer().getLevel(Level.OVERWORLD), SereneExtendedConfig.REAL_TIME_CANADIAN_SEASONS.get());
     }
 
     /**
@@ -110,6 +111,7 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
         if (event.getLevel().isClientSide() || !event.hasTime())return;
         ServerLevel level = (ServerLevel) event.getLevel();
         if( level.dimension() != Level.OVERWORLD) return;
+        RealTimeSeasonHelper.sync(level, SereneExtendedConfig.REAL_TIME_CANADIAN_SEASONS.get());
         this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
         CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
 

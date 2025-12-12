@@ -96,7 +96,7 @@ modrinth {
     changelog = rootProject.file("SSPchangelog.md").text
     gameVersions = ["1.21.1"]
     loaders = ["fabric"]
-    versionType = release_type
+    versionType = "beta"
     dependencies {
         required.project "e0bNACJD"
         required.project "tPLE214j"

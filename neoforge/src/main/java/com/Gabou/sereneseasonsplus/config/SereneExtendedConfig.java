@@ -15,6 +15,7 @@ public class SereneExtendedConfig {
     public static final ModConfigSpec.BooleanValue SNOWSTORM_ENABLED;
     public static final ModConfigSpec.IntValue MAX_SNOW_ACCUMULATION_LAYERS;
     public static final ModConfigSpec.BooleanValue GRASS_FLOWER_GROWTH_ENABLED;
+    public static final ModConfigSpec.BooleanValue REAL_TIME_CANADIAN_SEASONS;
 
 
     public static final int MIN_CORES_FOR_ASYNC = 6;
@@ -50,6 +51,13 @@ public class SereneExtendedConfig {
                 .comment("Maximum total snow layers allowed per column (8 layers = 1 block). Default 24 = 3 blocks.")
                 .defineInRange("maxSnowAccumulationLayers", 24, 0, 512);
         builder.pop();
+
+        builder.push("seasonSync");
+        REAL_TIME_CANADIAN_SEASONS = builder
+                .comment("Lock seasons to current Canadian calendar months (Eastern time).")
+                .define("realTimeCanadianSeasons", false);
+        builder.pop();
+
         builder.push("seasonalDaylightCycle");
         ENABLE_SEASONAL_DAYLIGHT_CYCLE = builder
                 .comment("Enable seasonal daylight cycle. This will change the length of day and night based on the current season.")
@@ -70,4 +78,3 @@ public class SereneExtendedConfig {
 
     public static final ModConfigSpec COMMON_SPEC;
 }
-

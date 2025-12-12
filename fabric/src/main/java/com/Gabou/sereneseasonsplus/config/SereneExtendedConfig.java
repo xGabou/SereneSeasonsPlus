@@ -27,6 +27,7 @@ public class SereneExtendedConfig {
     public static final BooleanValue SNOWSTORM_ENABLED;
     public static final IntValue MAX_SNOW_ACCUMULATION_LAYERS;
     public static final BooleanValue GRASSFLOWER_GROWTH_ENABLED;
+    public static final BooleanValue REAL_TIME_CANADIAN_SEASONS;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("sereneseasonsplus.json");
@@ -47,6 +48,7 @@ public class SereneExtendedConfig {
         SNOWSTORM_ENABLED = new BooleanValue("snowstormEnabled", false);
         // Maximum total layers allowed per snow column (8 layers = 1 block). Default 24 = 3 blocks.
         MAX_SNOW_ACCUMULATION_LAYERS = new IntValue("maxSnowAccumulationLayers", 24, 0, 512);
+        REAL_TIME_CANADIAN_SEASONS = new BooleanValue("realTimeCanadianSeasons", false);
 
         ENABLE_SEASONAL_DAYLIGHT_CYCLE = new BooleanValue("enableSeasonalDaylightCycle", true);
         CUSTOM_CYCLE_LENGTH = new BooleanValue("customCycleLength", false);
@@ -92,6 +94,7 @@ public class SereneExtendedConfig {
             SNOWSTORM_ENABLED.load(obj);
             GRASSFLOWER_GROWTH_ENABLED.load(obj);
             MAX_SNOW_ACCUMULATION_LAYERS.load(obj);
+            REAL_TIME_CANADIAN_SEASONS.load(obj);
             ENABLE_SEASONAL_DAYLIGHT_CYCLE.load(obj);
             CUSTOM_CYCLE_LENGTH.load(obj);
             CUSTOM_DAY_LENGTH.load(obj);
@@ -112,6 +115,7 @@ public class SereneExtendedConfig {
             TICK_SNOW_REPLACER.save(obj);
             SNOWSTORM_ENABLED.save(obj);
             MAX_SNOW_ACCUMULATION_LAYERS.save(obj);
+            REAL_TIME_CANADIAN_SEASONS.save(obj);
             ENABLE_SEASONAL_DAYLIGHT_CYCLE.save(obj);
             GRASSFLOWER_GROWTH_ENABLED.save(obj);
             CUSTOM_CYCLE_LENGTH.save(obj);
@@ -212,4 +216,3 @@ public class SereneExtendedConfig {
         }
     }
 }
-

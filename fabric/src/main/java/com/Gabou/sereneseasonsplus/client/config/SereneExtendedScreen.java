@@ -34,6 +34,8 @@ public class SereneExtendedScreen extends Screen {
     private double customNightLength;
 
 
+    private boolean realTimeCanadianSeasons;
+
     private boolean grassFlowersEnabled;
 
     private Component replacerLabel = Component.literal("Common Feature Threshold:");
@@ -69,6 +71,7 @@ public class SereneExtendedScreen extends Screen {
         this.customDayLength = SereneExtendedConfig.CUSTOM_DAY_LENGTH.get();
         this.customNightLength = SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get();
         this.grassFlowersEnabled = SereneExtendedConfig.GRASSFLOWER_GROWTH_ENABLED.get();
+        this.realTimeCanadianSeasons = SereneExtendedConfig.REAL_TIME_CANADIAN_SEASONS.get();
 
 
         int panelW = 420;
@@ -107,6 +110,12 @@ public class SereneExtendedScreen extends Screen {
             b.setMessage(toggleLabel("Custom Daylight Cycle", customDayCycle));
         }).bounds(0,0,200,20).build();
         this.list.addRow(Component.literal("Custom Daylight Cycle"), customBtn);
+
+        var realTimeBtn = Button.builder(toggleLabel("Real-time Canadian Seasons", realTimeCanadianSeasons), b -> {
+            realTimeCanadianSeasons = !realTimeCanadianSeasons;
+            b.setMessage(toggleLabel("Real-time Canadian Seasons", realTimeCanadianSeasons));
+        }).bounds(0,0,200,20).build();
+        this.list.addRow(Component.literal("Calendar Synced Seasons"), realTimeBtn);
 
 
         var grassFlowersBtn = Button.builder(toggleLabel("Grass and Flower Growth", grassFlowersEnabled), b -> {
@@ -210,6 +219,7 @@ public class SereneExtendedScreen extends Screen {
         SereneExtendedConfig.CUSTOM_DAY_LENGTH.set(parsed3);
         SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.set(parsed4);
         SereneExtendedConfig.GRASSFLOWER_GROWTH_ENABLED.set(parsed5);
+        SereneExtendedConfig.REAL_TIME_CANADIAN_SEASONS.set(realTimeCanadianSeasons);
 
 
         // Persist to Fabric config JSON
@@ -268,4 +278,3 @@ public class SereneExtendedScreen extends Screen {
 
 
 }
-

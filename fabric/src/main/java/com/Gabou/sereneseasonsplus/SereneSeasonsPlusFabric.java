@@ -7,6 +7,7 @@ import com.Gabou.sereneseasonsplus.mixin.MinecraftServerMixin;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.FabricAsyncExecutorHandler;
 import com.Gabou.sereneseasonsplus.util.FabricEnvironmentHelper;
+import com.Gabou.sereneseasonsplus.util.RealTimeSeasonHelper;
 import com.Gabou.sereneseasonsplus.util.SereneService;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -64,6 +65,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
 
     private void onWorldTick(ServerLevel level) {
         if( level.dimension() != Level.OVERWORLD) return;
+        RealTimeSeasonHelper.sync(level, SereneExtendedConfig.REAL_TIME_CANADIAN_SEASONS.get());
         this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
         CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
 
@@ -71,6 +73,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
 
     private void onServerStarted(MinecraftServer server) {
         EnvironmentHelper.onServerStarted(server.getLevel(Level.OVERWORLD));
+        RealTimeSeasonHelper.sync(server.getLevel(Level.OVERWORLD), SereneExtendedConfig.REAL_TIME_CANADIAN_SEASONS.get());
         // Apply configured maximum snow accumulation (in layers)
         server.getGameRules()
                 .getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT)
