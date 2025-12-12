@@ -11,6 +11,8 @@ public class SSPTags {
                 TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("sereneseasonsplus", "meltable"));
         public static final TagKey<Block> FLOWERS =
                 TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("sereneseasonsplus", "flowers"));
+        public static final TagKey<Block> SNOW_REPLACEABLE =
+                TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("sereneseasonsplus", "snow_replaceable"));
     }
 }
 

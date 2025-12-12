@@ -327,10 +327,6 @@ public class CommonSnowBlockFeature {
                         BlockState ns = level.getBlockState(targetPos);
                         accumulateColumnUpdate(targetPos, ns);
                     }
-
-                    // Try freezing water in water biomes near this attempt
-                    BlockPos below = new BlockPos(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z), z).below();
-                    tryFreezeWaterAt(level, below);
                 }
             } else {
                 for (int i = 0; i < blocksToReplace; ++i) {
@@ -516,7 +512,6 @@ public class CommonSnowBlockFeature {
         if (!state.is(Blocks.WATER)) return false;
 
         BlockPos sample = pos.above();
-        if (!EnvironmentHelper.isRainning(level, sample)) return false;
         // Do not freeze under roofs/caves
         if (!isExposedToSky(level, sample)) return false;
         if (!HANDLER.isColdEnoughForSnow(level, sample)) return false;
@@ -999,7 +994,7 @@ public class CommonSnowBlockFeature {
         BlockState at = level.getBlockState(base);
 
         BlockState snow = Blocks.SNOW.defaultBlockState();
-        if ((level.isEmptyBlock(base) || at.canBeReplaced()) && snow.canSurvive(level, base) && canReceiveSnowAt(level, base)) {
+        if ((level.isEmptyBlock(base) || at.is(SSPTags.Blocks.SNOW_REPLACEABLE)) && snow.canSurvive(level, base) && canReceiveSnowAt(level, base)) {
             return base;
         }
 
@@ -1095,7 +1090,7 @@ public class CommonSnowBlockFeature {
             if (targetLayers == 8) return false;
             BlockState newState = Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, targetLayers);
             return level.setBlock(pos, newState, Block.UPDATE_CLIENTS);
-        } else if (allowPlace && (level.isEmptyBlock(pos) || state.canBeReplaced())) {
+        } else if (allowPlace && (level.isEmptyBlock(pos) || state.is(SSPTags.Blocks.SNOW_REPLACEABLE))) {
             if (!canReceiveSnowAt(level, pos)) return false;
             BlockState snow = Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, targetLayers);
             if (!snow.canSurvive(level, pos)) return false;
@@ -1128,7 +1123,7 @@ public class CommonSnowBlockFeature {
             queueChange(pos, newState, Block.UPDATE_CLIENTS);
             snowPill.add(pos.immutable());
             return true;
-        } else if (allowPlace && (level.isEmptyBlock(pos) || state.canBeReplaced())) {
+        } else if (allowPlace && (level.isEmptyBlock(pos) || state.is(SSPTags.Blocks.SNOW_REPLACEABLE))) {
             if (!canReceiveSnowAt(level, pos)) return false;
             BlockState snow = Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, targetLayers);
             if (!snow.canSurvive(level, pos)) return false;
@@ -1229,8 +1224,14 @@ public class CommonSnowBlockFeature {
     }
 
     protected static boolean queueClearIfNeeded(ServerLevel level, BlockPos pos, boolean toWater) {
-        BlockState wanted = toWater ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState();
         BlockState current = level.getBlockState(pos);
+        // Melt ice back into water instead of leaving an air gap
+        BlockState wanted;
+        if (current.is(Blocks.ICE) || current.is(Blocks.FROSTED_ICE)) {
+            wanted = Blocks.WATER.defaultBlockState();
+        } else {
+            wanted = toWater ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState();
+        }
         if (current.is(wanted.getBlock())) return false;
         queueChange(pos, wanted, Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
         return true;

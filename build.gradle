@@ -44,6 +44,8 @@ subprojects {
 
     version = "${minecraft_version}-${mod_version}"
 
+
+
     java.toolchain.languageVersion = JavaLanguageVersion.of(21)
     java.withSourcesJar()
 
