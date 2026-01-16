@@ -14,7 +14,7 @@ import com.Gabou.sereneseasonsplus.util.SnowUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
@@ -25,7 +25,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -41,7 +41,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class CommonSnowBlockFeature {
 
-    public static final Logger LOGGER = LogManager.getLogger("SnowBlockReplacer");
+    public static final Logger LOGGER = LogManager.getLogger("CommonSnowBlockFeature");
 
     protected static final Map<ServerPlayer, BlockPos> playerPositions = new ConcurrentHashMap<>();
 
@@ -88,6 +88,7 @@ public class CommonSnowBlockFeature {
     public static float STORM_INTENSITY_MULTIPLIER = 1.0f;
 
     protected static int maxHeightForSnow;
+    private static final int MAX_SNOW_HEIGHT_CAP = 8;
 
     public static void setFastPilingMode(boolean enabled) {
         FAST_PILING_MODE = enabled;
@@ -129,10 +130,11 @@ public class CommonSnowBlockFeature {
             return;
         }
 
-        if(needUpdateSnowFeature)
-            server.getGameRules()
-                    .getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT)
-                    .set(maxHeightForSnow, server);
+        if (needUpdateSnowFeature) {
+            server.getWorldData().getGameRules()
+                    .set(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT, clampSnowHeight(maxHeightForSnow), server);
+            needUpdateSnowFeature = false;
+        }
 
         if (!snowQueue.isEmpty()) {
             chunkHandler(level);
@@ -391,7 +393,7 @@ public class CommonSnowBlockFeature {
         if (!(chunk instanceof ISnowTrackedChunk tracked)) return false;
 
         // Skip this chunk entirely if it already reached the max snow cap from the gamerule
-        int cap = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
+        int cap = level.getGameRules().get(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT);
         if (cap > 0 && isChunkAtOrAboveSnowCap(level, chunk, cap)) {
             return false;
         }
@@ -535,7 +537,7 @@ public class CommonSnowBlockFeature {
             Holder<net.minecraft.world.level.biome.Biome> holder = level.getBiome(pos);
             return holder.unwrapKey()
                     .map(key -> {
-                        ResourceLocation rl = key.location();
+                        Identifier rl = key.identifier();
                         String path = rl.getPath();
                         return path.contains("ocean") || path.contains("river");
                     })
@@ -565,7 +567,7 @@ public class CommonSnowBlockFeature {
         if (!(chunk instanceof ISnowTrackedChunk tracked)) return false;
 
         // Skip this chunk entirely if it already reached the max snow cap from the gamerule
-        int cap = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
+        int cap = level.getGameRules().get(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT);
         if (cap > 0 && isChunkAtOrAboveSnowCap(level, chunk, cap)) {
             return false;
         }
@@ -725,7 +727,7 @@ public class CommonSnowBlockFeature {
                                                           RandomSource rng) {
         if (!(chunk instanceof ISnowTrackedChunk tracked)) return false;
 
-        int cap = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
+        int cap = level.getGameRules().get(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT);
         if (cap > 0 && isChunkAtOrAboveSnowCap(level, chunk, cap)) {
             return false;
         }
@@ -1141,7 +1143,7 @@ public class CommonSnowBlockFeature {
 
     // Ensure we never exceed configured max snow height (layers) per column
     private static int clampLayersForColumnCap(ServerLevel level, BlockPos pos, BlockState currentState, int targetLayers) {
-        int cap = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
+        int cap = level.getGameRules().get(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT);
         if (cap <= 0) return targetLayers; // no cap
 
         // compute current total in this vertical snow column
@@ -1343,8 +1345,10 @@ public class CommonSnowBlockFeature {
     }
 
     protected static int getSimulationDistance(ServerPlayer player) {
-        MinecraftServer server = player.getServer();
-        return server != null ? server.getPlayerList().getViewDistance() : 10;
+        ServerLevel level = player.level();
+        if(level == null) return 0;
+        MinecraftServer server = level.getServer();
+        return server.getPlayerList().getViewDistance();
     }
 
     public static int computeGlobalAvg(ServerLevel level) {
@@ -1406,7 +1410,8 @@ public class CommonSnowBlockFeature {
     public static void onServerStarting(int config, boolean snowStorm, int snowHeight) {
         tickThresholdSnowReplacer = config;
         snowFeatureEnabled = snowStorm;
-        maxHeightForSnow = snowHeight;
+        maxHeightForSnow = clampSnowHeight(snowHeight);
+        needUpdateSnowFeature = true;
         tickCounter = 0;
         playerPositions.clear();
         ChunkQueue.clear();
@@ -1426,8 +1431,9 @@ public class CommonSnowBlockFeature {
     }
 
     public static void onConfigReload(int config, boolean snowStorm, int snowHeight) {
-        if(snowHeight != maxHeightForSnow) {
-            maxHeightForSnow = snowHeight;
+        int clampedHeight = clampSnowHeight(snowHeight);
+        if(clampedHeight != maxHeightForSnow) {
+            maxHeightForSnow = clampedHeight;
             needUpdateSnowFeature = true;
         }
         tickThresholdSnowReplacer = config;
@@ -1463,6 +1469,10 @@ public class CommonSnowBlockFeature {
         } else {
             return temperature < 0.5F ? 3 : 25;
         }
+    }
+
+    private static int clampSnowHeight(int height) {
+        return Mth.clamp(height, 0, MAX_SNOW_HEIGHT_CAP);
     }
 
     public static boolean isSnowStormAt(ServerLevel level, ChunkPos pos) {

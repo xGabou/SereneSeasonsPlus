@@ -206,7 +206,7 @@ public final class SSPApi {
     public static void resetLoadedChunkProgress(ServerLevel level) {
         if (level == null || level.isClientSide()) return;
         for (net.minecraft.server.level.ServerPlayer player : level.players()) {
-            int view = player.getServer() != null ? player.getServer().getPlayerList().getViewDistance() : 10;
+            int view = level.getServer().getPlayerList().getViewDistance();
             int radius = Math.max(1, view);
             int baseCX = player.blockPosition().getX() >> 4;
             int baseCZ = player.blockPosition().getZ() >> 4;

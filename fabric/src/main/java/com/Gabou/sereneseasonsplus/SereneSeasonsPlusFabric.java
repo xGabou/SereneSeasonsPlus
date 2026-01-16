@@ -17,7 +17,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -106,9 +106,10 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
     private void onServerStarted(MinecraftServer server) {
         EnvironmentHelper.onServerStarted(server.getLevel(Level.OVERWORLD));
         // Apply configured maximum snow accumulation (in layers)
-        server.getGameRules()
-                .getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT)
-                .set(SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get(), server);
+        ServerLevel overworld = server.getLevel(Level.OVERWORLD);
+        if (overworld != null) {
+            overworld.getGameRules().set(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT, SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get(), server);
+        }
     }
 
     private void onChunkLoad(ServerLevel level, ChunkAccess chunkAccess) {

@@ -3,7 +3,6 @@ package com.Gabou.sereneseasonsplus.mixin;
 import com.Gabou.sereneseasonsplus.SereneSeasonPlusCommon;
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;
@@ -12,6 +11,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.PalettedContainerFactory;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.storage.RegionStorageInfo;
 import net.minecraft.world.level.chunk.storage.SerializableChunkData;
@@ -81,7 +81,7 @@ public abstract class ChunkSerializerSnowMixin {
     private static final Map<ChunkPos, CompoundTag> SS_PLUS_CACHE = new HashMap<>();
 
     @Inject(method = "parse", at = @At("RETURN"))
-    private static void ssp$cacheTag(LevelHeightAccessor level, RegistryAccess access, CompoundTag nbt, CallbackInfoReturnable<SerializableChunkData> cir) {
+    private static void ssp$cacheTag(LevelHeightAccessor level, PalettedContainerFactory access, CompoundTag nbt, CallbackInfoReturnable<SerializableChunkData> cir) {
         if (nbt.contains("SereneSeasonsPlus")) {
             ChunkPos pos = new ChunkPos(nbt.getInt("xPos").get(), nbt.getInt("zPos").get());
             SS_PLUS_CACHE.put(pos, nbt.getCompound("SereneSeasonsPlus").get().copy());

@@ -11,7 +11,7 @@ public final class DebugCommands {
     public static void registerTo(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
                 Commands.literal("sspdebug")
-                        .requires(src -> src.hasPermission(2))
+                        .requires((Commands.hasPermission(Commands.LEVEL_GAMEMASTERS)))
                         .then(Commands.literal("on").executes(ctx -> set(ctx.getSource(), true)))
                         .then(Commands.literal("off").executes(ctx -> set(ctx.getSource(), false)))
                         .then(Commands.literal("toggle").executes(ctx -> toggle(ctx.getSource())))

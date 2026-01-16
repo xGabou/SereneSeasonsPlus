@@ -11,7 +11,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
@@ -104,7 +104,7 @@ public class ServerLevelMixin {
 
             // Snow accumulation (uses your helper instead of vanilla "bl")
             if (EnvironmentHelper.isRainning(level, blockPos) && level.canSeeSkyFromBelowWater(blockPos)) {
-                int maxSnow = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
+                int maxSnow = level.getGameRules().get(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT);
                 if (maxSnow > 0 && sereneseasons.season.SeasonHooks.shouldSnowHook(biome, level, blockPos,level.getSeaLevel())) {
                     BlockState state = level.getBlockState(blockPos);
                     // Skip if this column was marked destroyed for the current storm

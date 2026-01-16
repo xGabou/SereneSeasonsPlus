@@ -7,6 +7,9 @@ import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 import java.util.Arrays;
@@ -36,7 +39,6 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         return 360;
     }
 
-
     /**
      * Scrollbar x position relative to the left edge of the list.
      */
@@ -44,6 +46,7 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
     protected int scrollBarX() {
         return this.getRowLeft() + this.getRowWidth() + 8;
     }
+
     /**
      * Adds a new row with a label and one or more widgets aligned to the right.
      *
@@ -92,8 +95,11 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
          * Renders the row label and delegates rendering to child widgets.
          */
         @Override
-        public void render(GuiGraphics g, int index, int y, int x, int rowWidth, int rowHeight,
-                           int mouseX, int mouseY, boolean hovered, float delta) {
+        public void renderContent(GuiGraphics g, int mouseX, int mouseY, boolean hovered, float delta) {
+            int x = this.getX();
+            int y = this.getY();
+            int rowWidth = this.getWidth();
+            int rowHeight = this.getHeight();
             layoutIfNeeded(x, y, rowWidth, rowHeight);
 
             // Label on the left
@@ -123,11 +129,11 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
          * Delegates clicks to child widgets and manages row selection/focus.
          */
         @Override
-        public boolean mouseClicked(double mx, double my, int button) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
             for (AbstractWidget w : widgets) {
-                if (w.mouseClicked(mx, my, button)) {
+                if (w.mouseClicked(event, doubleClick)) {
                     owner.setSelected(this);
-                    w.setFocused(true); // Fabric 1.20.4 still supports this
+                    w.setFocused(true);
                     return true;
                 }
             }
@@ -139,8 +145,8 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
          * Forwards mouse release to child widgets.
          */
         @Override
-        public boolean mouseReleased(double mx, double my, int button) {
-            for (AbstractWidget w : widgets) w.mouseReleased(mx, my, button);
+        public boolean mouseReleased(MouseButtonEvent event) {
+            for (AbstractWidget w : widgets) w.mouseReleased(event);
             return false;
         }
 
@@ -148,8 +154,8 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
          * Forwards drag events to child widgets.
          */
         @Override
-        public boolean mouseDragged(double mx, double my, int button, double dx, double dy) {
-            for (AbstractWidget w : widgets) if (w.mouseDragged(mx, my, button, dx, dy)) return true;
+        public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+            for (AbstractWidget w : widgets) if (w.mouseDragged(event, dx, dy)) return true;
             return false;
         }
 
@@ -166,8 +172,8 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
          * Forwards key events to child widgets.
          */
         @Override
-        public boolean keyPressed(int key, int sc, int mods) {
-            for (AbstractWidget w : widgets) if (w.keyPressed(key, sc, mods)) return true;
+        public boolean keyPressed(KeyEvent event) {
+            for (AbstractWidget w : widgets) if (w.keyPressed(event)) return true;
             return false;
         }
 
@@ -175,8 +181,8 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
          * Forwards character typed events to child widgets.
          */
         @Override
-        public boolean charTyped(char c, int mods) {
-            for (AbstractWidget w : widgets) if (w.charTyped(c, mods)) return true;
+        public boolean charTyped(CharacterEvent event) {
+            for (AbstractWidget w : widgets) if (w.charTyped(event)) return true;
             return false;
         }
 

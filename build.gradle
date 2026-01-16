@@ -16,7 +16,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.modrinth.minotaur:Minotaur:2.+'
-        classpath 'gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:1.1.7'
+        classpath 'gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:1.3'
         classpath 'net.minecraftforge:gradleutils:2.2.0' // Required for changelog generation
     }
 }

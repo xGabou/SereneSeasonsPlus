@@ -11,9 +11,9 @@ sourceSets.main.resources.srcDir 'src/generated/resources'
 
 dependencies {
     // Common-only compile-time deps used by shared utilities
-    compileOnly "curse.maven:serene-seasons-291874:6812965"
-    compileOnly "curse.maven:glitchcore-955399:6812823"
-    compileOnly "curse.maven:betterdays-895618:7054149"
+    compileOnly "curse.maven:serene-seasons-291874:7330937"
+    compileOnly "curse.maven:glitchcore-955399:7335721"
+    compileOnly "curse.maven:betterdays-895618:7443510"
     compileOnly group:'org.spongepowered', name: 'mixin', version: '0.8.5'
     compileOnly group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-common", version: "${whitenoise_version}"
 }

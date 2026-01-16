@@ -24,33 +24,33 @@ public class NeoForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandle
 
     @Override
     public int getBlocksToReplace(ServerLevel level, BlockPos playerPos) {
-        if (!SereneSeasonsPlusNeoForge.isProjectAtmosphereLoaded) {
+//        if (!SereneSeasonsPlusNeoForge.isProjectAtmosphereLoaded) {
             float temperature = SeasonHooks.getBiomeTemperature(level, level.getBiome(playerPos), playerPos, level.getSeaLevel());
             return SeasonHooks.coldEnoughToSnowSeasonal(level, playerPos,level.getSeaLevel())
                     ? CommonSnowBlockFeature.calculateBlocksToReplace(temperature)
                     : 0;
-        } else {
-            float temperature = ForecastOrchestrator.getCurrentTemperature(
-                    new BiomeInstanceKey(level.getBiome(playerPos).unwrapKey().get().location(), playerPos),
-                    level.getDayTime()
-            );
-            return temperature >= 0.5F
-                    ? CommonSnowBlockFeature.calculateBlocksToReplace1(temperature)
-                    : -level.random.nextInt(2, 6);
-        }
+//        } else {
+//            float temperature = ForecastOrchestrator.getCurrentTemperature(
+//                    new BiomeInstanceKey(level.getBiome(playerPos).unwrapKey().get().identifier(), playerPos),
+//                    level.getDayTime()
+//            );
+//            return temperature >= 0.5F
+//                    ? CommonSnowBlockFeature.calculateBlocksToReplace1(temperature)
+//                    : -level.random.nextInt(2, 6);
+//        }
     }
 
     @Override
     public boolean isColdEnoughForSnow(ServerLevel level, BlockPos pos) {
-        if (!SereneSeasonsPlusNeoForge.isProjectAtmosphereLoaded) {
+//        if (!SereneSeasonsPlusNeoForge.isProjectAtmosphereLoaded) {
             return SeasonHooks.coldEnoughToSnowSeasonal(level, pos, level.getSeaLevel());
-        } else {
-            float temperature = ForecastOrchestrator.getCurrentTemperature(
-                    new BiomeInstanceKey(level.getBiome(pos).unwrapKey().get().location(), pos),
-                    level.getDayTime()
-            );
-            return temperature < 0.5F;
-        }
+//        } else {
+//            float temperature = ForecastOrchestrator.getCurrentTemperature(
+//                    new BiomeInstanceKey(level.getBiome(pos).unwrapKey().get().location(), pos),
+//                    level.getDayTime()
+//            );
+//            return temperature < 0.5F;
+//        }
     }
 
 

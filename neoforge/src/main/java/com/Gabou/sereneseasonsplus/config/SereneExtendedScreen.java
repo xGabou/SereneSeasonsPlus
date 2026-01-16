@@ -7,6 +7,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 /**
@@ -242,37 +245,37 @@ public class SereneExtendedScreen extends Screen {
     /**
      * Delegates click handling to the list and then widgets.
      */
-    public boolean mouseClicked(double x, double y, int button) {
-        if (this.list != null && this.list.mouseClicked(x, y, button)) return true;
-        return super.mouseClicked(x, y, button);
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (this.list != null && this.list.mouseClicked(event, doubleClick)) return true;
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public boolean keyPressed(int key, int sc, int mods) {
-        if (this.list != null && this.list.keyPressed(key, sc, mods)) return true;
+    public boolean keyPressed(KeyEvent event) {
+        if (this.list != null && this.list.keyPressed(event)) return true;
 
 
-        if (this.maxReplacerBox != null && this.maxReplacerBox.keyPressed(key, sc, mods)) return true;
-        if (this.maxSnowHeightBox   != null && this.maxSnowHeightBox.keyPressed(key, sc, mods)) return true;
-        if (this.nightLengthBox != null && this.nightLengthBox.keyPressed(key, sc, mods)) return true;
-        if (this.dayLengthBox   != null && this.dayLengthBox.keyPressed(key, sc, mods)) return true;
+        if (this.maxReplacerBox != null && this.maxReplacerBox.keyPressed(event)) return true;
+        if (this.maxSnowHeightBox   != null && this.maxSnowHeightBox.keyPressed(event)) return true;
+        if (this.nightLengthBox != null && this.nightLengthBox.keyPressed(event)) return true;
+        if (this.dayLengthBox   != null && this.dayLengthBox.keyPressed(event)) return true;
 
-        return super.keyPressed(key, sc, mods);
+        return super.keyPressed(event);
     }
 
     /**
      * Forwards typed characters to the list and text boxes.
      */
     @Override
-    public boolean charTyped(char c, int mods) {
-        if (this.list != null && this.list.charTyped(c, mods)) return true;
+    public boolean charTyped(CharacterEvent event) {
+        if (this.list != null && this.list.charTyped(event)) return true;
 
-        if (this.maxReplacerBox != null && this.maxReplacerBox.charTyped(c, mods)) return true;
-        if (this.maxSnowHeightBox   != null && this.maxSnowHeightBox.charTyped(c, mods)) return true;
-        if (this.nightLengthBox != null && this.nightLengthBox.charTyped(c, mods)) return true;
-        if (this.dayLengthBox   != null && this.dayLengthBox.charTyped(c, mods)) return true;
+        if (this.maxReplacerBox != null && this.maxReplacerBox.charTyped(event)) return true;
+        if (this.maxSnowHeightBox   != null && this.maxSnowHeightBox.charTyped(event)) return true;
+        if (this.nightLengthBox != null && this.nightLengthBox.charTyped(event)) return true;
+        if (this.dayLengthBox   != null && this.dayLengthBox.charTyped(event)) return true;
 
-        return super.charTyped(c, mods);
+        return super.charTyped(event);
     }
 
 

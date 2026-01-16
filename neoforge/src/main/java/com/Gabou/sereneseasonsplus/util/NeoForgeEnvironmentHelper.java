@@ -59,13 +59,13 @@ public class NeoForgeEnvironmentHelper implements IEnvironmentHelper{
      */
     @Override
     public boolean shouldRunMod() {
-        return FMLEnvironment.dist.isDedicatedServer()
-                || (FMLEnvironment.dist.isClient() && Minecraft.getInstance().hasSingleplayerServer());
+        return FMLEnvironment.getDist().isDedicatedServer()
+                || (FMLEnvironment.getDist().isClient() && Minecraft.getInstance().hasSingleplayerServer());
     }
 
     @Override
     public boolean isClient() {
-        return FMLEnvironment.dist.isClient();
+        return FMLEnvironment.getDist().isClient();
     }
 
     /**

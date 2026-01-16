@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus;
 
+import com.Gabou.sereneseasonsplus.client.SereneSeasonsPlusNeoForgeClientEntrypoint;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
@@ -7,17 +8,20 @@ import com.Gabou.sereneseasonsplus.features.NeoForgeSnowEnvironmentHandler;
 import com.Gabou.sereneseasonsplus.util.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
@@ -49,10 +53,10 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
         if (isProjectAtmosphereLoaded) {
             EnvironmentHelper.initRainHandler(new ProjectAtmosphereRainHandler());
         }
-        modEventBus.addListener((FMLClientSetupEvent event) -> {
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
             LOGGER.info("Setting up Serene Seasons Plus (Common)");
-            clientSetup(event, modContainer);
-        });
+            clientSetup(modContainer);
+        }
     }
 
     @SubscribeEvent
@@ -63,10 +67,10 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
      */
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("Serene Seasons Extended is loading!");
-        event.getServer().getGameRules()
-                .getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT)
-                .set(SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get(), event.getServer());
-        CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get(), SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get());
+        int clampedSnow = Mth.clamp(SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get(), 0, 8);
+        event.getServer().getWorldData().getGameRules()
+                .set(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT, clampedSnow, event.getServer());
+        CommonSnowBlockFeature.onServerStarting(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get(), clampedSnow);
     }
 
 
@@ -78,13 +82,10 @@ public class SereneSeasonsPlusNeoForge extends SereneSeasonPlusCommon {
     /**
      * Performs client-side setup such as registering config screens.
      *
-     * @param event        the client setup event
      * @param modContainer the active mod container
      */
-    private void clientSetup(final FMLClientSetupEvent event, ModContainer modContainer) {
-        LOGGER.info("Setting up Serene Seasons Plus (Client)");
-        SereneSeasonsPlusNeoForgeClient.init(modContainer);
-        NeoForge.EVENT_BUS.register(SereneSeasonsPlusNeoForgeClient.class);
+    private void clientSetup(ModContainer modContainer) {
+        SereneSeasonsPlusNeoForgeClientEntrypoint.init(modContainer);
     }
 
     @SubscribeEvent

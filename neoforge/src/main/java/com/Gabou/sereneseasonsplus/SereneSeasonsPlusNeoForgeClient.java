@@ -12,7 +12,7 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
 
-@OnlyIn(Dist.CLIENT)
+
 public class SereneSeasonsPlusNeoForgeClient {
 
     /**

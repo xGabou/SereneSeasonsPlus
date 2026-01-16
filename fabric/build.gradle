@@ -1,6 +1,6 @@
 plugins {
-    id 'fabric-loom' version '1.11-SNAPSHOT'
-    id 'com.matthewprenger.cursegradle' version '1.4.0' // CurseForge uploader
+    id "fabric-loom" version "1.14-SNAPSHOT"
+    id "net.darkhax.curseforgegradle" version "1.1.28"
     id "com.modrinth.minotaur"
 }
 base.archivesName.set("Fabric-Version-${mod_id}")
@@ -45,6 +45,9 @@ tasks.withType(JavaCompile) {
 tasks.withType(Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+tasks.withType(Test).configureEach {
+    failOnNoDiscoveredTests = false
+}
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
@@ -55,12 +58,12 @@ dependencies {
     include implementation("com.electronwill.night-config:core:${nightconfig_version}")
     include implementation("net.jodah:typetools:0.6.3")
     implementation project(":Common")
-    modImplementation "curse.maven:betterdays-895618:7054148"
-    modImplementation "curse.maven:serene-seasons-291874:6747295"
-    modImplementation "curse.maven:glitchcore-955399:6398450"
+    modImplementation "curse.maven:betterdays-895618:7443509"
+    modImplementation "curse.maven:serene-seasons-291874:7330938"
+    modImplementation "curse.maven:glitchcore-955399:7335722"
     runtimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.1")
-    modImplementation "curse.maven:modmenu-308702:6946098"
-    runtimeOnly "curse.maven:spark-361579:6796742"
+    runtimeOnly("org.apache.httpcomponents:httpclient:4.5.13")
+    modImplementation "curse.maven:modmenu-308702:7441070"
     modImplementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_range}"
 }
 
@@ -80,33 +83,33 @@ dependencies {
 //    }
 //}
 
+def fabricUploadJar = tasks.named("remapJar").flatMap { it.archiveFile }
+
 modrinth {
     token = System.getenv("MODRINTH_TOKEN")
-    projectId = "4Al4H3t9" // from your Modrinth project URL
+    projectId = "4Al4H3t9"
     versionNumber = "Fabric-${project.version}"
     versionName = "Serene Seasons Plus ${mod_version}"
     changelog = rootProject.file("SSPchangelog.md").text
-    gameVersions = ["1.21.5"]
+    gameVersions = ["1.21.11"]
     loaders = ["fabric"]
-    versionType = "release"
+    versionType = "beta"
     dependencies {
         required.project "e0bNACJD"
         required.project "tPLE214j"
         required.project "mOgUt4GM"
     }
-    uploadFile = file("build/libs/${archivesBaseName}-${version}.jar")
+    uploadFile = fabricUploadJar
 }
-curseforge {
-    apiKey = System.getenv("CURSEFORGE_TOKEN")
 
-    project {
-        id = "1288843"
-        changelog = rootProject.file("SSPchangelog.md")
-        releaseType = "release" // options: alpha, beta, release
-        addGameVersion "1.21.5"
-        addGameVersion "Fabric"
-        mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {
-            displayName = "Fabric-${version}"
-        }
-    }
+tasks.register("curseforgeUploadFabric", net.darkhax.curseforgegradle.TaskPublishCurseForge) {
+    apiToken = System.getenv("CURSEFORGE_TOKEN")
+
+    def mainFile = upload(1288843, fabricUploadJar.get().asFile)
+    mainFile.releaseType = "beta"
+    mainFile.addGameVersion("1.21.11")
+    mainFile.addModLoader("Fabric")
+    mainFile.changelog = rootProject.file("SSPchangelog.md").text
+    mainFile.displayName = "Fabric-${project.version}"
 }
+
