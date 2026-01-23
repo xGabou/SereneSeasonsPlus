@@ -58,6 +58,10 @@ public class CommonSnowBlockFeature {
     public record QueuedChange(BlockPos pos, BlockState state, int flags) {
     }
 
+    public static int getSnowHeightCap() {
+        return maxHeightForSnow;
+    }
+
     static final Map<BlockPos, QueuedChange> pendingChanges = new LinkedHashMap<>();
     static final Set<ChunkPos> chunksToDirty = new HashSet<>();
 

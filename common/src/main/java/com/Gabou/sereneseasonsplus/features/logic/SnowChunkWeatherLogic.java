@@ -77,7 +77,7 @@ public final class SnowChunkWeatherLogic {
 
             // Snow accumulation (uses your helper instead of vanilla "bl")
             if (EnvironmentHelper.isRainning(level, blockPos) && level.canSeeSkyFromBelowWater(blockPos)) {
-                int maxSnow = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
+                int maxSnow = CommonSnowBlockFeature.getSnowHeightCap();
                 if (maxSnow > 0 && SeasonHooks.shouldSnowHook(biome, level, blockPos)) {
                     BlockState state = level.getBlockState(blockPos);
                     // Skip if this column was marked destroyed for the current storm
