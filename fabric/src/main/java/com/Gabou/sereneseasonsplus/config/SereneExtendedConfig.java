@@ -46,7 +46,7 @@ public class SereneExtendedConfig {
 
         SNOWSTORM_ENABLED = new BooleanValue("snowstormEnabled", false);
         // Maximum total layers allowed per snow column (8 layers = 1 block). Default 24 = 3 blocks.
-        MAX_SNOW_ACCUMULATION_LAYERS = new IntValue("maxSnowAccumulationLayers", 24, 0, 512);
+        MAX_SNOW_ACCUMULATION_LAYERS = new IntValue("maxSnowAccumulationLayers", 6, 0, 8);
 
         ENABLE_SEASONAL_DAYLIGHT_CYCLE = new BooleanValue("enableSeasonalDaylightCycle", true);
         CUSTOM_CYCLE_LENGTH = new BooleanValue("customCycleLength", false);

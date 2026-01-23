@@ -2,7 +2,7 @@ package com.Gabou.sereneseasonsplus.util;
 
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import com.Gabou.sereneseasonsplus.storage.SnowRecord;
+import net.Gabou.gaboulibs.storage.SnowRecord;
 
 public class SnowGenerator {
     public static SnowRecord generateStormRecord(RandomSource random) {

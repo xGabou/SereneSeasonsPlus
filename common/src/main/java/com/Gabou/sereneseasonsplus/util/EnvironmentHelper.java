@@ -138,6 +138,7 @@ public class EnvironmentHelper {
         onWorldLoad(level);
         onSeasonChange(level,false);
         CommonSnowBlockFeature.HANDLER.resetWinterState(level, currentWinterId);
+
     }
 
 

@@ -1,0 +1,10 @@
+# Use Cloth Config mod for the descriptions.
+---
+sitOnSlab: true
+sitOnStairs: true
+sitOnCarpet: true
+sitOnBed: true
+sitActionReachDistanceRatio: 0.75
+requireEmptyHand: false
+allowClickBlockBottomToSit: false
+makeLeashedMobSit: true

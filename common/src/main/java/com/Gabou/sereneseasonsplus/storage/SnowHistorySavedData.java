@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus.storage;
 
+import net.Gabou.gaboulibs.storage.SnowRecord;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtAccounter;

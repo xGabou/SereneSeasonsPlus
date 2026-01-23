@@ -46,7 +46,7 @@ public class SereneExtendedConfig {
         builder.push("snow");
         MAX_SNOW_ACCUMULATION_LAYERS = builder
                 .comment("Maximum total snow layers allowed per column (8 layers = 1 block). Default 24 = 3 blocks.")
-                .defineInRange("maxSnowAccumulationLayers", 24, 0, 512);
+                .defineInRange("maxSnowAccumulationLayers", 6, 0, 8);
         builder.pop();
         builder.push("seasonalDaylightCycle");
         ENABLE_SEASONAL_DAYLIGHT_CYCLE = builder

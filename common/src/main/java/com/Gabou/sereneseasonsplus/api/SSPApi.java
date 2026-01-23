@@ -2,11 +2,13 @@ package com.Gabou.sereneseasonsplus.api;
 
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
-import com.Gabou.sereneseasonsplus.storage.SnowRecord;
+import net.Gabou.gaboulibs.storage.SnowRecord;
 import com.Gabou.sereneseasonsplus.storage.SnowSavedData;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import net.minecraft.server.level.ServerLevel;
+
+
 
 /**
  * Public API for tuning SereneSeasonsPlus snow storm behavior at runtime.

@@ -52,6 +52,7 @@ tasks.withType(Test).configureEach {
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.officialMojangMappings()
+
     modImplementation "net.fabricmc:fabric-loader:${loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
     include implementation("com.electronwill.night-config:toml:${nightconfig_version}")
@@ -59,11 +60,14 @@ dependencies {
     include implementation("net.jodah:typetools:0.6.3")
     implementation project(":Common")
     modImplementation "curse.maven:betterdays-895618:7443509"
+    compileOnly "curse.maven:snow-real-magic-fabric-560441:7472578"
     modImplementation "curse.maven:serene-seasons-291874:7330938"
     modImplementation "curse.maven:glitchcore-955399:7335722"
     runtimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.1")
     runtimeOnly("org.apache.httpcomponents:httpclient:4.5.13")
     modImplementation "curse.maven:modmenu-308702:7441070"
+    modImplementation "curse.maven:architectury-api-419699:7339256"
+    modImplementation "curse.maven:gaboulibs-1367332:7495338"
     modImplementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_range}"
 }
 
