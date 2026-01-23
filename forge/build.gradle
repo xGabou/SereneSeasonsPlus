@@ -101,7 +101,7 @@ dependencies {
     implementation fg.deobf("curse.maven:rubidium-extra-654373:6101745")
     implementation fg.deobf("curse.maven:gabous-libs-1367332:7261537")
     runtimeOnly fg.deobf("curse.maven:architectury-api-419699:5137938")
-    implementation fg.deobf("curse.maven:snow-real-magic-308663:6888541")
+    compileOnly fg.deobf("curse.maven:snow-real-magic-308663:6888541")
     implementation fg.deobf("curse.maven:kiwi-303657:7289940")
     //runtimeOnly fg.deobf("curse.maven:simple-clouds-1121215:6928978")
 }
@@ -113,7 +113,7 @@ modrinth {
     changelog = rootProject.file("SSPchangelog.md").text
     gameVersions = ["1.20.1"]
     loaders = ["forge"]
-    versionType = "beta"
+    versionType = "release"
     dependencies {
         required.project "e0bNACJD"
         required.project "tPLE214j"
@@ -128,7 +128,7 @@ curseforge {
     project {
         id = "1288843"
         changelog = rootProject.file("SSPchangelog.md")
-        releaseType = "beta" // options: alpha, beta, release
+        releaseType = "release" // options: alpha, beta, release
         addGameVersion "1.20.1"
         addGameVersion "Forge"
         mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {

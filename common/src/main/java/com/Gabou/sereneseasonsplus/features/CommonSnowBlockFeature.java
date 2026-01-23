@@ -73,6 +73,10 @@ public class CommonSnowBlockFeature {
     static int applyCycleProcessed = 0;
 
 
+    public static int getSnowHeightCap() {
+        return maxHeightForSnow;
+    }
+
     protected static boolean snowFeatureEnabled = false;
 
 

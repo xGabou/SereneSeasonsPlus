@@ -27,7 +27,6 @@ public abstract class SeasonHooksMixin {
         boolean vanillaResult = cir.getReturnValue();
         boolean customLogic =
                 (!ModConfig.seasons.generateSnowAndIce || !SeasonHooks.warmEnoughToRainSeasonal(levelReader, pos))
-                        && (ModConfig.seasons.generateSnowAndIce || !biome.warmEnoughToRain(pos))
                         && pos.getY() >= levelReader.getMinBuildHeight()
                         && pos.getY() < levelReader.getMaxBuildHeight()
                         && levelReader.getBrightness(LightLayer.BLOCK, pos) < 10
