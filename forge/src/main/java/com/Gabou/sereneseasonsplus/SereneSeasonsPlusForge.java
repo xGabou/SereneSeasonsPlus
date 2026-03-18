@@ -55,6 +55,7 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
         if(!isProjectAtmosphereLoaded) {
             SeasonChangeEvent.register();
         }
+        bootstrapSeasonalTreesFeature();
         context.getModEventBus().addListener((FMLClientSetupEvent event) -> {
             LOGGER.info("Setting up Serene Season Plus (Common)");
             clientSetup(event,context);
@@ -190,6 +191,10 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
         // Remove any tracked snow column entries for this X/Z so sync won't try to re-add this storm
         tracked.sereneseasonsplus$getSnowColumns().keySet().removeIf(p -> p.getX() == pos.getX() && p.getZ() == pos.getZ());
         chunk.setUnsaved(true);
+    }
+
+    private void bootstrapSeasonalTreesFeature() {
+        SeasonalTreesFeature.bootstrap();
     }
 
 

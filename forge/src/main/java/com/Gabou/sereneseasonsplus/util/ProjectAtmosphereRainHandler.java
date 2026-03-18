@@ -19,12 +19,15 @@ public class ProjectAtmosphereRainHandler extends DefaultRainHandler {
 
     @Override
     public boolean isRainingAt(ServerLevel level, BlockPos pos) {
-        PaState s = states.get(level);
-        // If we never tracked this level yet, fallback to AtmoApi check
-        if (s == null) {
-            return AtmoApi.getInstance().isRainingOrThundering(level, pos);
+        try {
+            return AtmoApi.getInstance().isRainningAt(level, pos);
+        } catch (Throwable t) {
+            PaState s = states.get(level);
+            if (s == null) {
+                return AtmoApi.getInstance().isRainingOrThundering(level, pos);
+            }
+            return !s.activeRainClouds.isEmpty();
         }
-        return !s.activeRainClouds.isEmpty();
     }
 
     /**

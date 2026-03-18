@@ -91,7 +91,7 @@ modrinth {
     changelog = rootProject.file("SSPchangelog.md").text
     gameVersions = ["1.20.1"]
     loaders = ["fabric"]
-    versionType = "release"
+    versionType = "alpha"
     dependencies {
         required.project "e0bNACJD"
         required.project "tPLE214j"
@@ -107,7 +107,7 @@ curseforge {
     project {
         id = "1288843"
         changelog = rootProject.file("SSPchangelog.md")
-        releaseType = "release" // options: alpha, beta, release
+        releaseType = "alpha" // options: alpha, beta, release
         addGameVersion "1.20.1"
         addGameVersion "Fabric"
         mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {

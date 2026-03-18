@@ -77,7 +77,7 @@ sourceSets.each {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    compileOnly project(":Common")
+    implementation project(":Common")
     // tes dépendances Forge spécifiques
     implementation fg.deobf("curse.maven:betterdays-895618:7046761")
     //compileOnly fg.deobf("curse.maven:project-atmosphere-1258344:6994348")
@@ -99,11 +99,16 @@ dependencies {
     implementation fg.deobf("curse.maven:embeddium-908741:5681725")
     implementation fg.deobf("curse.maven:chloride-931925:6615986")
     implementation fg.deobf("curse.maven:rubidium-extra-654373:6101745")
-    implementation fg.deobf("curse.maven:gabous-libs-1367332:7261537")
+    implementation fg.deobf("curse.maven:gabous-libs-1367332:7512891")
     runtimeOnly fg.deobf("curse.maven:architectury-api-419699:5137938")
     compileOnly fg.deobf("curse.maven:snow-real-magic-308663:6888541")
     implementation fg.deobf("curse.maven:kiwi-303657:7289940")
+    implementation fg.deobf("curse.maven:dynamictrees-252818:7502488")
+    implementation fg.deobf("curse.maven:atmospheric-362393:6393127")
+    runtimeOnly fg.deobf("curse.maven:blueprint-382216:6408581")
     //runtimeOnly fg.deobf("curse.maven:simple-clouds-1121215:6928978")
+    testCompileOnly fg.deobf("curse.maven:snow-real-magic-308663:6888541")
+    implementation fg.deobf("curse.maven:caverns-and-chasms-438005:6040957")
 }
 modrinth {
     token = System.getenv("MODRINTH_TOKEN")
@@ -113,7 +118,7 @@ modrinth {
     changelog = rootProject.file("SSPchangelog.md").text
     gameVersions = ["1.20.1"]
     loaders = ["forge"]
-    versionType = "release"
+    versionType = "alpha"
     dependencies {
         required.project "e0bNACJD"
         required.project "tPLE214j"
@@ -128,7 +133,7 @@ curseforge {
     project {
         id = "1288843"
         changelog = rootProject.file("SSPchangelog.md")
-        releaseType = "release" // options: alpha, beta, release
+        releaseType = "alpha" // options: alpha, beta, release
         addGameVersion "1.20.1"
         addGameVersion "Forge"
         mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {

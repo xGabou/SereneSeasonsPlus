@@ -118,8 +118,10 @@ public final class ChunkQueue {
 
     public static void clear() {
         TASKS_CURRENT_TICK.clear();
+        TASKS_NEXT_TICK.clear();
         SCHEDULED.clear();
         SCHEDULED_TASKS.clear();
+        BUGGED_CHUNK.clear();
     }
 
     public record Entry(ChunkPos pos, TaskType type, Season.SubSeason subSeason, boolean fullClear) {

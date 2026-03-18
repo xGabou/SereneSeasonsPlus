@@ -66,30 +66,8 @@ public class ServerLevelMixin {
             int randomTickSpeed,
             CallbackInfo ci
     ) {
-        ServerLevel level = (ServerLevel)(Object)this;
-        if (CommonSnowBlockFeature.isSnowFeatureEnabled()) {
-            int t = CommonSnowBlockFeature.getTickCounter();
-            ChunkPos cpos = chunk.getPos();
-            boolean doEval = ((cpos.x ^ cpos.z ^ t) & 15) == 0; // ~once per 16 ticks per ticking chunk
-            if (doEval && chunk instanceof ISnowTrackedChunk tracked) {
-                Season.SubSeason currentSeason = EnvironmentHelper.getCurrentSeason();
-                var seasonState = SeasonHelper.getSeasonState(level);
-
-                if (seasonState != null && currentSeason != null) {
-                    // Lazily cache surface height if not set yet
-                    if (tracked.sereneseasonsplus$getSurfaceHeight() == -1) {
-                        int surfaceHeightCache = level.getHeight(
-                                Heightmap.Types.WORLD_SURFACE,
-                                cpos.getMiddleBlockX(),
-                                cpos.getMiddleBlockZ()
-                        );
-                        tracked.sereneseasonsplus$setSurfaceHeight(surfaceHeightCache);
-                    }
-                    int surfaceHeight = tracked.sereneseasonsplus$getSurfaceHeight();
-                    SnowLogic.evaluate(level, currentSeason, seasonState, tracked, cpos, true, surfaceHeight);
-                }
-            }
-        }
+        // Chunk evaluation is handled in SnowChunkWeatherLogic.run.
+        // Keeping this inject empty avoids scheduling the same work twice per tickChunk.
     }
 
 
@@ -127,7 +105,7 @@ public class ServerLevelMixin {
     private boolean ssp$AccumulateColumnUpdate(ServerLevel level, BlockPos pos, BlockState state) {
         boolean result = level.setBlockAndUpdate(pos, state);
         if (result) {
-            CommonSnowBlockFeature.accumulateColumnUpdate(pos, state);
+            CommonSnowBlockFeature.accumulateColumnUpdate(level, pos, state);
         }
         return result;
     }
@@ -192,21 +170,6 @@ public class ServerLevelMixin {
     }
 
 
-    @Redirect(
-            method = "tickChunk",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/biome/Biome;shouldSnow(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;)Z"
-            )
-    )
-    private boolean sereneseasonsplus$redirectShouldSnow(Biome biome, net.minecraft.world.level.LevelReader level, BlockPos pos) {
-        try {
-            return SeasonHooks.shouldSnowHook(biome, level, pos);
-        } catch (Throwable t) {
-            return biome.shouldSnow(level, pos);
-        }
-    }
-
 
     @Inject(
             method = "tickChunk",
@@ -262,11 +225,12 @@ public class ServerLevelMixin {
         sereneseasonsplus$shouldSkipSnowCheck = skip;
     }
 
-    @Redirect(
+    @ModifyVariable(
             method = "tickChunk",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/block/state/BlockState;is(Lnet/minecraft/world/level/block/Block;)Z"
+                    target = "Lnet/minecraft/world/level/block/state/BlockState;is(Lnet/minecraft/world/level/block/Block;)Z",
+                    shift = At.Shift.AFTER
             ),
             slice = @Slice(
                     from = @At(
@@ -278,17 +242,12 @@ public class ServerLevelMixin {
                             target = "Lnet/minecraft/world/level/biome/Biome;getPrecipitationAt(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/biome/Biome$Precipitation;"
                     )
             ),
-            require = 1
+            ordinal = 0
     )
-    private boolean sereneseasonsplus$gateSnowIsCheckSliced(BlockState state, net.minecraft.world.level.block.Block block) {
-        if (!CommonSnowBlockFeature.isSnowFeatureEnabled()) {
-            return state.is(block);
-        }
-        if (sereneseasonsplus$shouldSkipSnowCheck && block == Blocks.SNOW) {
-            return false;
-        }
-        return state.is(block);
+    private boolean skipSnowIf(boolean original) {
+        return !sereneseasonsplus$shouldSkipSnowCheck && original;
     }
+
 
 
 
@@ -329,7 +288,7 @@ public class ServerLevelMixin {
         // Let vanilla handle it when not skipping
         boolean result = level.setBlockAndUpdate(pos, state);
         if (result) {
-            CommonSnowBlockFeature.accumulateColumnUpdate(pos, state);
+            CommonSnowBlockFeature.accumulateColumnUpdate(level, pos, state);
         }
         return result;
     }

@@ -24,4 +24,5 @@ dependencies {
     compileOnly "org.ow2.asm:asm-util:9.8"
     compileOnly "org.ow2.asm:asm-analysis:9.8"
     compileOnly "curse.maven:gabous-libs-1367332:7261537"
+    compileOnly "curse.maven:dynamictrees-252818:7502488"
 }
