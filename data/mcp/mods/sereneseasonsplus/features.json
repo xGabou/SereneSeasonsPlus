@@ -1,0 +1,61 @@
+{
+  "features": [
+    {
+      "id": "seasonal-daylight-cycle",
+      "name": "Seasonal daylight cycle",
+      "description": "Adjusts Better Days day and night speed by Serene Seasons sub-season.",
+      "examples": [
+        "Longer days in summer and longer nights in winter."
+      ]
+    },
+    {
+      "id": "custom-day-night-speed",
+      "name": "Custom day and night speed",
+      "description": "Lets users override seasonal daylight behavior with custom Better Days speed values.",
+      "notes": [
+        "Requires seasonal daylight to be disabled before the custom values are used."
+      ]
+    },
+    {
+      "id": "snow-accumulation-and-melting",
+      "name": "Season-aware snow system",
+      "description": "Adds tracked snow accumulation, melting, and storm-aware snow behavior."
+    },
+    {
+      "id": "chunk-load-snow-reconciliation",
+      "name": "Chunk-load snow reconciliation",
+      "description": "Loaded chunks can be reconciled toward expected snow state instead of waiting for nearby players."
+    },
+    {
+      "id": "storm-history-snow",
+      "name": "Storm-history snow buildup",
+      "description": "Current source tracks winter storm history and uses it to rebuild snow coverage."
+    },
+    {
+      "id": "real-time-canadian-seasons",
+      "name": "Real-time Canadian season sync",
+      "description": "Can map Serene Seasons sub-seasons to real calendar months in the America/Toronto timezone."
+    },
+    {
+      "id": "grass-and-flower-growth",
+      "name": "Warm-season grass and flower growth",
+      "description": "Allows extra grass and flower growth in warm seasons when enabled."
+    },
+    {
+      "id": "project-atmosphere-integration",
+      "name": "Project Atmosphere integration",
+      "description": "Forge build can use Project Atmosphere rain and temperature data when the mod is present.",
+      "notes": [
+        "Officially optional on Forge only in this source tree."
+      ]
+    },
+    {
+      "id": "snow-real-magic-integration",
+      "name": "Snow Real Magic integration",
+      "description": "Current source and v5.0.0 release notes describe optional support for managed snow-state integration.",
+      "notes": [
+        "Confirm version scope before promising support for older releases."
+      ]
+    }
+  ]
+}

@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
@@ -15,8 +16,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.levelgen.Heightmap;
+import org.spongepowered.asm.mixin.injection.Inject;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.season.SeasonHooks;
@@ -63,6 +64,7 @@ public final class SnowChunkWeatherLogic {
         ProfilerFiller profiler = Profiler.get();
         profiler.popPush("iceandsnow");
         if (level.random.nextInt(16) == 0) {
+            boolean snowRealMagicLoaded = EnvironmentHelper.isSnowRealMagicLoaded();
             int j = chunk.getPos().getMinBlockX();
             int k = chunk.getPos().getMinBlockZ();
             BlockPos blockPos = level.getHeightmapPos(
@@ -76,8 +78,8 @@ public final class SnowChunkWeatherLogic {
             }
 
             // Snow accumulation (uses your helper instead of vanilla "bl")
-            if (EnvironmentHelper.isRainning(level, blockPos) && level.canSeeSkyFromBelowWater(blockPos)) {
-                int maxSnow = level.getGameRules().get(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT);
+            if (!snowRealMagicLoaded && EnvironmentHelper.isRainning(level, blockPos) && level.canSeeSkyFromBelowWater(blockPos)) {
+                int maxSnow = CommonSnowBlockFeature.getSnowHeightCap();
                 if (maxSnow > 0 && SeasonHooks.shouldSnowHook(biome, level, blockPos, level.getSeaLevel())) {
                     BlockState state = level.getBlockState(blockPos);
                     // Skip if this column was marked destroyed for the current storm
@@ -104,18 +106,26 @@ public final class SnowChunkWeatherLogic {
                             BlockState next = state.setValue(SnowLayerBlock.LAYERS, layers + 1);
                             Block.pushEntitiesUp(state, next, level, blockPos);
                             if (level.setBlockAndUpdate(blockPos, next)) {
-                                CommonSnowBlockFeature.accumulateColumnUpdate(blockPos, next);
+                                CommonSnowBlockFeature.accumulateColumnUpdate(level, blockPos, next);
                             }
                         }
                     } else {
                         BlockState snow = Blocks.SNOW.defaultBlockState();
-                        if (level.setBlockAndUpdate(blockPos, snow)) {
-                            CommonSnowBlockFeature.accumulateColumnUpdate(blockPos, snow);//done
+                        if ((state.isAir() || CommonSnowBlockFeature.SNOW_COMPATIBILITY.isReplaceableForSnow(state))
+                                && level.setBlockAndUpdate(blockPos, snow)) {
+                            CommonSnowBlockFeature.accumulateColumnUpdate(level, blockPos, snow);//done
                         }
                     }
                 }
                 //same for ice accumulation
                 // Precipitation hook
+                Biome.Precipitation precipitation = biome.getPrecipitationAt(blockPos2, level.getSeaLevel());
+                if (precipitation != Biome.Precipitation.NONE) {
+                    BlockState base = level.getBlockState(blockPos2);
+                    base.getBlock().handlePrecipitation(base, level, blockPos2, precipitation);
+                }
+            }
+            if (snowRealMagicLoaded && EnvironmentHelper.isRainning(level, blockPos)) {
                 Biome.Precipitation precipitation = biome.getPrecipitationAt(blockPos2, level.getSeaLevel());
                 if (precipitation != Biome.Precipitation.NONE) {
                     BlockState base = level.getBlockState(blockPos2);

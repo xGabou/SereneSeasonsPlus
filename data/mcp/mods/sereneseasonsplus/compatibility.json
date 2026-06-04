@@ -1,0 +1,95 @@
+{
+  "supportedMinecraftVersions": [
+    "1.20.1"
+  ],
+  "supportedLoaders": [
+    "forge",
+    "fabric"
+  ],
+  "requiredDependencies": [
+    {
+      "name": "Serene Seasons",
+      "modId": "sereneseasons",
+      "loaders": [
+        "forge",
+        "fabric"
+      ],
+      "source": "forge mods.toml and fabric.mod.json"
+    },
+    {
+      "name": "Better Days",
+      "modId": "betterdays",
+      "loaders": [
+        "forge",
+        "fabric"
+      ],
+      "source": "forge mods.toml and fabric.mod.json"
+    },
+    {
+      "name": "GlitchCore",
+      "modId": "glitchcore",
+      "loaders": [
+        "forge",
+        "fabric"
+      ],
+      "source": "build.gradle runtime dependencies and published dependency configuration"
+    },
+    {
+      "name": "Fabric API",
+      "modId": "fabric",
+      "loaders": [
+        "fabric"
+      ],
+      "source": "fabric.mod.json"
+    }
+  ],
+  "optionalDependencies": [
+    {
+      "name": "Project Atmosphere",
+      "modId": "projectatmosphere",
+      "loaders": [
+        "forge"
+      ],
+      "source": "forge mods.toml"
+    },
+    {
+      "name": "Mod Menu",
+      "modId": "modmenu",
+      "loaders": [
+        "fabric"
+      ],
+      "source": "fabric.mod.json suggests"
+    },
+    {
+      "name": "Snow Real Magic",
+      "modId": "snowrealmagic",
+      "loaders": [
+        "forge",
+        "fabric"
+      ],
+      "source": "current source integration and SSPchangelog.md"
+    }
+  ],
+  "confirmedCompatible": [
+    {
+      "name": "Project Atmosphere",
+      "loaders": [
+        "forge"
+      ],
+      "notes": "Optional Forge integration is explicitly implemented and declared."
+    },
+    {
+      "name": "Snow Real Magic",
+      "loaders": [
+        "forge",
+        "fabric"
+      ],
+      "notes": "Current source and the v5.0.0 changelog describe optional support for managed snow-state integration. Confirm exact release scope for older builds."
+    }
+  ],
+  "confirmedIncompatible": [],
+  "notes": [
+    "Do not claim Project Atmosphere support on Fabric from this source tree alone.",
+    "Snow Real Magic support should be answered with version scope, because repository version labels are inconsistent."
+  ]
+}

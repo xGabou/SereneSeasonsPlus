@@ -1,0 +1,7 @@
+{
+  "commands": [],
+  "notes": [
+    "No Brigadier command registration was found in the current source tree.",
+    "SSPApi is a code API, not an in-game command interface."
+  ]
+}

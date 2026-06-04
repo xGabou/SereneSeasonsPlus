@@ -2,7 +2,6 @@ package com.Gabou.sereneseasonsplus.mixin;
 
 import com.Gabou.sereneseasonsplus.tags.SSPTags;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
@@ -12,6 +11,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SpreadingSnowyDirtBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -25,7 +25,6 @@ public abstract class SpreadingSnowyDirtBlockMixin {
     @Inject(method = "randomTick", at = @At("TAIL"))
     private void sereneseasonsplus$growVegetation(BlockState state, ServerLevel level, BlockPos pos, RandomSource random, CallbackInfo ci) {
         if(!EnvironmentHelper.isGrassFloweringEnabled()) return;
-        if (!state.is(Blocks.GRASS_BLOCK)) return;
         if(!EnvironmentHelper.isHotSeason()) return;
 
         BlockPos above = pos.above();
@@ -54,10 +53,16 @@ public abstract class SpreadingSnowyDirtBlockMixin {
             if (flowerTag.isPresent()) {
                 List<Holder<Block>> flowers = flowerTag.get().stream().toList();
                 if (!flowers.isEmpty()) {
-                    Holder<Block> randomFlower = flowers.get(random.nextInt(flowers.size()));
-                    Block flowerBlock = randomFlower.value();
-                    level.setBlock(above, flowerBlock.defaultBlockState(), 3);
-                    return;
+                    int start = random.nextInt(flowers.size());
+                    for (int i = 0; i < flowers.size(); i++) {
+                        Holder<Block> randomFlower = flowers.get((start + i) % flowers.size());
+                        Block flowerBlock = randomFlower.value();
+                        BlockState flowerState = flowerBlock.defaultBlockState();
+                        if (flowerState.canSurvive(level, above)) {
+                            level.setBlock(above, flowerState, 3);
+                            return;
+                        }
+                    }
                 }
             }
 

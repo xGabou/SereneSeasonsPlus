@@ -1,0 +1,42 @@
+{
+  "issues": [
+    {
+      "id": "fabric-real-time-canadian-seasons-not-persisted",
+      "title": "Fabric realTimeCanadianSeasons is defined but not loaded or saved",
+      "affectedVersions": [
+        "0.5.0.0"
+      ],
+      "symptoms": [
+        "The Fabric realTimeCanadianSeasons setting may not persist across restarts or config reloads."
+      ],
+      "workarounds": [
+        "UNKNOWN: no reliable permanent user workaround is confirmed from the current source tree.",
+        "Re-check the setting after restart when testing current source builds."
+      ],
+      "status": "open",
+      "fixedIn": "UNKNOWN",
+      "sourceType": "reviewed-issues"
+    },
+    {
+      "id": "tick-snow-piller-appears-unused",
+      "title": "tickSnowPiller appears unused in the current source tree",
+      "affectedVersions": [
+        "0.5.0.0"
+      ],
+      "symptoms": [
+        "Changing tickSnowPiller may have no visible effect."
+      ],
+      "workarounds": [
+        "Use tickSnowReplacer and maxSnowAccumulationLayers for current snow tuning.",
+        "Treat tickSnowPiller as non-functional until confirmed otherwise."
+      ],
+      "status": "open",
+      "fixedIn": "UNKNOWN",
+      "sourceType": "reviewed-issues"
+    }
+  ],
+  "notes": [
+    "No official issue tracker export was found in this repository.",
+    "Issues listed here come from direct source review."
+  ]
+}

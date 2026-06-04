@@ -128,6 +128,9 @@ public class ServerLevelMixin  {
             )
     )
     private boolean ssp$AccumulateColumnUpdate1(ServerLevel level, BlockPos pos, BlockState state) {
+        if (!sereneseasonsplus$canPlaceSnowWithoutReplacingImportant(level, pos, state)) {
+            return false;
+        }
         boolean result = level.setBlockAndUpdate(pos, state);
         if (result) {
             CommonSnowBlockFeature.accumulateColumnUpdate(pos, state);
@@ -305,11 +308,25 @@ public class ServerLevelMixin  {
         }
 
         // Let vanilla handle it when not skipping
+        if (!sereneseasonsplus$canPlaceSnowWithoutReplacingImportant(level, pos, state)) {
+            return false;
+        }
         boolean result = level.setBlockAndUpdate(pos, state);
         if (result) {
             CommonSnowBlockFeature.accumulateColumnUpdate(pos, state);
         }
         return result;
+    }
+
+    @Unique
+    private boolean sereneseasonsplus$canPlaceSnowWithoutReplacingImportant(ServerLevel level, BlockPos pos, BlockState newState) {
+        if (!newState.is(Blocks.SNOW)) {
+            return true;
+        }
+        BlockState current = level.getBlockState(pos);
+        return CommonSnowBlockFeature.SNOW_COMPATIBILITY.isManagedSnow(current)
+                || current.isAir()
+                || CommonSnowBlockFeature.SNOW_COMPATIBILITY.isReplaceableForSnow(current);
     }
 
 

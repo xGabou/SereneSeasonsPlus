@@ -10,9 +10,8 @@ public class SSPTags {
         public static final TagKey<Block> MELTABLE =
                 TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("sereneseasonsplus", "meltable"));
         public static final TagKey<Block> FLOWERS =
-                TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("sereneseasonsplus", "flowers"));
+                TagKey.create(Registries.BLOCK,  Identifier.fromNamespaceAndPath("sereneseasonsplus", "flowers"));
         public static final TagKey<Block> SNOW_REPLACEABLE =
                 TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("sereneseasonsplus", "snow_replaceable"));
     }
 }
-

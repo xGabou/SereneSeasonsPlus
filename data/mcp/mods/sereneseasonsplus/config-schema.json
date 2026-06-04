@@ -1,0 +1,148 @@
+{
+  "entries": [
+    {
+      "key": "useAsync",
+      "category": "performance",
+      "type": "boolean",
+      "default": "auto:true when availableProcessors > 6, otherwise false",
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "description": "Enables async execution for supported operations.",
+      "example": "Set false when testing unexplained compatibility or threading issues.",
+      "notes": [
+        "Forge path: performance.useAsync",
+        "Fabric key: useAsync"
+      ]
+    },
+    {
+      "key": "tickSnowPiller",
+      "category": "snowPillerAndReplacer",
+      "type": "integer",
+      "default": 20,
+      "allowedValues": "1..2147483647",
+      "description": "Documented as the snow piller tick interval.",
+      "example": "20 means one update every second.",
+      "notes": [
+        "Current source review found no active call sites for this entry.",
+        "Treat it as potentially non-functional until confirmed."
+      ]
+    },
+    {
+      "key": "tickSnowReplacer",
+      "category": "snowPillerAndReplacer",
+      "type": "integer",
+      "default": 100,
+      "allowedValues": "1..2147483647",
+      "description": "Controls the configured snow replacer interval used by the main snow feature bootstrap.",
+      "example": "40 updates more frequently than 100."
+    },
+    {
+      "key": "snowstormEnabled",
+      "category": "snowstorm",
+      "type": "boolean",
+      "default": false,
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "description": "Enables snowstorm mode that increases snow piling intensity.",
+      "example": "Set true to use storm mode in supported snow flows."
+    },
+    {
+      "key": "maxSnowAccumulationLayers",
+      "category": "snow",
+      "type": "integer",
+      "default": 24,
+      "allowedValues": "0..512",
+      "description": "Maximum total snow layers allowed per column.",
+      "example": "24 equals three full snow blocks.",
+      "notes": [
+        "0 allows effectively no additional cap beyond the underlying game rule usage in the current source."
+      ]
+    },
+    {
+      "key": "grassFlowerGrowthEnabled",
+      "category": "grass-and-flowers",
+      "type": "boolean",
+      "default": true,
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "description": "Enables extra grass and flower growth during warm seasons.",
+      "example": "Set false to disable this growth feature."
+    },
+    {
+      "key": "realTimeCanadianSeasons",
+      "category": "seasonSync",
+      "type": "boolean",
+      "default": false,
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "description": "Maps Serene Seasons to real-world Canadian months using the America/Toronto timezone.",
+      "example": "Set true to keep the season aligned with the calendar.",
+      "notes": [
+        "Current Fabric source review shows this key is defined but not loaded or saved."
+      ]
+    },
+    {
+      "key": "enableSeasonalDaylightCycle",
+      "category": "seasonalDaylightCycle",
+      "type": "boolean",
+      "default": true,
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "description": "Enables season-based Better Days speed changes.",
+      "example": "Set false when you want custom values instead of seasonal values."
+    },
+    {
+      "key": "customCycleLength",
+      "category": "seasonalDaylightCycle",
+      "type": "boolean",
+      "default": false,
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "description": "Allows custom day and night values when seasonal daylight is disabled.",
+      "example": "Set true after disabling seasonal daylight.",
+      "notes": [
+        "If seasonal daylight stays enabled, this does not take priority."
+      ]
+    },
+    {
+      "key": "customDayLength",
+      "category": "seasonalDaylightCycle",
+      "type": "double",
+      "default": 1.0,
+      "allowedValues": "0.05..100.0",
+      "description": "Custom Better Days day speed value used when custom cycle mode is active.",
+      "example": "0.75 slows daytime progression relative to 1.0.",
+      "notes": [
+        "The config comment mentions ticks, but the implementation passes this as a Better Days speed value."
+      ]
+    },
+    {
+      "key": "customNightLength",
+      "category": "seasonalDaylightCycle",
+      "type": "double",
+      "default": 1.0,
+      "allowedValues": "0.05..100.0",
+      "description": "Custom Better Days night speed value used when custom cycle mode is active.",
+      "example": "1.5 speeds nighttime progression relative to 1.0.",
+      "notes": [
+        "The config comment mentions ticks, but the implementation passes this as a Better Days speed value."
+      ]
+    }
+  ],
+  "notes": [
+    "Forge stores settings in categorized common config entries.",
+    "Fabric stores settings in config/sereneseasonsplus.json with flat keys."
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "versions": [
+    {
+      "version": "0.5.0.0",
+      "releaseDate": "UNKNOWN",
+      "mcVersions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "forge",
+        "fabric"
+      ],
+      "supportStatus": "current-source",
+      "notes": "Current value from gradle.properties."
+    },
+    {
+      "version": "5.0.0",
+      "releaseDate": "UNKNOWN",
+      "mcVersions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "forge",
+        "fabric"
+      ],
+      "supportStatus": "needs-confirmation",
+      "notes": "Version label used in SSPchangelog.md. Confirm whether this maps to mod_version 0.5.0.0."
+    },
+    {
+      "version": "4.0.6",
+      "releaseDate": "2025-10-17",
+      "mcVersions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "forge",
+        "fabric"
+      ],
+      "supportStatus": "legacy",
+      "notes": "Release note entry from forge/changelog.md."
+    },
+    {
+      "version": "4.0.4",
+      "releaseDate": "UNKNOWN",
+      "mcVersions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "forge",
+        "fabric"
+      ],
+      "supportStatus": "legacy",
+      "notes": "Release note entry from fabric/changelog.md. Build date field in that file is unresolved."
+    }
+  ],
+  "notes": [
+    "Repository version naming is inconsistent between gradle.properties and SSPchangelog.md.",
+    "Treat public latest-version naming as TODO until confirmed."
+  ]
+}

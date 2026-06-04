@@ -1,7 +1,10 @@
 package com.Gabou.sereneseasonsplus.features;
 
+import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
+import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
 
 /**
  * Loader specific hooks used to align snow placement with the active weather

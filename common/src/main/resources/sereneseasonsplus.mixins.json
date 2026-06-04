@@ -10,12 +10,11 @@
     "MinecraftServerMixin",
     "ProtoChunkSnowMixin",
     "SeasonHooksMixin",
-    "ServelLevelChunkMixin",
     "ServerLevelMixin",
+    "SnowRealMagicCompatMixin",
     "SpreadingSnowyDirtBlockMixin"
   ],
   "client": [
-    "ScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

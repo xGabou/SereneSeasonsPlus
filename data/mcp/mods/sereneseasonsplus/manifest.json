@@ -1,0 +1,29 @@
+{
+  "slug": "sereneseasonsplus",
+  "name": "Serene Seasons Plus",
+  "aliases": [
+    "SS+",
+    "SSP"
+  ],
+  "latestVersion": "0.5.0.0",
+  "minecraftVersions": [
+    "1.20.1"
+  ],
+  "loaders": [
+    "forge",
+    "fabric"
+  ],
+  "docs": {
+    "overview": "docs/mods/sereneseasonsplus/overview.md",
+    "install": "docs/mods/sereneseasonsplus/install.md",
+    "troubleshooting": "docs/mods/sereneseasonsplus/troubleshooting.md",
+    "faq": "docs/mods/sereneseasonsplus/faq.md"
+  },
+  "links": {
+    "discord": "https://discord.gg/2jRhTJgYz4"
+  },
+  "notes": [
+    "Source of truth for current code version is gradle.properties: mod_version=0.5.0.0.",
+    "SSPchangelog.md uses the label v5.0.0-1.20.1. Confirm public release naming manually."
+  ]
+}
