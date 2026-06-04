@@ -1,4 +1,4 @@
-package com.Gabou.sereneseasonsplus.util;
+package com.Gabou.sereneseasonsplus.access;
 
 import net.minecraft.world.level.chunk.LevelChunk;
 

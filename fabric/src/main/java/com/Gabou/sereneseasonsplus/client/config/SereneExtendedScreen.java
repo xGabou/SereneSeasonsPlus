@@ -1,6 +1,5 @@
 package com.Gabou.sereneseasonsplus.client.config;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
-import net.Gabou.gaboulibs.util.IScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -26,6 +25,8 @@ public class SereneExtendedScreen extends Screen {
     private EditBox nightLengthBox;
 
     private boolean seasonalDaylightCycle;
+
+    private boolean betterDaysDynamicTimeCompat;
 
     private boolean customDayCycle;
 
@@ -67,6 +68,7 @@ public class SereneExtendedScreen extends Screen {
         this.tickSnowReplacerThreshold = SereneExtendedConfig.TICK_SNOW_REPLACER.get();
         this.maxSnowHeight = SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get();
         this.seasonalDaylightCycle = SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get();
+        this.betterDaysDynamicTimeCompat = SereneExtendedConfig.ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.get();
         this.customDayCycle = SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get();
         this.customDayLength = SereneExtendedConfig.CUSTOM_DAY_LENGTH.get();
         this.customNightLength = SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get();
@@ -103,6 +105,12 @@ public class SereneExtendedScreen extends Screen {
             b.setMessage(toggleLabel("Seasonal Daylight Cycle", seasonalDaylightCycle));
         }).bounds(0,0,200,20).build();
         this.list.addRow(Component.literal("Seasonal Daylight Cycle"), seasonBtn);
+
+        var betterDaysCompatBtn = Button.builder(toggleLabel("Better Days Time Compat", betterDaysDynamicTimeCompat), b -> {
+            betterDaysDynamicTimeCompat = !betterDaysDynamicTimeCompat;
+            b.setMessage(toggleLabel("Better Days Time Compat", betterDaysDynamicTimeCompat));
+        }).bounds(0,0,200,20).build();
+        this.list.addRow(Component.literal("Better Days Time Compat"), betterDaysCompatBtn);
 
         var customBtn = Button.builder(toggleLabel("Custom Daylight Cycle", customDayCycle), b -> {
             customDayCycle = !customDayCycle;
@@ -164,13 +172,15 @@ public class SereneExtendedScreen extends Screen {
      */
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        this.renderBackground(g, mouseX, mouseY, partialTick);
+
         int panelW = 480;
         int panelX = (this.width - panelW) / 2;
         int top = 40;
         int bottom = this.height - 40;
         g.fill(panelX - 4, top - 4, panelX + panelW + 4, bottom, 0xAA000000);
         g.drawString(this.font, "Serene Seasons Plus", panelX + 6, top - 14, 0xFFFFFF, false);
-        ((IScreen)(Object)this).sereneseasonsplus$renderNoBackground(g, mouseX, mouseY, partialTick);
+        super.render(g, mouseX, mouseY, partialTick);
     }
 
     /**
@@ -215,6 +225,7 @@ public class SereneExtendedScreen extends Screen {
         SereneExtendedConfig.SNOWSTORM_ENABLED.set(snowFeatureEnabled);
         SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.set(parsedSnowHeight);
         SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.set(seasonalDaylightCycle);
+        SereneExtendedConfig.ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.set(betterDaysDynamicTimeCompat);
         SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.set(customDayCycle);
         SereneExtendedConfig.CUSTOM_DAY_LENGTH.set(parsed3);
         SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.set(parsed4);

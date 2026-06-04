@@ -8,8 +8,8 @@ import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
 import net.Gabou.gaboulibs.storage.SnowRecord;
 import com.Gabou.sereneseasonsplus.tags.SSPTags;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
-import com.Gabou.sereneseasonsplus.util.MinecraftServerAccess;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.MinecraftServerAccess;
 import net.Gabou.gaboulibs.util.SnowUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
@@ -25,7 +25,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -53,7 +54,7 @@ public class CommonSnowBlockFeature {
 
     public static ISnowEnvironmentHandler HANDLER = new DefaultSnowEnvironmentHandler();
 
-    protected static final int MAX_ATTEMPTS = 64;
+    protected static final int MAX_ATTEMPTS = SnowProcessingLimits.ACTIVE_SNOW_RANDOM_ATTEMPTS;
 
     public record QueuedChange(BlockPos pos, BlockState state, int flags) {
     }
@@ -71,7 +72,7 @@ public class CommonSnowBlockFeature {
     static final Map<ChunkPos, java.util.Set<BlockPos>> pendingIceAdds = new HashMap<>();
 
     // restored for visibility or metrics during a batch
-    static final List<BlockPos> snowPill = new ArrayList<>();
+    static final List<BlockPos> pendingColumnUpdates = new ArrayList<>();
 
     static int applyCycleTotal = 0;
     static int applyCycleProcessed = 0;
@@ -87,9 +88,9 @@ public class CommonSnowBlockFeature {
     // When true, use immediate/fast piling (current behavior). When false, pile gradually.
     public static boolean FAST_PILING_MODE = false;
     // Target time to reach full storm distribution (in ticks). Default ~8000 per request.
-    public static int ACTIVE_STORM_TARGET_TICKS = 8000;
+    public static int ACTIVE_STORM_TARGET_TICKS = SnowProcessingLimits.DEFAULT_ACTIVE_STORM_TARGET_TICKS;
     // Multiplier to scale the speed (1.0 = default; >1 faster, <1 slower)
-    public static float STORM_INTENSITY_MULTIPLIER = 1.0f;
+    public static float STORM_INTENSITY_MULTIPLIER = SnowProcessingLimits.DEFAULT_STORM_INTENSITY_MULTIPLIER;
 
     protected static int maxHeightForSnow;
 
@@ -102,7 +103,7 @@ public class CommonSnowBlockFeature {
     }
 
     public static void setStormIntensityMultiplier(float mult) {
-        STORM_INTENSITY_MULTIPLIER = Math.max(0.01f, mult);
+        STORM_INTENSITY_MULTIPLIER = Math.max(SnowProcessingLimits.MIN_STORM_INTENSITY_MULTIPLIER, mult);
     }
 
     public static int getTickCounter() {
@@ -114,10 +115,9 @@ public class CommonSnowBlockFeature {
         playerPositions.clear();
         tickCounter = 0;
         ChunkQueue.clear();
-        pendingChanges.clear();
-        chunksToDirty.clear();
-        pendingColumnMapUpdates.clear();
-        snowPill.clear();
+        MUTATION_BATCH.clear();
+        LOAD_RECONCILER.clear();
+        pendingColumnUpdates.clear();
         applyCycleTotal = 0;
         applyCycleProcessed = 0;
         pendingIceAdds.clear();
@@ -138,92 +138,16 @@ public class CommonSnowBlockFeature {
                     .getRule(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT)
                     .set(maxHeightForSnow, server);
 
-        if (!snowQueue.isEmpty()) {
-            chunkHandler(level);
-        }
+        chunkHandler(level);
 
         if (level.random.nextInt(16) == 0 || (EnvironmentHelper.isHotSeason() && level.random.nextInt(2) == 0)) {
             updatePlayerPositions(level.players());
-            passifSnowBlocks(level);
+            processPassiveSnowBlocks(level);
             EnvironmentHelper.checkAndUpdate(level);
         }
 
-        int phase = tickCounter % 5;
-        if (phase == 0 && tickCounter > 10) return;
-
-        if (phase == 1) {
-            ChunkQueue.Entry entry;
-            int processed = 0;
-
-            if (ChunkQueue.isEmpty()) ChunkQueue.shuffle();
-
-            while ((entry = ChunkQueue.poll()) != null) {
-                boolean timeUp = (
-                        ((MinecraftServerAccess) server).sereneseasonsplus$tempsEcoule() && processed >= 5
-                ) || processed >= 20;
-                if (timeUp) {
-                    if (entry.type() == ChunkQueue.TaskType.APPLY_SNOW) {
-                        enqueueChunkForSnowApply(entry.pos(), entry.subSeason());
-                    } else {
-                        enqueueChunkForSnowMelt(entry.pos(), entry.fullClear());
-                    }
-                    break;
-                }
-
-                boolean changed = false;
-                ChunkPos chunkPos = entry.pos();
-                if (!level.hasChunk(chunkPos.x, chunkPos.z)) {
-                    continue;
-                }
-
-//                if(chunkPos.equals(new ChunkPos(23,-39))){
-//                    LOGGER.info("Processing chunk -7,-5 for task {} (fullClear={})", entry.type(), entry.fullClear());
-//                }
-                LevelChunk chunk = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
-                if (chunk == null) {
-                    continue;
-                }
-
-                switch (entry.type()) {
-                    case APPLY_SNOW -> {
-                        boolean synced = syncTrackedColumnsToWorld(level, chunk);
-                        if (!synced) {
-                            synced = applySnowHistoryPass(level, chunk);
-                        }
-                        if (!synced) {
-                            synced = applySnowPatternFromActiveRecord(level, chunk);
-                        }
-                        if (synced) {
-                            chunksToDirty.add(chunkPos);
-                            changed = true;
-                        }
-                    }
-                    case MELT_SNOW -> {
-                        changed = meltSnowInChunk(level, chunkPos, entry.fullClear());
-                        if (changed) {
-                            chunksToDirty.add(chunkPos);
-                        }
-                    }
-                }
-                processed++;
-            }
-        }
-
-        if (phase == 2 || phase == 3 || phase == 4) {
-            if (applyCycleProcessed == 0) {
-                applyCycleTotal = pendingChanges.size();
-            }
-            int batch = (applyCycleTotal + 2) / 3;
-            int toProcess = (phase == 4) ? Integer.MAX_VALUE : batch;
-            int applied = processQueuedChanges(level, toProcess);
-            applyCycleProcessed += applied;
-
-            if (phase == 4) {
-                finalizeChunkBatch(level);
-                applyCycleTotal = 0;
-                applyCycleProcessed = 0;
-            }
-        }
+        drainChunkQueue(server, level);
+        drainQueuedMutations(level);
     }
 
     protected static final Queue<LevelChunk> snowQueue = new ConcurrentLinkedQueue<>();
@@ -235,41 +159,121 @@ public class CommonSnowBlockFeature {
     }
 
     protected static void chunkHandler(ServerLevel level) {
-        LevelChunk chunk;
-        while ((chunk = snowQueue.poll()) != null) {
-            if (!(chunk instanceof ISnowTrackedChunk tracked)) continue;
+        if (!LOAD_RECONCILER.hasPendingLoads()) {
+            return;
+        }
+        long deadline = System.nanoTime() + SnowProcessingLimits.CHUNK_LOAD_RECONCILE_BUDGET_NANOS;
+        LOAD_RECONCILER.process(
+                level,
+                SNOW_COMPATIBILITY,
+                SnowProcessingLimits.MIN_CHUNK_LOAD_RECONCILES_PER_TICK,
+                SnowProcessingLimits.MAX_CHUNK_LOAD_RECONCILES_PER_TICK,
+                deadline
+        );
+    }
 
-            boolean needSurface = tracked.sereneseasonsplus$getSurfaceHeight() == -1;
-            boolean needAvail = tracked.sereneseasonsplus$getAvailableSnowColumns() == -1;
-            if (!needSurface && !needAvail) continue;
-
-            if (needSurface) {
-                int centerX = chunk.getPos().getMiddleBlockX();
-                int centerZ = chunk.getPos().getMiddleBlockZ();
-                int surfaceHeight = level.getHeight(
-                        net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE,
-                        centerX,
-                        centerZ
-                );
-                tracked.sereneseasonsplus$setSurfaceHeight(surfaceHeight);
-            }
-
-            if (needAvail) {
-                int baseX = chunk.getPos().getMinBlockX();
-                int baseZ = chunk.getPos().getMinBlockZ();
-                int count = 0;
-                for (int dx = 0; dx < 16; dx++) {
-                    for (int dz = 0; dz < 16; dz++) {
-                        int x = baseX + dx;
-                        int z = baseZ + dz;
-                        BlockPos surface = findPlacementTop(level, x, z);
-                        if (surface != null) count++;
-                    }
-                }
-                tracked.sereneseasonsplus$setAvailableSnowColumns(count);
-            }
+    private static void drainChunkQueue(MinecraftServer server, ServerLevel level) {
+        if (!ChunkQueue.hasPendingWork()) {
+            return;
         }
 
+        long deadline = System.nanoTime() + SnowProcessingLimits.CHUNK_TASK_BUDGET_NANOS;
+        int processed = 0;
+        int inspected = 0;
+
+        while (ChunkQueue.hasPendingWork()) {
+            if (ChunkQueue.isEmpty()) {
+                ChunkQueue.shuffle();
+            }
+
+            ChunkQueue.Entry entry = ChunkQueue.poll();
+            if (entry == null) {
+                break;
+            }
+
+            inspected++;
+            if (shouldYieldChunkQueue(server, processed, inspected, deadline)) {
+                ChunkQueue.deferUntilNextTick(entry);
+                break;
+            }
+
+            processChunkQueueEntry(level, entry);
+            ChunkQueue.markProcessed(entry);
+            processed++;
+        }
+    }
+
+    private static boolean shouldYieldChunkQueue(MinecraftServer server, int processed, int inspected, long deadlineNanos) {
+        if (processed < SnowProcessingLimits.MIN_CHUNK_TASKS_PER_TICK) {
+            return false;
+        }
+        if (processed >= SnowProcessingLimits.MAX_CHUNK_TASKS_PER_TICK
+                || inspected >= SnowProcessingLimits.MAX_INSPECTED_CHUNK_TASKS_PER_TICK) {
+            return true;
+        }
+        if (System.nanoTime() >= deadlineNanos) {
+            return true;
+        }
+        return !((MinecraftServerAccess) server).sereneseasonsplus$tempsEcoule()
+                && processed >= SnowProcessingLimits.TIME_BUDGET_MIN_PROCESSED_CHUNKS;
+    }
+
+    private static void processChunkQueueEntry(ServerLevel level, ChunkQueue.Entry entry) {
+        ChunkPos chunkPos = entry.pos();
+        if (!hasRequiredNeighborChunks(level, chunkPos)) {
+            if (entry.attempts() < ChunkQueue.MAX_DEFER_ATTEMPTS) {
+                ChunkQueue.requeueDeferred(entry);
+            } else {
+                ChunkQueue.markDropped(entry);
+            }
+            return;
+        }
+
+        LevelChunk chunk = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
+        if (chunk == null) {
+            if (entry.attempts() < ChunkQueue.MAX_DEFER_ATTEMPTS) {
+                ChunkQueue.requeueDeferred(entry);
+            } else {
+                ChunkQueue.markDropped(entry);
+            }
+            return;
+        }
+
+        boolean changed = switch (entry.type()) {
+            case APPLY_SNOW -> {
+                boolean synced = syncTrackedColumnsToWorld(level, chunk);
+                if (!synced) {
+                    synced = applySnowHistoryPass(level, chunk);
+                }
+                if (!synced) {
+                    synced = applySnowPatternFromActiveRecord(level, chunk);
+                }
+                yield synced;
+            }
+            case MELT_SNOW -> meltSnowInChunk(level, chunkPos, entry.fullClear());
+            case RETRY -> false;
+        };
+
+        if (changed) {
+            MUTATION_BATCH.markChunkDirty(chunkPos);
+        }
+    }
+
+    private static void drainQueuedMutations(ServerLevel level) {
+        if (!MUTATION_BATCH.hasPendingChanges()) {
+            return;
+        }
+
+        long deadline = System.nanoTime() + SnowProcessingLimits.MUTATION_BUDGET_NANOS;
+        int applied = processQueuedChanges(
+                level,
+                SnowProcessingLimits.MIN_MUTATIONS_PER_TICK,
+                SnowProcessingLimits.MAX_MUTATIONS_PER_TICK,
+                deadline
+        );
+        if (applied > 0) {
+            finalizeChunkBatch(level);
+        }
     }
 
     public static void enqueueChunkForSnowApply(ChunkPos chunkPos, Season.SubSeason subSeason) {
@@ -280,70 +284,8 @@ public class CommonSnowBlockFeature {
         ChunkQueue.enqueueMelt(chunkPos, fullClear);
     }
 
-    protected static void passifSnowBlocks(ServerLevel level) {
-        for (Map.Entry<ServerPlayer, BlockPos> entry : playerPositions.entrySet()) {
-            ServerPlayer player = entry.getKey();
-            BlockPos playerPos = entry.getValue();
-
-            int simulationDistance = getSimulationDistance(player);
-            int radius = Mth.clamp(simulationDistance * 16, 16, 64);
-
-            int blocksToReplace = HANDLER.getBlocksToReplace(level, playerPos);
-            if (blocksToReplace < 0) {
-                if (!EnvironmentHelper.isRainning(level, playerPos)) continue;
-
-                final RandomSource random = level.random;
-                for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-                    int dx = random.nextInt(radius * 2 + 1) - radius;
-                    int dz = random.nextInt(radius * 2 + 1) - radius;
-                    int x = playerPos.getX() + dx;
-                    int z = playerPos.getZ() + dz;
-
-                    BlockPos surface = findPlacementTop(level, x, z);
-                    if (surface == null) continue;
-
-                    BlockState st = level.getBlockState(surface);
-                    BlockPos targetPos = surface;
-                    int targetLayers = 1;
-
-                    if (st.is(Blocks.SNOW)) {
-                        int cur = st.getValue(SnowLayerBlock.LAYERS);
-                        if (cur < 8) {
-                            targetLayers = cur + 1;
-                        } else {
-                            // stack above
-                            BlockPos above = surface.above();
-                            if (!level.isEmptyBlock(above)) continue;
-                            targetPos = above;
-                            targetLayers = 1;
-                        }
-                    } else if (st.is(Blocks.SNOW_BLOCK)) {
-                        BlockPos above = surface.above();
-                        if (!level.isEmptyBlock(above)) continue;
-                        targetPos = above;
-                        targetLayers = 1;
-                    } else {
-                        targetPos = surface;
-                        targetLayers = 1;
-                    }
-
-                    if (placeOrQueueLayers(level, targetPos, targetLayers, true, false)) {
-                        BlockState ns = level.getBlockState(targetPos);
-                        accumulateColumnUpdate(targetPos, ns);
-                    }
-                }
-            } else {
-                for (int i = 0; i < blocksToReplace; ++i) {
-                    BlockPos targetPos = findSnowBlockInRadius(level, playerPos, radius);
-                    if (targetPos == null) continue;
-
-                    SnowUtils.breakOrDecrementLayer(level, targetPos);
-
-                    BlockState ns = level.getBlockState(targetPos);
-                    accumulateColumnUpdate(targetPos, ns);
-                }
-            }
-        }
+    protected static void processPassiveSnowBlocks(ServerLevel level) {
+        ACTIVE_SNOW_UPDATE_SERVICE.run(level, playerPositions);
     }
 
     protected static boolean syncTrackedColumnsToWorld(ServerLevel level, LevelChunk chunk) {
@@ -1013,9 +955,6 @@ public class CommonSnowBlockFeature {
     }
 
     protected static boolean isExposedToSky(ServerLevel level, BlockPos pos) {
-        if (pos.equals(new BlockPos(-98, 63, -104))) {
-            int debug = 0;
-        }
         try {
             return level.canSeeSkyFromBelowWater(pos);
         } catch (Throwable t) {
@@ -1049,6 +988,27 @@ public class CommonSnowBlockFeature {
         }
     }
 
+    public static boolean isSnowReplaceableGroundCover(BlockState state) {
+        if (state.isAir()) {
+            return false;
+        }
+        if (state.is(Blocks.SHORT_GRASS)
+                || state.is(Blocks.TALL_GRASS)
+                || state.is(Blocks.FERN)
+                || state.is(Blocks.LARGE_FERN)
+                || state.is(Blocks.DEAD_BUSH)) {
+            return true;
+        }
+        if (state.is(BlockTags.FLOWERS) || state.is(SSPTags.Blocks.FLOWERS)) {
+            return true;
+        }
+
+        String blockPath = net.minecraft.core.registries.BuiltInRegistries.BLOCK
+                .getKey(state.getBlock())
+                .getPath();
+        return blockPath.contains("leaf_litter") || blockPath.contains("ground_leav");
+    }
+
     /**
      * Unified setter
      * If queue is true we enqueue using the classic queueSnowLayersIfNeeded
@@ -1060,7 +1020,7 @@ public class CommonSnowBlockFeature {
         int activeId = (sd != null) ? sd.currentStormId : 0;
         if (activeId > 0) {
             net.minecraft.world.level.chunk.LevelChunk chunk = level.getChunkSource().getChunk(pos.getX() >> 4, pos.getZ() >> 4, false);
-            if (chunk instanceof com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk tracked) {
+            if (chunk instanceof ISnowTrackedChunk tracked) {
                 if (tracked.sereneseasonsplus$getDestroyedStormId() != activeId) {
                     // Different storm than what was recorded: reset tracking lazily
                     tracked.sereneseasonsplus$getDestroyedColumns().clear();
@@ -1135,7 +1095,13 @@ public class CommonSnowBlockFeature {
             snowPill.add(pos.immutable());
             return true;
         }
-        return false;
+        SnowWorldMutation mutation = SNOW_COMPATIBILITY.createLayerMutation(level, pos, state, targetLayers, allowPlace);
+        if (mutation == null) {
+            return false;
+        }
+        MUTATION_BATCH.queueMutation(mutation);
+        pendingColumnUpdates.add(mutation.trackingPos().immutable());
+        return true;
     }
 
     // Ensure we never exceed configured max snow height (layers) per column
@@ -1289,54 +1255,13 @@ public class CommonSnowBlockFeature {
         return applied;
     }
 
+    protected static int processQueuedChanges(ServerLevel level, int minToProcess, int maxToProcess, long deadlineNanos) {
+        return MUTATION_BATCH.processQueuedChanges(level, minToProcess, maxToProcess, deadlineNanos, SNOW_COMPATIBILITY);
+    }
+
     protected static void finalizeChunkBatch(ServerLevel level) {
-        // Flush accumulated snow column updates per chunk
-        if (!pendingColumnMapUpdates.isEmpty()) {
-            for (Map.Entry<ChunkPos, Map<BlockPos, Integer>> entry : pendingColumnMapUpdates.entrySet()) {
-                ChunkPos cp = entry.getKey();
-                Map<BlockPos, Integer> updates = entry.getValue();
-                if (!level.hasChunk(cp.x, cp.z)) continue;
-                LevelChunk chunk = level.getChunkSource().getChunk(cp.x, cp.z, false);
-                if (!(chunk instanceof ISnowTrackedChunk tracked)) continue;
-
-                Map<BlockPos, Integer> columns = tracked.sereneseasonsplus$getSnowColumns();
-                for (Map.Entry<BlockPos, Integer> up : updates.entrySet()) {
-                    int val = up.getValue();
-                    if (val <= 0) {
-                        columns.remove(up.getKey());
-                    } else {
-                        // Ensure per-position layers are bounded to [1..8]
-                        columns.put(up.getKey().immutable(), Mth.clamp(val, 1, 8));
-                    }
-                }
-            }
-            pendingColumnMapUpdates.clear();
-        }
-
-        // Flush accumulated ice adds per chunk (track where we froze water)
-        if (!pendingIceAdds.isEmpty()) {
-            for (Map.Entry<ChunkPos, java.util.Set<BlockPos>> e : pendingIceAdds.entrySet()) {
-                ChunkPos cp = e.getKey();
-                if (!level.hasChunk(cp.x, cp.z)) continue;
-                LevelChunk chunk = level.getChunkSource().getChunk(cp.x, cp.z, false);
-                if (!(chunk instanceof ISnowTrackedChunk tracked)) continue;
-                java.util.Set<BlockPos> set = tracked.sereneseasonsplus$getIceColumns();
-                for (BlockPos p : e.getValue()) {
-                    if (level.getBlockState(p).is(Blocks.ICE)) set.add(p.immutable());
-                }
-            }
-            pendingIceAdds.clear();
-        }
-
-        for (ChunkPos cp : chunksToDirty) {
-            if (!level.hasChunk(cp.x, cp.z)) continue;
-            LevelChunk chunk = level.getChunkSource().getChunk(cp.x, cp.z, false);
-            if (chunk == null) continue;
-            chunk.setUnsaved(true);
-        }
-        chunksToDirty.clear();
-        pendingChanges.clear();
-        snowPill.clear();
+        MUTATION_BATCH.finalizeChunkBatch(level);
+        pendingColumnUpdates.clear();
         applyCycleTotal = 0;
         applyCycleProcessed = 0;
     }
@@ -1415,11 +1340,9 @@ public class CommonSnowBlockFeature {
         tickCounter = 0;
         playerPositions.clear();
         ChunkQueue.clear();
-        pendingColumnMapUpdates.clear();
-        pendingChanges.clear();
-        pendingIceAdds.clear();
-        chunksToDirty.clear();
-        snowPill.clear();
+        MUTATION_BATCH.clear();
+        LOAD_RECONCILER.clear();
+        pendingColumnUpdates.clear();
         applyCycleTotal = 0;
         applyCycleProcessed = 0;
 

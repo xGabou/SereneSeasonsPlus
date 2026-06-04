@@ -2,7 +2,6 @@
   "required": true,
   "package": "com.Gabou.sereneseasonsplus.mixin",
   "compatibilityLevel": "JAVA_17",
-  "plugin": "com.Gabou.sereneseasonsplus.mixin.SereneSeasonsPlusMixinPlugin",
   "refmap": "sereneseasonsplus-refmap.json",
   "mixins": [
     "ChunkSerializerSnowMixin",
@@ -10,9 +9,8 @@
     "MinecraftServerMixin",
     "ProtoChunkSnowMixin",
     "SeasonHooksMixin",
-    "ServelLevelChunkMixin",
+    "ServerLevelAccessMixin",
     "ServerLevelMixin",
-    "SnowRealMagicCompatMixin",
     "SpreadingSnowyDirtBlockMixin"
   ],
   "client": [

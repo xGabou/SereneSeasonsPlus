@@ -34,6 +34,10 @@ public final class ChunkQueue {
         TASKS_NEXT_TICK.clear();
     }
 
+    public static boolean hasPendingWork() {
+        return !TASKS_CURRENT_TICK.isEmpty() || !TASKS_NEXT_TICK.isEmpty();
+    }
+
     public static void enqueueScheduled(ChunkPos chunkPos) {
         EntryKey key = new EntryKey(ChunkPos.asLong(chunkPos.x, chunkPos.z), TaskType.APPLY_SNOW, true);
         if (SCHEDULED.add(key)) {
@@ -74,6 +78,27 @@ public final class ChunkQueue {
         if (SCHEDULED.add(key)) {
             TASKS_NEXT_TICK.add(new Entry(chunkPos, TaskType.MELT_SNOW, null, fullClear));
         }
+    }
+
+    public static void requeueDeferred(Entry entry) {
+        Entry next = entry.withAttempts(entry.attempts() + 1);
+        if (trySchedule(next, true)) {
+            TASKS_NEXT_TICK.add(next);
+        }
+    }
+
+    public static void deferUntilNextTick(Entry entry) {
+        if (trySchedule(entry, true)) {
+            TASKS_NEXT_TICK.add(entry);
+        }
+    }
+
+    public static void markProcessed(Entry entry) {
+        COOLDOWN_UNTIL_TICK.put(keyFor(entry), currentTick + PROCESSED_COOLDOWN_TICKS);
+    }
+
+    public static void markDropped(Entry entry) {
+        COOLDOWN_UNTIL_TICK.put(keyFor(entry), currentTick + PROCESSED_COOLDOWN_TICKS);
     }
 
     public static Entry poll() {

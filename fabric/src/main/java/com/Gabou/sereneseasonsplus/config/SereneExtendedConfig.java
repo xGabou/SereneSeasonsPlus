@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import net.fabricmc.loader.api.FabricLoader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SereneExtendedConfig {
+    private static final Logger LOGGER = LogManager.getLogger("SereneExtendedConfig");
 
     public static final int MIN_CORES_FOR_ASYNC = 6;
 
@@ -21,6 +24,7 @@ public class SereneExtendedConfig {
     public static final IntValue TICK_SNOW_PILLER;
     public static final IntValue TICK_SNOW_REPLACER;
     public static final BooleanValue ENABLE_SEASONAL_DAYLIGHT_CYCLE;
+    public static final BooleanValue ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT;
     public static final DoubleValue CUSTOM_DAY_LENGTH;
     public static final DoubleValue CUSTOM_NIGHT_LENGTH;
     public static final BooleanValue CUSTOM_CYCLE_LENGTH;
@@ -51,6 +55,7 @@ public class SereneExtendedConfig {
         REAL_TIME_CANADIAN_SEASONS = new BooleanValue("realTimeCanadianSeasons", false);
 
         ENABLE_SEASONAL_DAYLIGHT_CYCLE = new BooleanValue("enableSeasonalDaylightCycle", true);
+        ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT = new BooleanValue("enableBetterDaysDynamicTimeCompat", true);
         CUSTOM_CYCLE_LENGTH = new BooleanValue("customCycleLength", false);
         CUSTOM_DAY_LENGTH = new DoubleValue("customDayLength", 1.0, 0.05, 100.0);
         CUSTOM_NIGHT_LENGTH = new DoubleValue("customNightLength", 1.0, 0.05, 100.0);
@@ -66,7 +71,7 @@ public class SereneExtendedConfig {
             try {
                 r.run();
             } catch (Throwable t) {
-                t.printStackTrace();
+                LOGGER.error("Failed to run config reload listener", t);
             }
         }
     }
@@ -96,6 +101,7 @@ public class SereneExtendedConfig {
             MAX_SNOW_ACCUMULATION_LAYERS.load(obj);
             REAL_TIME_CANADIAN_SEASONS.load(obj);
             ENABLE_SEASONAL_DAYLIGHT_CYCLE.load(obj);
+            ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.load(obj);
             CUSTOM_CYCLE_LENGTH.load(obj);
             CUSTOM_DAY_LENGTH.load(obj);
             CUSTOM_NIGHT_LENGTH.load(obj);
@@ -117,7 +123,7 @@ public class SereneExtendedConfig {
             MAX_SNOW_ACCUMULATION_LAYERS.save(obj);
             REAL_TIME_CANADIAN_SEASONS.save(obj);
             ENABLE_SEASONAL_DAYLIGHT_CYCLE.save(obj);
-            GRASSFLOWER_GROWTH_ENABLED.save(obj);
+            ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.save(obj);
             CUSTOM_CYCLE_LENGTH.save(obj);
             CUSTOM_DAY_LENGTH.save(obj);
             CUSTOM_NIGHT_LENGTH.save(obj);

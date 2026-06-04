@@ -1,11 +1,27 @@
-# Serene Seasons Plus - v4.2.2-1.21.1
+# Serene Seasons Plus v5.1.0
 
-## Changelog
-### Added
-- Real-time Canadian season sync option that ties Serene Seasons to calendar months.
-### Fixed
-### Changed / Removed
+## Highlights
 
-### Notes
-- This version is in beta testing. Please report any issues you find on the Discord server: https://discord.gg/2jRhTJgYz4
-- Real-time Canadian season sync: aligns sub-seasons to real calendar months (Eastern time) so winter is sharp and other core seasons stay distinct.
+- Snow updates should now appear much faster when chunks load or seasons change.
+- Snow placement is safer around important blocks.
+- Winter snow can still cover natural ground clutter like grass, tall grass, flowers, ferns, and leaf litter.
+- Grass and flower regrowth is more natural and no longer only brings back dandelions.
+
+## Fixed
+
+- Snow should no longer delete important blocks such as rails, buttons, levers, and carpets.
+- Improved snow replacement behavior so natural plants can be covered by snow without breaking protected blocks.
+- Fixed the old Snow Real Magic compatibility path that could prevent normal snow logic from running correctly.
+- Improved Better Days compatibility messaging so users know when SSP is changing Better Days time speeds.
+
+## Improved
+
+- Snow processing is now much more responsive without trying to do all work in one laggy tick.
+- Chunk loading snow sync is faster and should feel closer to instant.
+- Performance handling for snow replacement and melting has been smoothed out.
+- Shared Fabric and NeoForge screens were cleaned up, reducing duplicate code and future maintenance issues.
+
+## Notes
+
+- Better Days dynamic time compatibility is now clearly exposed as a config option.
+- On newer versions, Better Days' own seasonal time system is preferred when available.

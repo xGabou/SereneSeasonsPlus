@@ -43,6 +43,31 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         // If you have client-only stuff, register it in SereneSeasonsPlusClientFabric
     }
 
+    private void onBlockBreak(Level lvl, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity) {
+        if (!(lvl instanceof ServerLevel level)) return;
+        if (level.dimension() != Level.OVERWORLD) return;
+
+        if (!state.is(Blocks.SNOW) && !state.is(Blocks.SNOW_BLOCK)) return;
+
+        com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get();
+        int activeId = (sd != null) ? sd.currentStormId : 0;
+        if (activeId <= 0) return; // only track during active storm
+
+        LevelChunk chunk = level.getChunkSource().getChunk(pos.getX() >> 4, pos.getZ() >> 4, false);
+        if (!(chunk instanceof com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk tracked)) return;
+
+        if (tracked.sereneseasonsplus$getDestroyedStormId() != activeId) {
+            tracked.sereneseasonsplus$getDestroyedColumns().clear();
+            tracked.sereneseasonsplus$setDestroyedStormId(activeId);
+        }
+        long xz = (((long) pos.getX()) << 32) ^ (pos.getZ() & 0xffffffffL);
+        tracked.sereneseasonsplus$getDestroyedColumns().add(xz);
+
+        // Remove any tracked snow column entries for this X/Z so sync won't try to re-add this storm
+        tracked.sereneseasonsplus$getSnowColumns().keySet().removeIf(p -> p.getX() == pos.getX() && p.getZ() == pos.getZ());
+        chunk.markUnsaved();
+    }
+
     private void onConfigReload() {
         CommonSnowBlockFeature.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get(), SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get());
         SereneService.reloadConfig();
@@ -65,8 +90,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
 
     private void onWorldTick(ServerLevel level) {
         if( level.dimension() != Level.OVERWORLD) return;
-        RealTimeSeasonHelper.sync(level, SereneExtendedConfig.REAL_TIME_CANADIAN_SEASONS.get());
-        this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
+        this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
         CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
 
     }

@@ -8,6 +8,7 @@ import technology.roughness.whitenoise.config.WhiteNoiseConfigSpec;
 
 public class ConfigHacks {
     private static final Logger LOGGER = LogManager.getLogger("ConfigHacks");
+    private static boolean warningLogged;
 
     /**
      * Overrides BetterDays' time speed configuration using reflection.
@@ -18,13 +19,22 @@ public class ConfigHacks {
      */
     public static void setTimeSpeeds(double day, double night) {
         try {
+            logCompatibilityWarning();
             Field commonField = ConfigHandler.class.getDeclaredField("COMMON");
             commonField.setAccessible(true);
             setConfigValues(day,night, commonField);
             LOGGER.info("Updated daySpeed = {}, nightSpeed = {}", day, night);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("Failed to set time speeds dynamically", e);
         }
+    }
+
+    private static void logCompatibilityWarning() {
+        if (warningLogged) {
+            return;
+        }
+        warningLogged = true;
+        LOGGER.warn("Better Days dynamic time compatibility is enabled. Serene Seasons Plus will update Better Days daySpeed/nightSpeed using reflection because Better Days 1.21.11 does not expose a public seasonal speed API.");
     }
 
     private static void setConfigValues(double day,double night, Field commonField) throws IllegalAccessException, NoSuchFieldException {
