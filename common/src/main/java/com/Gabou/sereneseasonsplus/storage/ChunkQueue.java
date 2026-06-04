@@ -46,6 +46,10 @@ public final class ChunkQueue {
         TASKS_NEXT_TICK.clear();
     }
 
+    public static boolean hasPendingWork() {
+        return !TASKS_CURRENT_TICK.isEmpty() || !TASKS_NEXT_TICK.isEmpty();
+    }
+
     public static void enqueueScheduled(ChunkPos chunkPos) {
         Entry entry = new Entry(chunkPos, TaskType.RETRY, null, true, 0);
         if (trySchedule(entry)) {
@@ -91,6 +95,12 @@ public final class ChunkQueue {
         Entry next = entry.withAttempts(entry.attempts() + 1);
         if (trySchedule(next, true)) {
             TASKS_NEXT_TICK.add(next);
+        }
+    }
+
+    public static void deferUntilNextTick(Entry entry) {
+        if (trySchedule(entry, true)) {
+            TASKS_NEXT_TICK.add(entry);
         }
     }
 

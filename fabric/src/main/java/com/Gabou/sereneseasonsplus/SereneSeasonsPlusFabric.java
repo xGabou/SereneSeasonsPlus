@@ -62,7 +62,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         if (activeId <= 0) return; // only track during active storm
 
         LevelChunk chunk = level.getChunkSource().getChunk(pos.getX() >> 4, pos.getZ() >> 4, false);
-        if (!(chunk instanceof com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk tracked)) return;
+        if (!(chunk instanceof com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk tracked)) return;
 
         if (tracked.sereneseasonsplus$getDestroyedStormId() != activeId) {
             tracked.sereneseasonsplus$getDestroyedColumns().clear();
@@ -98,7 +98,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
 
     private void onWorldTick(ServerLevel level) {
         if( level.dimension() != Level.OVERWORLD) return;
-        this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
+        this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
         CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
 
     }

@@ -5,7 +5,7 @@ import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
 import net.Gabou.gaboulibs.storage.SnowRecord;
 import com.Gabou.sereneseasonsplus.storage.SnowSavedData;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import net.minecraft.server.level.ServerLevel;
 
 
@@ -58,8 +58,7 @@ public final class SSPApi {
     }
 
     /**
-     * Globally scales the piling speed during active storms. Values > 1 speed up,
-     * < 1 slow down.
+     * Globally scales the piling speed during active storms. Values > 1 speed up, < 1 slow down.
      */
     public static void setStormIntensityMultiplier(float multiplier) {
         CommonSnowBlockFeature.setStormIntensityMultiplier(multiplier);

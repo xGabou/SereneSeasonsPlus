@@ -1,6 +1,6 @@
 package com.Gabou.sereneseasonsplus.mixin;
 
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import org.spongepowered.asm.mixin.Mixin;

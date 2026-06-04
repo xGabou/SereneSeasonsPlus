@@ -3,7 +3,7 @@ package com.Gabou.sereneseasonsplus.features.logic;
 import com.Gabou.sereneseasonsplus.features.SnowHistoryQueryService;
 import com.Gabou.sereneseasonsplus.features.SnowStateService;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;

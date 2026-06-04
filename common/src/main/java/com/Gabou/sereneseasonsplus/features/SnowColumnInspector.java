@@ -27,7 +27,8 @@ public final class SnowColumnInspector {
         }
 
         BlockPos up = base.above();
-        if (compatibility.canPlaceManagedSnow(level, up, level.getBlockState(up))) {
+        var upState = level.getBlockState(up);
+        if (compatibility.canPlaceManagedSnow(level, up, upState)) {
             return up;
         }
 

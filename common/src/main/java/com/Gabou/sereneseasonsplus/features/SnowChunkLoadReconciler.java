@@ -2,7 +2,7 @@ package com.Gabou.sereneseasonsplus.features;
 
 import com.Gabou.sereneseasonsplus.features.logic.SnowLogic;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -41,10 +41,16 @@ public final class SnowChunkLoadReconciler {
         return !pendingLoads.isEmpty();
     }
 
-    public void process(ServerLevel level, SnowBlockCompatibility compatibility) {
+    public int process(ServerLevel level, SnowBlockCompatibility compatibility, int minChunks, int maxChunks, long deadlineNanos) {
         ChunkPos chunkPos;
+        int processed = 0;
         while ((chunkPos = pendingLoads.poll()) != null) {
             queuedChunkKeys.remove(ChunkPos.asLong(chunkPos.x, chunkPos.z));
+            if (processed >= minChunks && (processed >= maxChunks || System.nanoTime() >= deadlineNanos)) {
+                requeue(chunkPos);
+                break;
+            }
+
             if (!level.hasChunk(chunkPos.x, chunkPos.z)) {
                 continue;
             }
@@ -56,6 +62,15 @@ public final class SnowChunkLoadReconciler {
 
             initializeChunkMetadata(level, chunk, tracked, compatibility);
             scheduleInitialReconciliation(level, chunk, tracked);
+            processed++;
+        }
+        return processed;
+    }
+
+    private void requeue(ChunkPos chunkPos) {
+        long key = ChunkPos.asLong(chunkPos.x, chunkPos.z);
+        if (queuedChunkKeys.add(key)) {
+            pendingLoads.add(chunkPos);
         }
     }
 

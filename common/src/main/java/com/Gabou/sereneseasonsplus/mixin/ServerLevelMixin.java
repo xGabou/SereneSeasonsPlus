@@ -1,12 +1,12 @@
 package com.Gabou.sereneseasonsplus.mixin;
 
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
+import com.Gabou.sereneseasonsplus.features.ServerPrecipitationService;
 import com.Gabou.sereneseasonsplus.features.logic.SnowChunkWeatherLogic;
 import com.Gabou.sereneseasonsplus.features.logic.SnowLogic;
-import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
-import com.Gabou.sereneseasonsplus.util.IServerLevel;
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.IServerLevel;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ChunkLevel;
 import net.minecraft.server.level.ServerLevel;
@@ -21,7 +21,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -36,14 +35,6 @@ public class ServerLevelMixin  {
 
     @Unique
     private boolean sereneseasonsplus$isRaining;
-
-
-
-
-    @Unique
-    private BlockPos atmosphere$freezePos;
-    @Unique
-    private ServerLevel atmosphere$level;
 
     @Unique
     private boolean sereneseasonsplus$shouldSkipSnowCheck = false;
@@ -112,11 +103,7 @@ public class ServerLevelMixin  {
             )
     )
     private boolean ssp$AccumulateColumnUpdate(ServerLevel level, BlockPos pos, BlockState state) {
-        boolean result = level.setBlockAndUpdate(pos, state);
-        if (result) {
-            CommonSnowBlockFeature.accumulateColumnUpdate(pos, state);
-        }
-        return result;
+        return ServerPrecipitationService.setBlockAndTrackSnow(level, pos, state);
     }
 
     @Redirect(
@@ -128,30 +115,10 @@ public class ServerLevelMixin  {
             )
     )
     private boolean ssp$AccumulateColumnUpdate1(ServerLevel level, BlockPos pos, BlockState state) {
-        if (!sereneseasonsplus$canPlaceSnowWithoutReplacingImportant(level, pos, state)) {
+        if (!ServerPrecipitationService.canPlaceSnowWithoutReplacingImportant(level, pos, state)) {
             return false;
         }
-        boolean result = level.setBlockAndUpdate(pos, state);
-        if (result) {
-            CommonSnowBlockFeature.accumulateColumnUpdate(pos, state);
-        }
-        return result;
-    }
-
-
-
-    @Inject(
-            method = "tickPrecipitation",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/biome/Biome;shouldFreeze(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;)Z"
-            ),
-            locals = LocalCapture.CAPTURE_FAILHARD
-    )
-    private void captureLocals(BlockPos $$0, CallbackInfo ci, BlockPos $$1, BlockPos posBelow, Biome $$3) {           // $$14
-
-        atmosphere$freezePos = posBelow;
-        atmosphere$level = (ServerLevel)(Object)this;
+        return ServerPrecipitationService.setBlockAndTrackSnow(level, pos, state);
     }
 
 
@@ -226,23 +193,9 @@ public class ServerLevelMixin  {
             BlockPos $$0, CallbackInfo ci, BlockPos posSnowCheck, BlockPos posBelow, Biome biome, int snowHeight, BlockState state16) {
 
         if(this instanceof IServerLevel serverLevel) {
-            boolean skip = false;
             LevelChunk chunk = serverLevel.sereneseasonsplus$getChunkLevel();
-
-            SnowHistorySavedData sd = SnowHistorySavedData.get();
-            int activeId = sd != null ? sd.currentStormId : 0;
-
-            if (activeId > 0 && chunk instanceof ISnowTrackedChunk tracked) {
-                if (tracked.sereneseasonsplus$getDestroyedStormId() != activeId) {
-                    tracked.sereneseasonsplus$getDestroyedColumns().clear();
-                    tracked.sereneseasonsplus$setDestroyedStormId(activeId);
-                }
-                long xz = (((long) posSnowCheck.getX()) << 32) ^ (posSnowCheck.getZ() & 0xFFFFFFFFL);
-                skip = tracked.sereneseasonsplus$getDestroyedColumns().contains(xz);
-            }
-
-            sereneseasonsplus$shouldSkipSnowCheck = skip;
-
+            sereneseasonsplus$shouldSkipSnowCheck =
+                    chunk != null && ServerPrecipitationService.isDestroyedDuringCurrentStorm(chunk, posSnowCheck);
         }
 
     }
@@ -269,10 +222,7 @@ public class ServerLevelMixin  {
             require = 1
     )
     private boolean sereneseasonsplus$gateSnowIsCheckSliced(BlockState state, Block block) {
-        if (sereneseasonsplus$shouldSkipSnowCheck && block == Blocks.SNOW) {
-            return false;
-        }
-        return state.is(block);
+        return ServerPrecipitationService.shouldTreatAsSnow(state, block, sereneseasonsplus$shouldSkipSnowCheck);
     }
 
 
@@ -308,25 +258,10 @@ public class ServerLevelMixin  {
         }
 
         // Let vanilla handle it when not skipping
-        if (!sereneseasonsplus$canPlaceSnowWithoutReplacingImportant(level, pos, state)) {
+        if (!ServerPrecipitationService.canPlaceSnowWithoutReplacingImportant(level, pos, state)) {
             return false;
         }
-        boolean result = level.setBlockAndUpdate(pos, state);
-        if (result) {
-            CommonSnowBlockFeature.accumulateColumnUpdate(pos, state);
-        }
-        return result;
-    }
-
-    @Unique
-    private boolean sereneseasonsplus$canPlaceSnowWithoutReplacingImportant(ServerLevel level, BlockPos pos, BlockState newState) {
-        if (!newState.is(Blocks.SNOW)) {
-            return true;
-        }
-        BlockState current = level.getBlockState(pos);
-        return CommonSnowBlockFeature.SNOW_COMPATIBILITY.isManagedSnow(current)
-                || current.isAir()
-                || CommonSnowBlockFeature.SNOW_COMPATIBILITY.isReplaceableForSnow(current);
+        return ServerPrecipitationService.setBlockAndTrackSnow(level, pos, state);
     }
 
 

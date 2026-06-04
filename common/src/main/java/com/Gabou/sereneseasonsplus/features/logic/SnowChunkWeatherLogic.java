@@ -1,8 +1,9 @@
 package com.Gabou.sereneseasonsplus.features.logic;
 
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
+import com.Gabou.sereneseasonsplus.features.ServerPrecipitationService;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.profiling.Profiler;
@@ -82,21 +83,7 @@ public final class SnowChunkWeatherLogic {
                 int maxSnow = CommonSnowBlockFeature.getSnowHeightCap();
                 if (maxSnow > 0 && SeasonHooks.shouldSnowHook(biome, level, blockPos, level.getSeaLevel())) {
                     BlockState state = level.getBlockState(blockPos);
-                    // Skip if this column was marked destroyed for the current storm
-                    boolean skipDueToDestroyed = false;
-                    com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get();
-                    int activeId = (sd != null) ? sd.currentStormId : 0;
-                    if (activeId > 0 && chunk instanceof ISnowTrackedChunk tracked) {
-                        if (tracked.sereneseasonsplus$getDestroyedStormId() != activeId) {
-                            tracked.sereneseasonsplus$getDestroyedColumns().clear();
-                            tracked.sereneseasonsplus$setDestroyedStormId(activeId);
-                        }
-                        long xz = (((long) blockPos.getX()) << 32) ^ (blockPos.getZ() & 0xffffffffL);
-                        if (tracked.sereneseasonsplus$getDestroyedColumns().contains(xz)) {
-                            skipDueToDestroyed = true;
-                        }
-                    }
-                    if (skipDueToDestroyed) {
+                    if (ServerPrecipitationService.isDestroyedDuringCurrentStorm(chunk, blockPos)) {
                         return; // abort vanilla-like snow add in this column
                     }
 
@@ -105,15 +92,12 @@ public final class SnowChunkWeatherLogic {
                         if (layers < Math.min(maxSnow, 8)) {
                             BlockState next = state.setValue(SnowLayerBlock.LAYERS, layers + 1);
                             Block.pushEntitiesUp(state, next, level, blockPos);
-                            if (level.setBlockAndUpdate(blockPos, next)) {
-                                CommonSnowBlockFeature.accumulateColumnUpdate(level, blockPos, next);
-                            }
+                            ServerPrecipitationService.setBlockAndTrackSnow(level, blockPos, next);
                         }
                     } else {
                         BlockState snow = Blocks.SNOW.defaultBlockState();
-                        if ((state.isAir() || CommonSnowBlockFeature.SNOW_COMPATIBILITY.isReplaceableForSnow(state))
-                                && level.setBlockAndUpdate(blockPos, snow)) {
-                            CommonSnowBlockFeature.accumulateColumnUpdate(level, blockPos, snow);//done
+                        if (ServerPrecipitationService.canPlaceSnowWithoutReplacingImportant(level, blockPos, snow)) {
+                            ServerPrecipitationService.setBlockAndTrackSnow(level, blockPos, snow);
                         }
                     }
                 }

@@ -1,6 +1,6 @@
 package com.Gabou.sereneseasonsplus.features;
 
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 

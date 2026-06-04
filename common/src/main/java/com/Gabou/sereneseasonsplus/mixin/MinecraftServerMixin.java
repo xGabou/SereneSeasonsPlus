@@ -1,5 +1,5 @@
 package com.Gabou.sereneseasonsplus.mixin;
-import com.Gabou.sereneseasonsplus.util.MinecraftServerAccess;
+import com.Gabou.sereneseasonsplus.access.MinecraftServerAccess;
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
