@@ -1,9 +1,9 @@
 plugins {
-    id "net.neoforged.gradle.userdev" version '7.0.192'
-    id "net.neoforged.gradle.mixin" version '7.0.192'
-    id 'com.matthewprenger.cursegradle' version '1.4.0' // CurseForge uploader
+    id "net.neoforged.gradle.userdev" version '7.1.36'
     id "com.modrinth.minotaur"
 }
+
+def neoUploadJar = tasks.named("jar").flatMap { it.archiveFile }
 
 base.archivesName.set("NeoForge-Version-${mod_name}")
 
@@ -57,7 +57,7 @@ dependencies {
     implementation "curse.maven:glitchcore-955399:5660740"
     implementation "curse.maven:betterdays-895618:7294209"
     runtimeOnly "me.djtheredstoner:DevAuth-neoforge:1.2.1"
-    compileOnly "curse.maven:project-atmosphere-1258344:7260024"
+    compileOnly "curse.maven:project-atmosphere-1258344:8226676"
     implementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-neoforge", version: "${whitenoise_version}"
     implementation "curse.maven:gabous-libs-1367332:7195722"
     implementation "curse.maven:architectury-api-419699:5786327"
@@ -100,23 +100,6 @@ modrinth {
         required.project "N8aGZtvj"
         optional.project "qIWoLcKJ"
     }
-    uploadFile = file("build/libs/${archivesBaseName}-${version}.jar")
+    uploadFile = neoUploadJar.get().asFile
 }
-curseforge {
-    apiKey = System.getenv("CURSEFORGE_TOKEN")
-
-    project {
-        id = "1288843"
-        changelog = rootProject.file("SSPchangelog.md")
-        releaseType = "beta" // options: alpha, beta, release
-        addGameVersion "1.21.1"
-        addGameVersion "NeoForge"
-        mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {
-            displayName = "NeoForge-${version}"
-        }
-    }
-}
-
-
-
 

@@ -13,8 +13,6 @@ import com.Gabou.sereneseasonsplus.access.MinecraftServerAccess;
 import net.Gabou.gaboulibs.util.SnowUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
@@ -461,7 +459,7 @@ public class CommonSnowBlockFeature {
         // Do not freeze under roofs/caves
         if (!isExposedToSky(level, sample)) return false;
         if (!HANDLER.isColdEnoughForSnow(level, sample)) return false;
-        if (!isWaterBiome(level, pos)) return false;
+        if (hasNearbyHeatSource(level, pos)) return false;
 
         BlockState ice = Blocks.ICE.defaultBlockState();
         if (level.setBlockAndUpdate(pos, ice)) {
@@ -471,19 +469,44 @@ public class CommonSnowBlockFeature {
         return false;
     }
 
-    protected static boolean isWaterBiome(ServerLevel level, BlockPos pos) {
-        try {
-            Holder<net.minecraft.world.level.biome.Biome> holder = level.getBiome(pos);
-            return holder.unwrapKey()
-                    .map(key -> {
-                        ResourceLocation rl = key.location();
-                        String path = rl.getPath();
-                        return path.contains("ocean") || path.contains("river");
-                    })
-                    .orElse(false);
-        } catch (Throwable t) {
-            return false;
+    private static boolean hasNearbyHeatSource(ServerLevel level, BlockPos pos) {
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dy = -1; dy <= 2; dy++) {
+                for (int dz = -2; dz <= 2; dz++) {
+                    cursor.set(pos.getX() + dx, pos.getY() + dy, pos.getZ() + dz);
+                    if (isHeatSource(level.getBlockState(cursor))) {
+                        return true;
+                    }
+                }
+            }
         }
+        return false;
+    }
+
+    private static boolean isHeatSource(BlockState state) {
+        return state.is(Blocks.FIRE)
+                || state.is(Blocks.SOUL_FIRE)
+                || state.is(Blocks.LAVA)
+                || state.is(Blocks.MAGMA_BLOCK)
+                || state.is(Blocks.GLOWSTONE)
+                || state.is(Blocks.SHROOMLIGHT)
+                || state.is(Blocks.CAMPFIRE)
+                || state.is(Blocks.SOUL_CAMPFIRE)
+                || state.is(Blocks.TORCH)
+                || state.is(Blocks.WALL_TORCH)
+                || state.is(Blocks.SOUL_TORCH)
+                || state.is(Blocks.SOUL_WALL_TORCH)
+                || state.is(Blocks.REDSTONE_TORCH)
+                || state.is(Blocks.REDSTONE_WALL_TORCH)
+                || state.is(Blocks.LANTERN)
+                || state.is(Blocks.SOUL_LANTERN)
+                || state.is(Blocks.JACK_O_LANTERN)
+                || state.is(Blocks.FURNACE)
+                || state.is(Blocks.BLAST_FURNACE)
+                || state.is(Blocks.SMOKER)
+                || state.is(Blocks.LAVA_CAULDRON)
+                || state.getLightEmission() > 0 && (state.is(Blocks.FURNACE) || state.is(Blocks.BLAST_FURNACE) || state.is(Blocks.SMOKER));
     }
 
     protected static boolean applySnowPatternFromActiveRecord(ServerLevel level, LevelChunk chunk) {

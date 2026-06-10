@@ -1,8 +1,9 @@
 plugins {
-    id "fabric-loom" version "1.9-SNAPSHOT"
-    id 'com.matthewprenger.cursegradle' version '1.4.0' // CurseForge uploader
+    id "fabric-loom" version "1.16.1"
     id "com.modrinth.minotaur"
 }
+
+def fabricUploadJar = tasks.named("remapJar").flatMap { it.archiveFile }
 base.archivesName.set("Fabric-Version-${mod_id}")
 
 loom {
@@ -103,19 +104,5 @@ modrinth {
         required.project "mOgUt4GM"
         required.project "N8aGZtvj"
     }
-    uploadFile = file("build/libs/${archivesBaseName}-${version}.jar")
-}
-curseforge {
-    apiKey = System.getenv("CURSEFORGE_TOKEN")
-
-    project {
-        id = "1288843"
-        changelog = rootProject.file("SSPchangelog.md")
-        releaseType = "beta" // options: alpha, beta, release
-        addGameVersion "1.21.1"
-        addGameVersion "Fabric"
-        mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {
-            displayName = "Fabric-${version}"
-        }
-    }
+    uploadFile = fabricUploadJar.get().asFile
 }
