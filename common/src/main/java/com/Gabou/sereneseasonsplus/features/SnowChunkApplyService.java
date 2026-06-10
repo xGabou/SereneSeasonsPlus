@@ -8,7 +8,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 
@@ -24,7 +24,7 @@ public final class SnowChunkApplyService {
     public boolean applySnowHistoryPass(ServerLevel level, LevelChunk chunk) {
         if (!(chunk instanceof ISnowTrackedChunk tracked)) return false;
 
-        int cap = level.getGameRules().get(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT);
+        int cap = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
         if (cap > 0 && isChunkAtOrAboveSnowCap(level, chunk, cap)) {
             return false;
         }
@@ -81,7 +81,7 @@ public final class SnowChunkApplyService {
                     placePos.set(cursor.getX(), cursor.getY() + 1, cursor.getZ());
                 }
 
-                while (remaining > 0 && placePos.getY() < level.getMaxY()) {
+                while (remaining > 0 && placePos.getY() < level.getMaxBuildHeight()) {
                     int toPlace = Math.min(8, remaining);
                     if (CommonSnowBlockFeature.placeOrQueueLayers(level, placePos, toPlace, true, true)) {
                         stateService.setTrackedLayers(tracked, placePos.immutable(), toPlace);
@@ -124,7 +124,7 @@ public final class SnowChunkApplyService {
     public boolean applySnowPattern(ServerLevel level, LevelChunk chunk, SnowRecord record, RandomSource random) {
         if (!(chunk instanceof ISnowTrackedChunk tracked)) return false;
 
-        int cap = level.getGameRules().get(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT);
+        int cap = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
         if (cap > 0 && isChunkAtOrAboveSnowCap(level, chunk, cap)) {
             return false;
         }
@@ -233,7 +233,7 @@ public final class SnowChunkApplyService {
                     }
                 }
 
-                while (need >= 8 && cursor.getY() < level.getMaxY()) {
+                while (need >= 8 && cursor.getY() < level.getMaxBuildHeight()) {
                     if (CommonSnowBlockFeature.placeOrQueueLayers(level, cursor, 8, true, true)) {
                         stateService.setTrackedLayers(tracked, cursor.immutable(), 8);
                         any = true;
@@ -242,7 +242,7 @@ public final class SnowChunkApplyService {
                     cursor.move(0, 1, 0);
                 }
 
-                if (need > 0 && cursor.getY() < level.getMaxY()) {
+                if (need > 0 && cursor.getY() < level.getMaxBuildHeight()) {
                     if (CommonSnowBlockFeature.placeOrQueueLayers(level, cursor, need, true, true)) {
                         stateService.setTrackedLayers(tracked, cursor.immutable(), need);
                         any = true;
@@ -257,7 +257,7 @@ public final class SnowChunkApplyService {
     public boolean applyCombinedFinishedPattern(ServerLevel level, LevelChunk chunk, SnowRecord combined, RandomSource random) {
         if (!(chunk instanceof ISnowTrackedChunk tracked)) return false;
 
-        int cap = level.getGameRules().get(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT);
+        int cap = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
         if (cap > 0 && isChunkAtOrAboveSnowCap(level, chunk, cap)) {
             return false;
         }
@@ -322,7 +322,7 @@ public final class SnowChunkApplyService {
                     }
                 }
 
-                while (need >= 8 && cursor.getY() < level.getMaxY()) {
+                while (need >= 8 && cursor.getY() < level.getMaxBuildHeight()) {
                     if (CommonSnowBlockFeature.placeOrQueueLayers(level, cursor, 8, true, true)) {
                         stateService.setTrackedLayers(tracked, cursor.immutable(), 8);
                         any = true;
@@ -331,7 +331,7 @@ public final class SnowChunkApplyService {
                     cursor.move(0, 1, 0);
                 }
 
-                if (need > 0 && cursor.getY() < level.getMaxY()) {
+                if (need > 0 && cursor.getY() < level.getMaxBuildHeight()) {
                     if (CommonSnowBlockFeature.placeOrQueueLayers(level, cursor, need, true, true)) {
                         stateService.setTrackedLayers(tracked, cursor.immutable(), need);
                         any = true;

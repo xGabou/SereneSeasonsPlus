@@ -47,7 +47,7 @@ public final class SnowAccumulationPolicy {
                                        boolean isLoadEvent,
                                        int sampleHeight,
                                        boolean coldEnoughOverride) {
-        BlockPos samplePos = chunkPos.getMiddleBlockPosition(Math.max(level.getMinY(), sampleHeight));
+        BlockPos samplePos = chunkPos.getMiddleBlockPosition(Math.max(level.getMinBuildHeight(), sampleHeight));
         boolean snowingNow = EnvironmentHelper.isRainning(level, samplePos);
         boolean allowApply = snowingNow || isLoadEvent;
 

@@ -11,6 +11,3 @@ java.base/sun.security.util=cpw.mods.securejarhandler
 --add-exports
 jdk.naming.dns/com.sun.jndi.dns=java.naming
 -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump
--DlegacyClassPath.file=G:\mods\SereneSeasonExtendedFix-1.21.1\neoforge\build\neoForm\neoFormJoined1.21.1-20240808.144430\steps\writeMinecraftClasspathJunit\classpath.txt
--DignoreList=mixinextras-neoforge-0.5.0.jar,client-extra,neoforge-
--Djava.net.preferIPv6Addresses=system

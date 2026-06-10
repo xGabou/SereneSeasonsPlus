@@ -2,6 +2,7 @@ package com.Gabou.sereneseasonsplus.features;
 
 
 import com.Gabou.sereneseasonsplus.features.logic.SnowLogic;
+import com.Gabou.sereneseasonsplus.features.logic.SnowAccumulationPolicy;
 import com.Gabou.sereneseasonsplus.features.snowstorm.ISnowStormLevel;
 import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
 import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
@@ -18,12 +19,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkSource;
@@ -51,8 +52,20 @@ public class CommonSnowBlockFeature {
 
 
     public static ISnowEnvironmentHandler HANDLER = new DefaultSnowEnvironmentHandler();
+    public static final SnowBlockCompatibility SNOW_COMPATIBILITY = new AdaptiveSnowBlockCompatibility();
+    protected static final SnowHistoryQueryService HISTORY_QUERY_SERVICE = new SnowHistoryQueryService();
+    protected static final SnowStateService SNOW_STATE_SERVICE = new SnowStateService();
+    public static final SnowAccumulationPolicy SNOW_ACCUMULATION_POLICY =
+            new SnowAccumulationPolicy(HISTORY_QUERY_SERVICE, SNOW_STATE_SERVICE);
+    protected static final SnowChunkApplyService CHUNK_APPLY_SERVICE = new SnowChunkApplyService(HISTORY_QUERY_SERVICE, SNOW_STATE_SERVICE);
+    protected static final SnowChunkMeltService CHUNK_MELT_SERVICE = new SnowChunkMeltService(SNOW_STATE_SERVICE);
+    protected static final ActiveSnowUpdateService ACTIVE_SNOW_UPDATE_SERVICE = new ActiveSnowUpdateService();
+    protected static final SnowMutationBatch MUTATION_BATCH = new SnowMutationBatch();
+    protected static final SnowChunkLoadReconciler LOAD_RECONCILER = new SnowChunkLoadReconciler(SNOW_STATE_SERVICE);
 
     protected static final int MAX_ATTEMPTS = SnowProcessingLimits.ACTIVE_SNOW_RANDOM_ATTEMPTS;
+
+    static final List<BlockPos> snowPill = new ArrayList<>();
 
     public record QueuedChange(BlockPos pos, BlockState state, int flags) {
     }
@@ -152,8 +165,9 @@ public class CommonSnowBlockFeature {
 
     // On chunk load, only cache surface height; do not enqueue or modify snow lists
     public static void handleOnChunkLoad(LevelChunk chunk) {
-        if(isSnowFeatureEnabled())
-            snowQueue.add(chunk);
+        if (isSnowFeatureEnabled()) {
+            LOAD_RECONCILER.enqueue(chunk);
+        }
     }
 
     protected static void chunkHandler(ServerLevel level) {
@@ -255,6 +269,17 @@ public class CommonSnowBlockFeature {
         if (changed) {
             MUTATION_BATCH.markChunkDirty(chunkPos);
         }
+    }
+
+    private static boolean hasRequiredNeighborChunks(ServerLevel level, ChunkPos chunkPos) {
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                if (!level.hasChunk(chunkPos.x + dx, chunkPos.z + dz)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private static void drainQueuedMutations(ServerLevel level) {

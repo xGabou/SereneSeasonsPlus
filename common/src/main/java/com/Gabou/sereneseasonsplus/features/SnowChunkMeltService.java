@@ -57,7 +57,7 @@ public final class SnowChunkMeltService {
                         stateService.setTrackedLayers(tracked, top.immutable(), layers - 1);
                     }
                 } else {
-                    int minY = level.getMinY();
+                    int minY = level.getMinBuildHeight();
                     cursor.set(top.getX(), top.getY(), top.getZ());
                     while (cursor.getY() >= minY) {
                         BlockState scanned = level.getBlockState(cursor);
@@ -97,7 +97,7 @@ public final class SnowChunkMeltService {
                 int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
                 for (int dy = 0; dy <= 6; dy++) {
                     pos.set(x, groundY + dy, z);
-                    if (pos.getY() < level.getMinY() || pos.getY() >= level.getMaxY()) {
+                    if (pos.getY() < level.getMinBuildHeight() || pos.getY() >= level.getMaxBuildHeight()) {
                         continue;
                     }
                     BlockState state = level.getBlockState(pos);

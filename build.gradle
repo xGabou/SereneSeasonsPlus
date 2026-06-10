@@ -16,12 +16,14 @@ buildscript {
     }
     dependencies {
         classpath 'com.modrinth.minotaur:Minotaur:2.+'
-        classpath 'gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:1.1.7'
         classpath 'net.minecraftforge:gradleutils:2.2.0' // Required for changelog generation
     }
 }
 
-apply plugin: 'org.jetbrains.gradle.plugin.idea-ext'
+plugins {
+    id 'org.jetbrains.gradle.plugin.idea-ext' version '1.4.1' apply false
+}
+
 apply plugin: 'net.minecraftforge.gradleutils'
 
 ext {
@@ -35,7 +37,6 @@ ext {
 
 subprojects {
     apply plugin: 'java'
-    apply plugin: 'idea'
     apply plugin: 'maven-publish'
 
     if (!project.name.equals("Common")) {
@@ -86,6 +87,11 @@ subprojects {
     tasks.withType(JavaCompile).configureEach {
         it.options.encoding = 'UTF-8'
         it.options.release.set(21)
+    }
+
+    tasks.withType(Test).configureEach {
+        onlyIf { !sourceSets.test.allSource.isEmpty() }
+        failOnNoDiscoveredTests = false
     }
 
     processResources {

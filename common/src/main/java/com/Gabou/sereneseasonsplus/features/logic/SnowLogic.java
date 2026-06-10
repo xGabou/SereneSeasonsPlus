@@ -2,6 +2,9 @@ package com.Gabou.sereneseasonsplus.features.logic;
 
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.storage.ChunkQueue;
+import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import sereneseasons.api.season.ISeasonState;

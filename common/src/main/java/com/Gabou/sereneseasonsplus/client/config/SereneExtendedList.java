@@ -7,9 +7,6 @@ import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 import java.util.Arrays;
@@ -17,20 +14,42 @@ import java.util.List;
 
 public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.Row> {
 
+    /**
+     * Creates a scrollable two-column list used by the config screen.
+     * The left column renders a label and the right hosts one or more widgets.
+     *
+     * @param mc         minecraft instance
+     * @param width      list width
+     * @param height     list height
+     * @param top        top y
+     * @param itemHeight row height in pixels
+     */
     public SereneExtendedList(Minecraft mc, int width, int height, int top, int itemHeight) {
         super(mc, width, height, top, itemHeight);
     }
 
+    /**
+     * Width reserved for each row (label + widgets area).
+     */
     @Override
     public int getRowWidth() {
         return 360;
     }
 
+    /**
+     * Scrollbar x position relative to the left edge of the list.
+     */
     @Override
-    protected int scrollBarX() {
-        return this.getRowLeft() + this.getRowWidth() + 8;
+    protected int getScrollbarPosition() {
+        return this.getRowLeft() + getRowWidth() + 8;
     }
 
+    /**
+     * Adds a new row with a label and one or more widgets aligned to the right.
+     *
+     * @param label   left-hand label
+     * @param widgets widgets to render on the right
+     */
     public void addRow(Component label, AbstractWidget... widgets) {
         this.addEntry(new Row(this, label, widgets));
     }
@@ -40,71 +59,75 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
         private final Component label;
         private final List<AbstractWidget> widgets;
 
-        private int lastX = Integer.MIN_VALUE;
-        private int lastY = Integer.MIN_VALUE;
-        private int lastRowW = Integer.MIN_VALUE;
-        private int lastRowH = Integer.MIN_VALUE;
+        private int lastX = Integer.MIN_VALUE, lastY = Integer.MIN_VALUE, lastRowW = Integer.MIN_VALUE, lastRowH = Integer.MIN_VALUE;
 
+        /**
+         * Creates a row bound to the given owner with a static label and one or
+         * more right-aligned widgets.
+         */
         Row(SereneExtendedList owner, Component label, AbstractWidget... widgets) {
             this.owner = owner;
             this.label = label;
             this.widgets = Arrays.asList(widgets);
         }
 
+        /**
+         * Lazily computes and applies widget positions when the row geometry changes.
+         */
         private void layoutIfNeeded(int x, int y, int rowWidth, int rowHeight) {
-            if (x == lastX && y == lastY && rowWidth == lastRowW && rowHeight == lastRowH) {
-                return;
-            }
-            lastX = x;
-            lastY = y;
-            lastRowW = rowWidth;
-            lastRowH = rowHeight;
+            if (x == lastX && y == lastY && rowWidth == lastRowW && rowHeight == lastRowH) return;
+            lastX = x; lastY = y; lastRowW = rowWidth; lastRowH = rowHeight;
 
-            final int widgetX = x + rowWidth - 200;
-            final int widgetY = y + (rowHeight - 20) / 2;
+            final int wx = x + rowWidth - 200;
+            final int wy = y + (rowHeight - 20) / 2;
 
-            for (AbstractWidget widget : widgets) {
-                if (widget.getX() != widgetX) {
-                    widget.setX(widgetX);
-                }
-                if (widget.getY() != widgetY) {
-                    widget.setY(widgetY);
-                }
-                if (widget.getWidth() != 200) {
-                    widget.setWidth(200);
-                }
+            for (AbstractWidget w : widgets) {
+                if (w.getX() != wx) w.setX(wx);
+                if (w.getY() != wy) w.setY(wy);
+                if (w.getWidth() != 200) w.setWidth(200);
             }
         }
 
+        /**
+         * Renders the row label and delegates rendering to child widgets.
+         */
         @Override
-        public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float delta) {
-            int x = this.getX();
-            int y = this.getY();
-            int rowWidth = this.getWidth();
-            int rowHeight = this.getHeight();
+        public void render(GuiGraphics g, int index, int y, int x, int rowWidth, int rowHeight,
+                           int mouseX, int mouseY, boolean hovered, float delta) {
             layoutIfNeeded(x, y, rowWidth, rowHeight);
 
-            graphics.drawString(owner.minecraft.font, label, x, y + 6, 0xFFFFFF, false);
+            // Label on the left
+            g.drawString(owner.minecraft.font, label, x, y + 6, 0xFFFFFF, false);
 
-            for (AbstractWidget widget : widgets) {
-                widget.render(graphics, mouseX, mouseY, delta);
+            // Render widgets on the right
+            for (AbstractWidget w : widgets) {
+                w.render(g, mouseX, mouseY, delta);
             }
         }
 
+        /**
+         * Narratable entries provided by child widgets.
+         */
         public List<? extends NarratableEntry> narratables() {
             return widgets;
         }
 
+        /**
+         * GUI event listeners provided by child widgets.
+         */
         public List<? extends GuiEventListener> children() {
             return widgets;
         }
 
+        /**
+         * Delegates clicks to child widgets and manages row selection/focus.
+         */
         @Override
-        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-            for (AbstractWidget widget : widgets) {
-                if (widget.mouseClicked(event, doubleClick)) {
+        public boolean mouseClicked(double mx, double my, int button) {
+            for (AbstractWidget w : widgets) {
+                if (w.mouseClicked(mx, my, button)) {
                     owner.setSelected(this);
-                    widget.setFocused(true);
+                    w.setFocused(true); // Fabric 1.20.4 still supports this
                     return true;
                 }
             }
@@ -112,58 +135,60 @@ public class SereneExtendedList extends ObjectSelectionList<SereneExtendedList.R
             return false;
         }
 
+        /**
+         * Forwards mouse release to child widgets.
+         */
         @Override
-        public boolean mouseReleased(MouseButtonEvent event) {
-            for (AbstractWidget widget : widgets) {
-                widget.mouseReleased(event);
-            }
+        public boolean mouseReleased(double mx, double my, int button) {
+            for (AbstractWidget w : widgets) w.mouseReleased(mx, my, button);
             return false;
         }
 
+        /**
+         * Forwards drag events to child widgets.
+         */
         @Override
-        public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
-            for (AbstractWidget widget : widgets) {
-                if (widget.mouseDragged(event, dx, dy)) {
-                    return true;
-                }
-            }
+        public boolean mouseDragged(double mx, double my, int button, double dx, double dy) {
+            for (AbstractWidget w : widgets) if (w.mouseDragged(mx, my, button, dx, dy)) return true;
             return false;
         }
 
+        /**
+         * Forwards scroll events to child widgets.
+         */
         @Override
         public boolean mouseScrolled(double mx, double my, double dx, double dy) {
-            for (AbstractWidget widget : widgets) {
-                if (widget.mouseScrolled(mx, my, dx, dy)) {
-                    return true;
-                }
-            }
+            for (AbstractWidget w : widgets) if (w.mouseScrolled(mx, my, dx, dy)) return true;
             return false;
         }
 
+        /**
+         * Forwards key events to child widgets.
+         */
         @Override
-        public boolean keyPressed(KeyEvent event) {
-            for (AbstractWidget widget : widgets) {
-                if (widget.keyPressed(event)) {
-                    return true;
-                }
-            }
+        public boolean keyPressed(int key, int sc, int mods) {
+            for (AbstractWidget w : widgets) if (w.keyPressed(key, sc, mods)) return true;
             return false;
         }
 
+        /**
+         * Forwards character typed events to child widgets.
+         */
         @Override
-        public boolean charTyped(CharacterEvent event) {
-            for (AbstractWidget widget : widgets) {
-                if (widget.charTyped(event)) {
-                    return true;
-                }
-            }
+        public boolean charTyped(char c, int mods) {
+            for (AbstractWidget w : widgets) if (w.charTyped(c, mods)) return true;
             return false;
         }
 
+        /**
+         * No-op narration aggregation; child widgets provide their own narration.
+         */
         @Override
-        public void updateNarration(NarrationElementOutput out) {
-        }
+        public void updateNarration(NarrationElementOutput out) { }
 
+        /**
+         * Row narration text, derived from the label.
+         */
         public Component getNarration() {
             return label;
         }

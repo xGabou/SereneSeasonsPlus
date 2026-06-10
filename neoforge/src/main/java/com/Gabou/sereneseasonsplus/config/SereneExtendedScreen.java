@@ -122,13 +122,6 @@ public class SereneExtendedScreen extends Screen {
         }).bounds(0,0,200,20).build();
         this.list.addRow(Component.literal("Calendar Synced Seasons"), realTimeBtn);
 
-        var grassFlowerBtn = Button.builder(toggleLabel("Grass and Flower Growth", grassFlowerGrowth), b -> {
-            grassFlowerGrowth = !grassFlowerGrowth;
-            b.setMessage(toggleLabel("Grass and Flower Growth", grassFlowerGrowth));
-        }).bounds(0,0,200,20).build();
-        this.list.addRow(Component.literal("Grass and Flower Growth"), grassFlowerBtn);
-
-
         this.maxReplacerBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
         this.maxReplacerBox.setValue(Integer.toString(tickSnowReplacerThreshold));
         this.list.addRow(Component.literal("Common Feature Threshold"), this.maxReplacerBox);

@@ -23,7 +23,6 @@ public class PerformanceWarning extends Screen {
         );
     }
 
-    @Override
     protected void renderBlurredBackground(GuiGraphics graphics) {
     }
 

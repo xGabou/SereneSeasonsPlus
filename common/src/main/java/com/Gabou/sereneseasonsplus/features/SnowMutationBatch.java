@@ -178,7 +178,7 @@ public final class SnowMutationBatch {
             }
             LevelChunk chunk = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
             if (chunk != null) {
-                chunk.markUnsaved();
+                chunk.setUnsaved(true);
             }
         }
 

@@ -102,7 +102,7 @@ public final class SnowChunkLoadReconciler {
         }
 
         ChunkPos chunkPos = chunk.getPos();
-        int sampleY = Math.max(level.getMinY(), tracked.sereneseasonsplus$getSurfaceHeight());
+        int sampleY = Math.max(level.getMinBuildHeight(), tracked.sereneseasonsplus$getSurfaceHeight());
         boolean coldEnough = CommonSnowBlockFeature.HANDLER.isColdEnoughForSnow(
                 level,
                 chunkPos.getMiddleBlockPosition(sampleY)

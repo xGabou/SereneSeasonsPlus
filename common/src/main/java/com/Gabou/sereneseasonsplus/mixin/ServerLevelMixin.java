@@ -90,7 +90,7 @@ public class ServerLevelMixin {
     }
 
     @Inject(
-            method = "tickPrecipitation",
+            method = "tickPrecipitation(Lnet/minecraft/core/BlockPos;)V",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/level/biome/Biome;shouldSnow(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;)Z"
@@ -102,20 +102,13 @@ public class ServerLevelMixin {
                     ),
                     to = @At(
                             value = "INVOKE",
-                            target = "Lnet/minecraft/world/level/biome/Biome;getPrecipitationAt(Lnet/minecraft/core/BlockPos;I)Lnet/minecraft/world/level/biome/Biome$Precipitation;"
+                            target = "Lnet/minecraft/world/level/biome/Biome;getPrecipitationAt(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/biome/Biome$Precipitation;"
                     )
             ),
             locals = LocalCapture.CAPTURE_FAILHARD
     )
     private void beforeSnowCheck(
-            BlockPos $$0,
-            CallbackInfo ci,
-            BlockPos posSnowCheck,
-            BlockPos posBelow,
-            Biome biome,
-            int snowHeight,
-            BlockState state16
-    ) {
+            BlockPos $$0, CallbackInfo ci, BlockPos posSnowCheck, BlockPos $$2, Biome $$3, int $$4) {
         if (!CommonSnowBlockFeature.isSnowFeatureEnabled()) {
             sereneseasonsplus$shouldSkipSnowCheck = false;
             return;
@@ -131,10 +124,11 @@ public class ServerLevelMixin {
     }
 
     @Redirect(
-            method = "tickPrecipitation",
+            method = "tickPrecipitation(Lnet/minecraft/core/BlockPos;)V",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/block/state/BlockState;is(Lnet/minecraft/world/level/block/Block;)Z"
+                    target = "Lnet/minecraft/world/level/block/state/BlockState;is(Lnet/minecraft/world/level/block/Block;)Z",
+                    ordinal = 0
             ),
             slice = @Slice(
                     from = @At(
@@ -143,7 +137,7 @@ public class ServerLevelMixin {
                     ),
                     to = @At(
                             value = "INVOKE",
-                            target = "Lnet/minecraft/world/level/biome/Biome;getPrecipitationAt(Lnet/minecraft/core/BlockPos;I)Lnet/minecraft/world/level/biome/Biome$Precipitation;"
+                            target = "Lnet/minecraft/world/level/biome/Biome;getPrecipitationAt(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/biome/Biome$Precipitation;"
                     )
             ),
             require = 1
@@ -152,8 +146,9 @@ public class ServerLevelMixin {
         return ServerPrecipitationService.shouldTreatAsSnow(state, block, sereneseasonsplus$shouldSkipSnowCheck);
     }
 
+
     @Redirect(
-            method = "tickPrecipitation",
+            method = "tickPrecipitation(Lnet/minecraft/core/BlockPos;)V",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z",
@@ -166,7 +161,7 @@ public class ServerLevelMixin {
                     ),
                     to = @At(
                             value = "INVOKE",
-                            target = "Lnet/minecraft/world/level/biome/Biome;getPrecipitationAt(Lnet/minecraft/core/BlockPos;I)Lnet/minecraft/world/level/biome/Biome$Precipitation;"
+                            target = "Lnet/minecraft/world/level/biome/Biome;getPrecipitationAt(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/biome/Biome$Precipitation;"
                     )
             )
     )

@@ -13,11 +13,18 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.LevelChunk;
+import org.jetbrains.annotations.Nullable;
 
 public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements ModInitializer {
 
@@ -65,7 +72,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
 
         // Remove any tracked snow column entries for this X/Z so sync won't try to re-add this storm
         tracked.sereneseasonsplus$getSnowColumns().keySet().removeIf(p -> p.getX() == pos.getX() && p.getZ() == pos.getZ());
-        chunk.markUnsaved();
+        chunk.setUnsaved(true);
     }
 
     private void onConfigReload() {

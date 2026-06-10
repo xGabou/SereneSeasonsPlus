@@ -69,7 +69,7 @@ public final class SnowColumnInspector {
 
         int totalLayers = 0;
         BlockPos topManagedPos = null;
-        int minY = level.getMinY();
+        int minY = level.getMinBuildHeight();
         while (down.getY() >= minY) {
             var state = level.getBlockState(down);
             if (!compatibility.isManagedSnow(state)) {
@@ -88,8 +88,8 @@ public final class SnowColumnInspector {
     public static int computeManagedColumnTotal(ServerLevel level, BlockPos pos, SnowBlockCompatibility compatibility) {
         int total = 0;
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos(pos.getX(), pos.getY(), pos.getZ());
-        int minY = level.getMinY();
-        int maxY = level.getMaxY();
+        int minY = level.getMinBuildHeight();
+        int maxY = level.getMaxBuildHeight();
 
         if (!compatibility.isManagedSnow(level.getBlockState(cursor))) {
             cursor.move(0, -1, 0);
