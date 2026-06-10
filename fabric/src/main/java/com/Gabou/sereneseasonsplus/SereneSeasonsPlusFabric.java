@@ -62,7 +62,14 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
     private void onWorldTick(ServerLevel level) {
         if( level.dimension() != Level.OVERWORLD) return;
         RealTimeSeasonHelper.sync(level, SereneExtendedConfig.REAL_TIME_CANADIAN_SEASONS.get());
-        this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
+        this.onTick(
+                level,
+                SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(),
+                SereneExtendedConfig.ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.get(),
+                SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(),
+                SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(),
+                SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get()
+        );
         CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
 
     }

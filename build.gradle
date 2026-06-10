@@ -17,9 +17,6 @@ buildscript {
 apply plugin: 'org.jetbrains.gradle.plugin.idea-ext'
 apply plugin: 'net.minecraftforge.gradleutils'
 apply plugin: 'idea'
-changelog {
-    fromTag '9.2.0'
-}
 
 ext {
     mod_version = gradleutils.getTagOffsetVersion()
@@ -166,7 +163,7 @@ tasks.register("discordWebhook") {
                 content: "**New release published!** 🎉\n" +
                         "<@&1410734648832688229>\n" + // role mention
                         "Project: ${mod_name}\n" +
-                        "Version: v${version}\n\n" +
+                        "Version: v${mod_version}-${minecraft_version}\n\n" +
                         "${changelogText.take(1500)}"
         ]
 

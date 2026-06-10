@@ -6,7 +6,7 @@ import net.Gabou.gaboulibs.storage.SnowRecord;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import net.Gabou.gaboulibs.util.SnowGenerator;
 import net.Gabou.projectatmosphere.manager.ForecastOrchestrator;
-import net.Gabou.projectatmosphere.util.BiomeInstanceKey;
+import net.Gabou.projectatmosphere.util.RegionInstanceKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import sereneseasons.season.SeasonHooks;
@@ -28,8 +28,7 @@ public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
                     ? CommonSnowBlockFeature.calculateBlocksToReplace(temperature)
                     : 0;
         } else {
-            float temperature = ForecastOrchestrator.getCurrentTemperature(
-                    new BiomeInstanceKey(level.getBiome(playerPos).unwrapKey().get().location(), playerPos),
+            float temperature = ForecastOrchestrator.getCurrentTemperature(RegionInstanceKey.from(playerPos),
                     level.getDayTime()
             );
             return temperature >= 0.5F
@@ -44,7 +43,7 @@ public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
             return SeasonHooks.coldEnoughToSnowSeasonal(level, pos);
         } else {
             float temperature = ForecastOrchestrator.getCurrentTemperature(
-                    new BiomeInstanceKey(level.getBiome(pos).unwrapKey().get().location(), pos),
+                    RegionInstanceKey.from(pos),
                     level.getDayTime()
             );
             return temperature < 0.5F;

@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import net.fabricmc.loader.api.FabricLoader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SereneExtendedConfig {
+    private static final Logger LOGGER = LogManager.getLogger("SereneExtendedConfig");
 
     public static final int MIN_CORES_FOR_ASYNC = 6;
 
@@ -28,6 +31,7 @@ public class SereneExtendedConfig {
     public static final IntValue MAX_SNOW_ACCUMULATION_LAYERS;
     public static final BooleanValue GRASSFLOWER_GROWTH_ENABLED;
     public static final BooleanValue REAL_TIME_CANADIAN_SEASONS;
+    public static final BooleanValue ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT;
 
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -51,6 +55,7 @@ public class SereneExtendedConfig {
         MAX_SNOW_ACCUMULATION_LAYERS = new IntValue("maxSnowAccumulationLayers", 24, 0, 512);
 
         ENABLE_SEASONAL_DAYLIGHT_CYCLE = new BooleanValue("enableSeasonalDaylightCycle", true);
+        ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT = new BooleanValue("enableBetterDaysDynamicTimeCompat", true);
         CUSTOM_CYCLE_LENGTH = new BooleanValue("customCycleLength", false);
         CUSTOM_DAY_LENGTH = new DoubleValue("customDayLength", 1.0, 0.05, 100.0);
         CUSTOM_NIGHT_LENGTH = new DoubleValue("customNightLength", 1.0, 0.05, 100.0);
@@ -68,7 +73,7 @@ public class SereneExtendedConfig {
             try {
                 r.run();
             } catch (Throwable t) {
-                t.printStackTrace();
+                LOGGER.error("Failed to run config reload listener", t);
             }
         }
     }
@@ -83,7 +88,6 @@ public class SereneExtendedConfig {
     public static void load() {
         if (!Files.exists(CONFIG_PATH)) {
             save();
-            notifyReloadListeners();
             return;
         }
         try (Reader reader = Files.newBufferedReader(CONFIG_PATH)) {
@@ -97,9 +101,11 @@ public class SereneExtendedConfig {
             GRASSFLOWER_GROWTH_ENABLED.load(obj);
             MAX_SNOW_ACCUMULATION_LAYERS.load(obj);
             ENABLE_SEASONAL_DAYLIGHT_CYCLE.load(obj);
+            ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.load(obj);
             CUSTOM_CYCLE_LENGTH.load(obj);
             CUSTOM_DAY_LENGTH.load(obj);
             CUSTOM_NIGHT_LENGTH.load(obj);
+            REAL_TIME_CANADIAN_SEASONS.load(obj);
         } catch (Exception ignored) {
         }
         notifyReloadListeners();
@@ -118,14 +124,17 @@ public class SereneExtendedConfig {
             MAX_SNOW_ACCUMULATION_LAYERS.save(obj);
             ENABLE_SEASONAL_DAYLIGHT_CYCLE.save(obj);
             GRASSFLOWER_GROWTH_ENABLED.save(obj);
+            ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.save(obj);
             CUSTOM_CYCLE_LENGTH.save(obj);
             CUSTOM_DAY_LENGTH.save(obj);
             CUSTOM_NIGHT_LENGTH.save(obj);
+            REAL_TIME_CANADIAN_SEASONS.save(obj);
             try (Writer writer = Files.newBufferedWriter(CONFIG_PATH)) {
                 GSON.toJson(obj, writer);
             }
         } catch (IOException ignored) {
         }
+        notifyReloadListeners();
     }
 
     public static final class BooleanValue {

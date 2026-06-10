@@ -41,10 +41,23 @@ public final class SnowChunkLoadReconciler {
         return !pendingLoads.isEmpty();
     }
 
-    public void process(ServerLevel level, SnowBlockCompatibility compatibility) {
+    public int process(ServerLevel level, SnowBlockCompatibility compatibility) {
+        return process(level, compatibility, 0, Integer.MAX_VALUE, Long.MAX_VALUE);
+    }
+
+    public int process(ServerLevel level,
+                       SnowBlockCompatibility compatibility,
+                       int minChunks,
+                       int maxChunks,
+                       long deadlineNanos) {
         ChunkPos chunkPos;
+        int processed = 0;
         while ((chunkPos = pendingLoads.poll()) != null) {
             queuedChunkKeys.remove(ChunkPos.asLong(chunkPos.x, chunkPos.z));
+            if (processed >= minChunks && (processed >= maxChunks || System.nanoTime() >= deadlineNanos)) {
+                requeue(chunkPos);
+                break;
+            }
             if (!level.hasChunk(chunkPos.x, chunkPos.z)) {
                 continue;
             }
@@ -56,6 +69,15 @@ public final class SnowChunkLoadReconciler {
 
             initializeChunkMetadata(level, chunk, tracked, compatibility);
             scheduleInitialReconciliation(level, chunk, tracked);
+            processed++;
+        }
+        return processed;
+    }
+
+    private void requeue(ChunkPos chunkPos) {
+        long key = ChunkPos.asLong(chunkPos.x, chunkPos.z);
+        if (queuedChunkKeys.add(key)) {
+            pendingLoads.add(chunkPos);
         }
     }
 

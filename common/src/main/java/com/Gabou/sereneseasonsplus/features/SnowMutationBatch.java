@@ -95,13 +95,24 @@ public final class SnowMutationBatch {
     }
 
     public int processQueuedChanges(ServerLevel level, int limit, SnowBlockCompatibility compatibility) {
+        return processQueuedChanges(level, 0, limit, Long.MAX_VALUE, compatibility);
+    }
+
+    public int processQueuedChanges(ServerLevel level,
+                                    int minToProcess,
+                                    int maxToProcess,
+                                    long deadlineNanos,
+                                    SnowBlockCompatibility compatibility) {
         if (pendingChanges.isEmpty()) {
             return 0;
         }
 
         int applied = 0;
         Iterator<Map.Entry<BlockPos, SnowWorldMutation>> iterator = pendingChanges.entrySet().iterator();
-        while (iterator.hasNext() && applied < limit) {
+        while (iterator.hasNext() && applied < maxToProcess) {
+            if (applied >= minToProcess && System.nanoTime() >= deadlineNanos) {
+                break;
+            }
             Map.Entry<BlockPos, SnowWorldMutation> entry = iterator.next();
             SnowWorldMutation mutation = entry.getValue();
             if (mutation.apply(level)) {
@@ -176,6 +187,5 @@ public final class SnowMutationBatch {
         }
 
         chunksToDirty.clear();
-        pendingChanges.clear();
     }
 }

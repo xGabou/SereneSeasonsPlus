@@ -81,19 +81,25 @@ public class SereneSeasonPlusCommon {
      *
      * @param level the overworld level
      */
-    protected void onTick(Level level, boolean ENABLE_SEASONAL_DAYLIGHT_CYCLE, boolean CUSTOM_CYCLE_LENGTH, double CUSTOM_DAY_LENGTH, double CUSTOM_NIGHT_LENGTH) {
+    protected void onTick(Level level,
+                          boolean ENABLE_SEASONAL_DAYLIGHT_CYCLE,
+                          boolean ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT,
+                          boolean CUSTOM_CYCLE_LENGTH,
+                          double CUSTOM_DAY_LENGTH,
+                          double CUSTOM_NIGHT_LENGTH) {
         if (++this.ticker >= 400) {
             this.ticker = 0;
             if (EnvironmentHelper.shouldRunMod()) {
                 Season.SubSeason currentSubSeason = EnvironmentHelper.getCurrentSeason();
                 if (currentSubSeason != this.lastSubSeason) {
                     this.lastSubSeason = currentSubSeason;
-                    if (ENABLE_SEASONAL_DAYLIGHT_CYCLE) {
+                    if (!ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT) {
+                        LOGGER.info("{} is active, but Better Days dynamic time compatibility is disabled.", currentSubSeason);
+                    } else if (ENABLE_SEASONAL_DAYLIGHT_CYCLE) {
                         double daySpeed = this.getDaySpeedForSeason(currentSubSeason);
                         double nightSpeed = this.getNightSpeedForSeason(currentSubSeason);
                         ConfigHacks.setTimeSpeeds(daySpeed, nightSpeed);
                         LogInfo(currentSubSeason, daySpeed, nightSpeed);
-                        //level.registryAccess().registryOrThrow(Registries.BIOME).getTagOrEmpty(ModTags.Biomes.BLACKLISTED_BIOMES).forEach((holder -> {LOGGER.info(holder.unwrapKey().get().location().toString());}));
                     } else if (CUSTOM_CYCLE_LENGTH) {
                         ConfigHacks.setTimeSpeeds(CUSTOM_DAY_LENGTH, CUSTOM_NIGHT_LENGTH);
                         LogInfo(currentSubSeason, CUSTOM_DAY_LENGTH, CUSTOM_NIGHT_LENGTH);

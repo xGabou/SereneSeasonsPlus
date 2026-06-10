@@ -16,6 +16,7 @@ public class SereneExtendedConfig {
     public static final ForgeConfigSpec.IntValue MAX_SNOW_ACCUMULATION_LAYERS;
     public static final ForgeConfigSpec.BooleanValue GRASS_FLOWER_GROWTH_ENABLED;
     public static final ForgeConfigSpec.BooleanValue REAL_TIME_CANADIAN_SEASONS;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT;
 
 
     public static final int MIN_CORES_FOR_ASYNC = 6;
@@ -60,6 +61,9 @@ public class SereneExtendedConfig {
         ENABLE_SEASONAL_DAYLIGHT_CYCLE = builder
                 .comment("Enable seasonal daylight cycle. This will change the length of day and night based on the current season.")
                 .define("enableSeasonalDaylightCycle", true);
+        ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT = builder
+                .comment("Enable Better Days time-speed compatibility so Serene Seasons Plus can adjust day and night speeds dynamically.")
+                .define("enableBetterDaysDynamicTimeCompat", true);
 
         CUSTOM_CYCLE_LENGTH = builder
                 .comment("If true, the day and night lengths will be determined by the custom values set below. If false, the day and night lengths will be determined by the season.")
