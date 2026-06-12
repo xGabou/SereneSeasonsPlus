@@ -2,11 +2,13 @@ package com.Gabou.sereneseasonsplus;
 
 import com.Gabou.sereneseasonsplus.util.ConfigHacks;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
+import sereneseasons.init.ModTags;
 
 public class SereneSeasonPlusCommon {
     protected int ticker = 0;
@@ -79,7 +81,12 @@ public class SereneSeasonPlusCommon {
      *
      * @param level the overworld level
      */
-    protected void onTick(Level level, boolean ENABLE_SEASONAL_DAYLIGHT_CYCLE, boolean ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT, boolean CUSTOM_CYCLE_LENGTH, double CUSTOM_DAY_LENGTH, double CUSTOM_NIGHT_LENGTH) {
+    protected void onTick(Level level,
+                          boolean ENABLE_SEASONAL_DAYLIGHT_CYCLE,
+                          boolean ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT,
+                          boolean CUSTOM_CYCLE_LENGTH,
+                          double CUSTOM_DAY_LENGTH,
+                          double CUSTOM_NIGHT_LENGTH) {
         if (++this.ticker >= 400) {
             this.ticker = 0;
             if (EnvironmentHelper.shouldRunMod()) {

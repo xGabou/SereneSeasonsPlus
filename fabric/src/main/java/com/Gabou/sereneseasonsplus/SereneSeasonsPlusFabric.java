@@ -25,6 +25,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.jetbrains.annotations.Nullable;
+import net.fabricmc.loader.api.FabricLoader;
 
 public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements ModInitializer {
 
@@ -32,12 +33,14 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
     @Override
     public void onInitialize() {
         LOGGER.info("Initializing Serene Seasons Plus (Fabric)");
+        if (!FabricLoader.getInstance().isModLoaded("projectatmosphere")) {
+            SeasonChangeEvent.register();
+        }
         // Server lifecycle hooks
         ServerLifecycleEvents.SERVER_STARTED.register(this::onServerStarted);
         ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStarting);
         ServerLifecycleEvents.SERVER_STOPPING.register(this::onServerStopping);
         EnvironmentHelper.init(new FabricEnvironmentHelper());
-        SeasonChangeEvent.register();
         // Register chunk load to cache surface height only (no enqueue)
         ServerChunkEvents.CHUNK_LOAD.register(this::onChunkLoad);
         SereneExtendedConfig.registerReloadListener(this::onConfigReload);
@@ -51,28 +54,6 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
     }
 
     private void onBlockBreak(Level lvl, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity) {
-        if (!(lvl instanceof ServerLevel level)) return;
-        if (level.dimension() != Level.OVERWORLD) return;
-
-        if (!state.is(Blocks.SNOW) && !state.is(Blocks.SNOW_BLOCK)) return;
-
-        com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get();
-        int activeId = (sd != null) ? sd.currentStormId : 0;
-        if (activeId <= 0) return; // only track during active storm
-
-        LevelChunk chunk = level.getChunkSource().getChunk(pos.getX() >> 4, pos.getZ() >> 4, false);
-        if (!(chunk instanceof com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk tracked)) return;
-
-        if (tracked.sereneseasonsplus$getDestroyedStormId() != activeId) {
-            tracked.sereneseasonsplus$getDestroyedColumns().clear();
-            tracked.sereneseasonsplus$setDestroyedStormId(activeId);
-        }
-        long xz = (((long) pos.getX()) << 32) ^ (pos.getZ() & 0xffffffffL);
-        tracked.sereneseasonsplus$getDestroyedColumns().add(xz);
-
-        // Remove any tracked snow column entries for this X/Z so sync won't try to re-add this storm
-        tracked.sereneseasonsplus$getSnowColumns().keySet().removeIf(p -> p.getX() == pos.getX() && p.getZ() == pos.getZ());
-        chunk.setUnsaved(true);
     }
 
     private void onConfigReload() {
@@ -98,7 +79,9 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
     private void onWorldTick(ServerLevel level) {
         if( level.dimension() != Level.OVERWORLD) return;
         this.onTick(level, SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(), SereneExtendedConfig.ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.get(), SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(), SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(), SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get());
-        CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
+        if (CommonSnowBlockFeature.isSnowFeatureEnabled()) {
+            CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
+        }
 
     }
 

@@ -5,7 +5,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.ProtoChunk;
-import net.minecraft.world.level.levelgen.Heightmap;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -16,9 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-
-import static com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature.LOGGER;
+import java.util.Set;;
 
 @Mixin(LevelChunk.class)
 public class LevelChunkSnowMixin implements ISnowTrackedChunk {
@@ -54,6 +51,12 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
     private int sereneseasonsplus$stormIdApplied = 0;
     @Unique
     private int sereneseasonsplus$lastProgressTick = 0;
+
+    @Unique
+    private int sereneseasonsplus$snowSyncGeneration = -1;
+
+    @Unique
+    private int sereneseasonsplus$appliedStormCount = 0;
 
     @Override
     public int sereneseasonsplus$getLastWinterId() {
@@ -146,6 +149,26 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
         sereneseasonsplus$lastProgressTick = tick;
     }
 
+    @Override
+    public int sereneseasonsplus$getSnowSyncGeneration() {
+        return sereneseasonsplus$snowSyncGeneration;
+    }
+
+    @Override
+    public void sereneseasonsplus$setSnowSyncGeneration(int generation) {
+        sereneseasonsplus$snowSyncGeneration = generation;
+    }
+
+    @Override
+    public int sereneseasonsplus$getAppliedStormCount() {
+        return sereneseasonsplus$appliedStormCount;
+    }
+
+    @Override
+    public void sereneseasonsplus$setAppliedStormCount(int count) {
+        sereneseasonsplus$appliedStormCount = Math.max(0, count);
+    }
+
     @Inject(
             method = "<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;)V",
             at = @At("TAIL"))
@@ -165,6 +188,8 @@ public class LevelChunkSnowMixin implements ISnowTrackedChunk {
             target.sereneseasonsplus$setSurfaceHeight(src.sereneseasonsplus$getSurfaceHeight());
             target.sereneseasonsplus$setAvailableSnowColumns(src.sereneseasonsplus$getAvailableSnowColumns());
             target.sereneseasonsplus$setDestroyedStormId(src.sereneseasonsplus$getDestroyedStormId());
+            target.sereneseasonsplus$setSnowSyncGeneration(src.sereneseasonsplus$getSnowSyncGeneration());
+            target.sereneseasonsplus$setAppliedStormCount(src.sereneseasonsplus$getAppliedStormCount());
             target.sereneseasonsplus$getDestroyedColumns().clear();
             target.sereneseasonsplus$getDestroyedColumns().addAll(src.sereneseasonsplus$getDestroyedColumns());
         }

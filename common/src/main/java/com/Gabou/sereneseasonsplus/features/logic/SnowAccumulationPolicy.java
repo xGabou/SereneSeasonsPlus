@@ -4,6 +4,7 @@ import com.Gabou.sereneseasonsplus.features.SnowHistoryQueryService;
 import com.Gabou.sereneseasonsplus.features.SnowStateService;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -19,6 +20,7 @@ public final class SnowAccumulationPolicy {
     public enum Reason {
         NONE,
         LOAD_RESTORE_TRACKED,
+        STORM_COUNT_CHANGED,
         BASELINE_DEFICIT,
         EMPTY_CHUNK_HISTORY,
         AVERAGE_DEFICIT,
@@ -52,36 +54,11 @@ public final class SnowAccumulationPolicy {
         boolean allowApply = snowingNow || isLoadEvent;
 
         if (coldEnoughOverride) {
-            if (isLoadEvent && stateService.hasTrackedSnow(tracked)) {
-                return new ChunkDecision(Action.APPLY, false, Reason.LOAD_RESTORE_TRACKED);
+            int serverStormCount = CommonSnowBlockFeature.HANDLER.getSnowStormsThisWinter(level);
+            if (serverStormCount > tracked.sereneseasonsplus$getAppliedStormCount() && allowApply) {
+                return new ChunkDecision(Action.APPLY, false, Reason.STORM_COUNT_CHANGED);
             }
 
-            int trackedTotal = tracked.sereneseasonsplus$getTotalSnowLayers();
-            int baseline = historyQueryService.computeGlobalMinSum(level);
-            if (baseline > 0) {
-                int estimatedColumns = stateService.getAvailableSnowColumnsOrDefault(tracked, 256);
-                int baselineTotal = baseline * estimatedColumns;
-                if (baselineTotal > 0) {
-                    float ratio = trackedTotal / (float) baselineTotal;
-                    if (ratio < 0.75f && allowApply) {
-                        return new ChunkDecision(Action.APPLY, false, Reason.BASELINE_DEFICIT);
-                    }
-                }
-            }
-
-            int trackedPositions = tracked.sereneseasonsplus$getTrackedColumnCount();
-            float globalAverage = historyQueryService.computeGlobalAvg(level);
-            if (trackedPositions == 0) {
-                if (globalAverage > 0.5f && allowApply) {
-                    return new ChunkDecision(Action.APPLY, false, Reason.EMPTY_CHUNK_HISTORY);
-                }
-            } else {
-                float currentAverage = trackedTotal / (float) trackedPositions;
-                float tolerance = Math.max(2.0f, globalAverage * 0.20f);
-                if ((globalAverage - currentAverage) > tolerance && allowApply) {
-                    return new ChunkDecision(Action.APPLY, false, Reason.AVERAGE_DEFICIT);
-                }
-            }
             return ChunkDecision.none();
         }
 

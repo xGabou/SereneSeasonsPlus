@@ -10,19 +10,22 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+/**
+ * Central queue for one-shot chunk wide snow operations.
+ * Tasks are enqueued when a chunk needs an initial snow pass or when
+ * a season skip forces a resynchronisation.
+ */
 public final class ChunkQueue {
     public static final int MAX_DEFER_ATTEMPTS = 100;
     private static final int PROCESSED_COOLDOWN_TICKS = 20;
 
     private static final Queue<Entry> TASKS_CURRENT_TICK = new ArrayDeque<>();
     private static final Queue<Entry> TASKS_NEXT_TICK = new ArrayDeque<>();
-
     private static final Set<EntryKey> SCHEDULED = new HashSet<>();
     private static final Map<EntryKey, Integer> COOLDOWN_UNTIL_TICK = new HashMap<>();
-    private static int currentTick = 0;
-
     private static final Queue<Entry> BUGGED_CHUNK = new ArrayDeque<>();
     private static final Queue<Entry> SCHEDULED_TASKS = new ArrayDeque<>();
+    private static int currentTick = 0;
 
     private ChunkQueue() {
     }
@@ -145,6 +148,7 @@ public final class ChunkQueue {
         COOLDOWN_UNTIL_TICK.clear();
         SCHEDULED_TASKS.clear();
         BUGGED_CHUNK.clear();
+        currentTick = 0;
     }
 
     private static boolean trySchedule(Entry entry) {

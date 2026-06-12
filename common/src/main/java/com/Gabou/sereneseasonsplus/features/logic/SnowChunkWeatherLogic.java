@@ -8,7 +8,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
@@ -17,7 +16,6 @@ import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
-import org.spongepowered.asm.mixin.injection.Inject;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.season.SeasonHooks;
@@ -64,6 +62,7 @@ public final class SnowChunkWeatherLogic {
         ProfilerFiller profiler = level.getProfiler();
         profiler.popPush("iceandsnow");
         if (level.random.nextInt(16) == 0) {
+            boolean snowRealMagicLoaded = EnvironmentHelper.isSnowRealMagicLoaded();
             int j = chunk.getPos().getMinBlockX();
             int k = chunk.getPos().getMinBlockZ();
             BlockPos blockPos = level.getHeightmapPos(
@@ -77,14 +76,10 @@ public final class SnowChunkWeatherLogic {
             }
 
             // Snow accumulation (uses your helper instead of vanilla "bl")
-            if (EnvironmentHelper.isRainning(level, blockPos) && level.canSeeSkyFromBelowWater(blockPos)) {
+            if (!snowRealMagicLoaded && EnvironmentHelper.isRainning(level, blockPos) && level.canSeeSkyFromBelowWater(blockPos)) {
                 int maxSnow = CommonSnowBlockFeature.getSnowHeightCap();
                 if (maxSnow > 0 && SeasonHooks.shouldSnowHook(biome, level, blockPos)) {
                     BlockState state = level.getBlockState(blockPos);
-                    if (ServerPrecipitationService.isDestroyedDuringCurrentStorm(chunk, blockPos)) {
-                        return; // abort vanilla-like snow add in this column
-                    }
-
                     if (state.is(Blocks.SNOW)) {
                         int layers = state.getValue(SnowLayerBlock.LAYERS);
                         if (layers < Math.min(maxSnow, 8)) {
@@ -101,6 +96,13 @@ public final class SnowChunkWeatherLogic {
                 }
                 //same for ice accumulation
                 // Precipitation hook
+                Biome.Precipitation precipitation = biome.getPrecipitationAt(blockPos2);
+                if (precipitation != Biome.Precipitation.NONE) {
+                    BlockState base = level.getBlockState(blockPos2);
+                    base.getBlock().handlePrecipitation(base, level, blockPos2, precipitation);
+                }
+            }
+            if (snowRealMagicLoaded && EnvironmentHelper.isRainning(level, blockPos)) {
                 Biome.Precipitation precipitation = biome.getPrecipitationAt(blockPos2);
                 if (precipitation != Biome.Precipitation.NONE) {
                     BlockState base = level.getBlockState(blockPos2);

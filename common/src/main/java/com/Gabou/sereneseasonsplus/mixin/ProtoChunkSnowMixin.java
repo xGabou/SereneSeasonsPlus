@@ -39,6 +39,12 @@ public class ProtoChunkSnowMixin implements ISnowTrackedChunk {
     @Unique
     private int sereneseasonsplus$lastProgressTick = 0;
 
+    @Unique
+    private int sereneseasonsplus$snowSyncGeneration = -1;
+
+    @Unique
+    private int sereneseasonsplus$appliedStormCount = 0;
+
     @Override
     public int sereneseasonsplus$getLastWinterId() {
         return sereneseasonsplus$lastWinterId;
@@ -122,5 +128,25 @@ public class ProtoChunkSnowMixin implements ISnowTrackedChunk {
     @Override
     public void sereneseasonsplus$setLastProgressTick(int tick) {
         sereneseasonsplus$lastProgressTick = tick;
+    }
+
+    @Override
+    public int sereneseasonsplus$getSnowSyncGeneration() {
+        return sereneseasonsplus$snowSyncGeneration;
+    }
+
+    @Override
+    public void sereneseasonsplus$setSnowSyncGeneration(int generation) {
+        sereneseasonsplus$snowSyncGeneration = generation;
+    }
+
+    @Override
+    public int sereneseasonsplus$getAppliedStormCount() {
+        return sereneseasonsplus$appliedStormCount;
+    }
+
+    @Override
+    public void sereneseasonsplus$setAppliedStormCount(int count) {
+        sereneseasonsplus$appliedStormCount = Math.max(0, count);
     }
 }

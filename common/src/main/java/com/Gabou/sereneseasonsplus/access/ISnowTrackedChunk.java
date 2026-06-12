@@ -38,6 +38,12 @@ public interface ISnowTrackedChunk {
     int sereneseasonsplus$getLastProgressTick();
     void sereneseasonsplus$setLastProgressTick(int tick);
 
+    int sereneseasonsplus$getSnowSyncGeneration();
+    void sereneseasonsplus$setSnowSyncGeneration(int generation);
+
+    int sereneseasonsplus$getAppliedStormCount();
+    void sereneseasonsplus$setAppliedStormCount(int count);
+
     Set<BlockPos> sereneseasonsplus$getIceColumns();
 
     int sereneseasonsplus$getDestroyedStormId();

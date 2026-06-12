@@ -98,7 +98,11 @@ public final class SnowMutationBatch {
         return processQueuedChanges(level, 0, limit, Long.MAX_VALUE, compatibility);
     }
 
-    public int processQueuedChanges(ServerLevel level, int minToProcess, int maxToProcess, long deadlineNanos, SnowBlockCompatibility compatibility) {
+    public int processQueuedChanges(ServerLevel level,
+                                    int minToProcess,
+                                    int maxToProcess,
+                                    long deadlineNanos,
+                                    SnowBlockCompatibility compatibility) {
         if (pendingChanges.isEmpty()) {
             return 0;
         }

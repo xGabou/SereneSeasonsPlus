@@ -57,11 +57,12 @@ dependencies {
     implementation "curse.maven:glitchcore-955399:5660740"
     implementation "curse.maven:betterdays-895618:7294209"
     runtimeOnly "me.djtheredstoner:DevAuth-neoforge:1.2.1"
-    compileOnly "curse.maven:project-atmosphere-1258344:8226676"
+    //compileOnly "curse.maven:project-atmosphere-1258344:8235023" //Pa 9.0.0
+    compileOnly "curse.maven:project-atmosphere-1258344:7772950" //Pa 8.1.0
     implementation group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-neoforge", version: "${whitenoise_version}"
-    implementation "curse.maven:gabous-libs-1367332:7195722"
+    implementation "curse.maven:gabous-libs-1367332:8237915"
     implementation "curse.maven:architectury-api-419699:5786327"
-    implementation "curse.maven:snow-real-magic-308663:6783557"
+    compileOnly "curse.maven:snow-real-magic-308663:6783557"
     implementation "curse.maven:kiwi-303657:7209486"
     //runtimeOnly "curse.maven:rubidium-extra-654373:5176872"
     //runtimeOnly "curse.maven:embeddium-908741:5521869"

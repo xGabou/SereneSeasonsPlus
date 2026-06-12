@@ -75,3 +75,9 @@ type = "required" #mandatory
 modId = "gaboulibs" #mandatory
 type = "required" #mandatory
 
+[[dependencies."${mod_id}"]]
+modId = "projectatmosphere"
+type = "optional"
+versionRange = "[0.8.0.0,)"
+side = "BOTH"
+

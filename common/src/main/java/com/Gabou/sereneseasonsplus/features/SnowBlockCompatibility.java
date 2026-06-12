@@ -52,12 +52,10 @@ public interface SnowBlockCompatibility {
         BlockState target;
         if (isManagedIce(state)) {
             target = net.minecraft.world.level.block.Blocks.WATER.defaultBlockState();
-        } else if (isManagedSnow(state) || isReplaceableForSnow(state)) {
+        } else {
             target = toWater
                     ? net.minecraft.world.level.block.Blocks.WATER.defaultBlockState()
                     : net.minecraft.world.level.block.Blocks.AIR.defaultBlockState();
-        } else {
-            return null;
         }
         if (state.is(target.getBlock())) {
             return null;

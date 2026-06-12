@@ -1,8 +1,6 @@
 package com.Gabou.sereneseasonsplus.mixin;
 
-import com.Gabou.sereneseasonsplus.SereneSeasonPlusCommon;
 import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
-import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;
@@ -13,7 +11,6 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.storage.ChunkSerializer;
 import net.minecraft.world.level.chunk.storage.RegionStorageInfo;
-import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -40,6 +37,8 @@ public abstract class ChunkSerializerSnowMixin {
         tag.putInt("LastProgressTick", tracked.sereneseasonsplus$getLastProgressTick());
         tag.putInt("AvailableColumns", tracked.sereneseasonsplus$getAvailableSnowColumns());
         tag.putInt("DestroyedStormId", tracked.sereneseasonsplus$getDestroyedStormId());
+        tag.putInt("SnowSyncGeneration", tracked.sereneseasonsplus$getSnowSyncGeneration());
+        tag.putInt("AppliedStormCount", tracked.sereneseasonsplus$getAppliedStormCount());
 
         // Snow columns
         ListTag snowList = new ListTag();
@@ -107,6 +106,8 @@ public abstract class ChunkSerializerSnowMixin {
         if (tag.contains("LastProgressTick")) tracked.sereneseasonsplus$setLastProgressTick(tag.getInt("LastProgressTick"));
         if (tag.contains("AvailableColumns")) tracked.sereneseasonsplus$setAvailableSnowColumns(tag.getInt("AvailableColumns"));
         if (tag.contains("DestroyedStormId")) tracked.sereneseasonsplus$setDestroyedStormId(tag.getInt("DestroyedStormId"));
+        if (tag.contains("SnowSyncGeneration")) tracked.sereneseasonsplus$setSnowSyncGeneration(tag.getInt("SnowSyncGeneration"));
+        if (tag.contains("AppliedStormCount")) tracked.sereneseasonsplus$setAppliedStormCount(tag.getInt("AppliedStormCount"));
 
         // Snow columns
         tracked.sereneseasonsplus$getSnowColumns().clear();
@@ -170,6 +171,12 @@ public abstract class ChunkSerializerSnowMixin {
                 }
                 if (tag.contains("DestroyedStormId")) {
                     tracked.sereneseasonsplus$setDestroyedStormId(tag.getInt("DestroyedStormId"));
+                }
+                if (tag.contains("SnowSyncGeneration")) {
+                    tracked.sereneseasonsplus$setSnowSyncGeneration(tag.getInt("SnowSyncGeneration"));
+                }
+                if (tag.contains("AppliedStormCount")) {
+                    tracked.sereneseasonsplus$setAppliedStormCount(tag.getInt("AppliedStormCount"));
                 }
 
 

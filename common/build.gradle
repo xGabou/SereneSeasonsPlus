@@ -16,7 +16,7 @@ dependencies {
     compileOnly "curse.maven:betterdays-895618:7294209"
     compileOnly group:'org.spongepowered', name: 'mixin', version: '0.8.5'
     compileOnly group: 'technology.roughness.whitenoise', name: "whitenoise-${minecraft_version}-common", version: "${whitenoise_version}"
-    compileOnly "curse.maven:gabous-libs-1367332:7195722"
+    compileOnly "curse.maven:gabous-libs-1367332:8237915"
     compileOnly "curse.maven:architectury-api-419699:5786326"
     compileOnly "org.ow2.asm:asm:9.8"
     compileOnly "org.ow2.asm:asm-commons:9.8"

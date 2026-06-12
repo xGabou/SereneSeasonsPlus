@@ -41,7 +41,15 @@ public final class SnowChunkLoadReconciler {
         return !pendingLoads.isEmpty();
     }
 
-    public int process(ServerLevel level, SnowBlockCompatibility compatibility, int minChunks, int maxChunks, long deadlineNanos) {
+    public int process(ServerLevel level, SnowBlockCompatibility compatibility) {
+        return process(level, compatibility, 0, Integer.MAX_VALUE, Long.MAX_VALUE);
+    }
+
+    public int process(ServerLevel level,
+                       SnowBlockCompatibility compatibility,
+                       int minChunks,
+                       int maxChunks,
+                       long deadlineNanos) {
         ChunkPos chunkPos;
         int processed = 0;
         while ((chunkPos = pendingLoads.poll()) != null) {
@@ -50,7 +58,6 @@ public final class SnowChunkLoadReconciler {
                 requeue(chunkPos);
                 break;
             }
-
             if (!level.hasChunk(chunkPos.x, chunkPos.z)) {
                 continue;
             }
@@ -108,12 +115,8 @@ public final class SnowChunkLoadReconciler {
                 chunkPos.getMiddleBlockPosition(sampleY)
         );
 
-        if (stateService.hasTrackedSnow(tracked)) {
-            if (coldEnough) {
-                CommonSnowBlockFeature.enqueueChunkForSnowApply(chunkPos, currentSeason);
-            } else {
-                CommonSnowBlockFeature.enqueueChunkForSnowMelt(chunkPos, false);
-            }
+        if (stateService.hasTrackedSnow(tracked) && !coldEnough) {
+            CommonSnowBlockFeature.enqueueChunkForSnowMelt(chunkPos, false);
             return;
         }
 
