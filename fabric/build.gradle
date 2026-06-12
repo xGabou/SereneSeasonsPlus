@@ -64,7 +64,7 @@ dependencies {
     include implementation("com.electronwill.night-config:toml:${nightconfig_version}")
     include implementation("com.electronwill.night-config:core:${nightconfig_version}")
     include implementation("net.jodah:typetools:0.6.3")
-    modImplementation "curse.maven:gabous-libs-1367332:7261538"
+    modImplementation "curse.maven:gabous-libs-1367332:8237903"
     runtimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.1")
     modImplementation ( group: "technology.roughness.whitenoise", name: "whitenoise-${minecraft_version}-fabric", version: "${whitenoise_version}")
 }

@@ -1,7 +1,7 @@
 package com.Gabou.sereneseasonsplus.features;
 
 import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import net.Gabou.gaboulibs.storage.SnowRecord;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -31,6 +31,7 @@ public final class SnowChunkApplyService {
 
         int baseline = historyQueryService.computeGlobalMinSum(level);
         if (baseline <= 0) return false;
+        SnowHistorySavedData savedData = SnowHistorySavedData.get();
 
         boolean any = false;
         ChunkPos chunkPos = chunk.getPos();
@@ -93,7 +94,6 @@ public final class SnowChunkApplyService {
             }
         }
 
-        SnowHistorySavedData savedData = SnowHistorySavedData.get();
         if (savedData != null) {
             if (savedData.currentStormId > 0) {
                 SnowRecord activeRecord = savedData.snowHistory.get(savedData.currentStormId);
@@ -108,6 +108,32 @@ public final class SnowChunkApplyService {
             }
         }
         return any;
+    }
+
+    public boolean applySnowForCurrentStormCount(ServerLevel level, LevelChunk chunk) {
+        SnowHistorySavedData savedData = SnowHistorySavedData.get();
+        if (savedData == null) {
+            return false;
+        }
+
+        if (savedData.currentStormId > 0) {
+            SnowRecord activeRecord = savedData.snowHistory.get(savedData.currentStormId);
+            return activeRecord != null && applySnowPattern(level, chunk, activeRecord, level.random);
+        }
+
+        SnowRecord combined = historyQueryService.aggregateFinishedStormSums(level);
+        return combined != null && applyCombinedFinishedPattern(level, chunk, combined, level.random);
+    }
+
+    public boolean hasApplicableStormRecord(ServerLevel level) {
+        SnowHistorySavedData savedData = SnowHistorySavedData.get();
+        if (savedData == null) {
+            return false;
+        }
+        if (savedData.currentStormId > 0) {
+            return savedData.snowHistory.containsKey(savedData.currentStormId);
+        }
+        return historyQueryService.aggregateFinishedStormSums(level) != null;
     }
 
     public boolean applySnowPatternFromActiveRecord(ServerLevel level, LevelChunk chunk) {
@@ -163,22 +189,10 @@ public final class SnowChunkApplyService {
             }
         }
 
-        int activeId = 0;
-        SnowHistorySavedData localData = SnowHistorySavedData.get();
-        if (localData != null) {
-            activeId = localData.currentStormId;
-        }
-
         for (int dx = 0; dx < 16; dx++) {
             for (int dz = 0; dz < 16; dz++) {
                 int x = baseX + dx;
                 int z = baseZ + dz;
-
-                if (activeId > 0) {
-                    if (stateService.isDestroyedDuringStorm(tracked, activeId, x, z)) {
-                        continue;
-                    }
-                }
 
                 float white = random.nextFloat();
                 double wave = Math.sin((x * 0.12D) + (z * 0.12D));

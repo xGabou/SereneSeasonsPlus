@@ -11,12 +11,19 @@ import java.util.Set;
 public class SereneSeasonsPlusMixinPlugin implements IMixinConfigPlugin {
     private static final String SERVER_LEVEL_MIXIN = "com.Gabou.sereneseasonsplus.mixin.ServerLevelMixin";
     private static final String SNOW_REAL_MAGIC_MIXIN = "com.Gabou.sereneseasonsplus.mixin.SnowRealMagicCompatMixin";
+    private static final String BIOME_FREEZING_MIXIN = "com.Gabou.sereneseasonsplus.mixin.BiomeFreezingMixin";
+    private static final String SEASON_HOOKS_MIXIN = "com.Gabou.sereneseasonsplus.mixin.SeasonHooksMixin";
+    private static final String SERVER_LEVEL_WEATHER_CYCLE_MIXIN = "com.Gabou.sereneseasonsplus.mixin.ServerLevelWeatherCycleMixin";
+    private static final String WEATHER_STATE_MIXIN = "com.Gabou.sereneseasonsplus.mixin.WeatherStateMixin";
+    private static final String CLIENT_LEVEL_WEATHER_MIXIN = "com.Gabou.sereneseasonsplus.mixin.client.ClientLevelWeatherMixin";
 
     private boolean snowRealMagicLoaded;
+    private boolean projectAtmosphereLoaded;
 
     @Override
     public void onLoad(String mixinPackage) {
         snowRealMagicLoaded = detectSnowRealMagic();
+        projectAtmosphereLoaded = detectProjectAtmosphere();
     }
 
     @Override
@@ -31,6 +38,15 @@ public class SereneSeasonsPlusMixinPlugin implements IMixinConfigPlugin {
         }
         if (SNOW_REAL_MAGIC_MIXIN.equals(mixinClassName)) {
             return snowRealMagicLoaded;
+        }
+        if (projectAtmosphereLoaded) {
+            if (BIOME_FREEZING_MIXIN.equals(mixinClassName)
+                    || SEASON_HOOKS_MIXIN.equals(mixinClassName)
+                    || SERVER_LEVEL_WEATHER_CYCLE_MIXIN.equals(mixinClassName)
+                    || WEATHER_STATE_MIXIN.equals(mixinClassName)
+                    || CLIENT_LEVEL_WEATHER_MIXIN.equals(mixinClassName)) {
+                return false;
+            }
         }
         return true;
     }
@@ -61,11 +77,21 @@ public class SereneSeasonsPlusMixinPlugin implements IMixinConfigPlugin {
                 || isFabricModLoaded();
     }
 
+    private boolean detectProjectAtmosphere() {
+        return isModLoaded("net.minecraftforge.fml.ModList", "projectatmosphere")
+                || isModLoaded("net.neoforged.fml.ModList", "projectatmosphere")
+                || isFabricModLoaded("projectatmosphere");
+    }
+
     private boolean isModLoaded(String modListClassName) {
+        return isModLoaded(modListClassName, "snowrealmagic");
+    }
+
+    private boolean isModLoaded(String modListClassName, String modId) {
         try {
             Class<?> modListClass = Class.forName(modListClassName);
             Object modList = modListClass.getMethod("get").invoke(null);
-            Object result = modListClass.getMethod("isLoaded", String.class).invoke(modList, "snowrealmagic");
+            Object result = modListClass.getMethod("isLoaded", String.class).invoke(modList, modId);
             return Boolean.TRUE.equals(result);
         } catch (ClassNotFoundException e) {
             return false; // different loader
@@ -75,10 +101,14 @@ public class SereneSeasonsPlusMixinPlugin implements IMixinConfigPlugin {
     }
 
     private boolean isFabricModLoaded() {
+        return isFabricModLoaded("snowrealmagic");
+    }
+
+    private boolean isFabricModLoaded(String modId) {
         try {
             Class<?> loaderClass = Class.forName("net.fabricmc.loader.api.FabricLoader");
             Object loader = loaderClass.getMethod("getInstance").invoke(null);
-            Object result = loaderClass.getMethod("isModLoaded", String.class).invoke(loader, "snowrealmagic");
+            Object result = loaderClass.getMethod("isModLoaded", String.class).invoke(loader, modId);
             return Boolean.TRUE.equals(result);
         } catch (ClassNotFoundException e) {
             return false;

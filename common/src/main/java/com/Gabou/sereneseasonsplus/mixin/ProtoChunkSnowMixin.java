@@ -1,6 +1,6 @@
 package com.Gabou.sereneseasonsplus.mixin;
 
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,6 +38,12 @@ public class ProtoChunkSnowMixin implements ISnowTrackedChunk {
     private int sereneseasonsplus$stormIdApplied = 0;
     @Unique
     private int sereneseasonsplus$lastProgressTick = 0;
+
+    @Unique
+    private int sereneseasonsplus$snowSyncGeneration = -1;
+
+    @Unique
+    private int sereneseasonsplus$appliedStormCount = 0;
 
     @Override
     public int sereneseasonsplus$getLastWinterId() {
@@ -122,5 +128,25 @@ public class ProtoChunkSnowMixin implements ISnowTrackedChunk {
     @Override
     public void sereneseasonsplus$setLastProgressTick(int tick) {
         sereneseasonsplus$lastProgressTick = tick;
+    }
+
+    @Override
+    public int sereneseasonsplus$getSnowSyncGeneration() {
+        return sereneseasonsplus$snowSyncGeneration;
+    }
+
+    @Override
+    public void sereneseasonsplus$setSnowSyncGeneration(int generation) {
+        sereneseasonsplus$snowSyncGeneration = generation;
+    }
+
+    @Override
+    public int sereneseasonsplus$getAppliedStormCount() {
+        return sereneseasonsplus$appliedStormCount;
+    }
+
+    @Override
+    public void sereneseasonsplus$setAppliedStormCount(int count) {
+        sereneseasonsplus$appliedStormCount = Math.max(0, count);
     }
 }

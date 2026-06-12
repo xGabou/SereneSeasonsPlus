@@ -4,12 +4,10 @@ import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
 import net.Gabou.gaboulibs.storage.SnowRecord;
 import com.Gabou.sereneseasonsplus.storage.SnowSavedData;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
 import net.Gabou.gaboulibs.util.SnowGenerator;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import sereneseasons.season.SeasonHooks;
 
@@ -84,6 +82,7 @@ public class DefaultSnowEnvironmentHandler implements ISnowEnvironmentHandler {
         SnowHistorySavedData hist = SnowHistorySavedData.get();
         hist.currentStormId = 0;
         hist.snowHistory.clear();
+        CommonSnowBlockFeature.bumpSnowSyncGeneration();
         hist.setDirty();
     }
 
@@ -105,6 +104,7 @@ public class DefaultSnowEnvironmentHandler implements ISnowEnvironmentHandler {
                     SnowRecord rec = SnowGenerator.generateStormRecord(level.random);
                     hist.snowHistory.put(stormId, rec);
                 }
+                CommonSnowBlockFeature.bumpSnowSyncGeneration();
                 hist.setDirty();
             }
         } else {
@@ -123,6 +123,7 @@ public class DefaultSnowEnvironmentHandler implements ISnowEnvironmentHandler {
                 // Clear active storm marker
                 hist.currentStormId = 0;
 
+                CommonSnowBlockFeature.bumpSnowSyncGeneration();
                 hist.setDirty();
             }
         }
@@ -133,7 +134,7 @@ public class DefaultSnowEnvironmentHandler implements ISnowEnvironmentHandler {
     public int getSnowStormsThisWinter(ServerLevel level) {
         if (!isOverworld(level)) return 0;
         SnowData data = getOrCreateData(level);
-        return data.stormCount - data.activeStorms.size();
+        return data.stormCount + data.activeStorms.size();
     }
 
     @Override

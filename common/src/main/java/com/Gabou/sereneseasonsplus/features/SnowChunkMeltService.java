@@ -1,7 +1,7 @@
 package com.Gabou.sereneseasonsplus.features;
 
 import com.Gabou.sereneseasonsplus.tags.SSPTags;
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -13,7 +13,6 @@ import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 public final class SnowChunkMeltService {
@@ -94,14 +93,14 @@ public final class SnowChunkMeltService {
             for (int dz = 0; dz < 16; dz++) {
                 int x = baseX + dx;
                 int z = baseZ + dz;
-                int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-                for (int dy = 0; dy <= 6; dy++) {
+                int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
+                for (int dy = -2; dy <= 6; dy++) {
                     pos.set(x, groundY + dy, z);
                     if (pos.getY() < level.getMinBuildHeight() || pos.getY() >= level.getMaxBuildHeight()) {
                         continue;
                     }
                     BlockState state = level.getBlockState(pos);
-                    if (state.is(SSPTags.Blocks.MELTABLE) && !CommonSnowBlockFeature.isExposedToSky(level, pos)) {
+                    if (state.is(SSPTags.Blocks.MELTABLE) && CommonSnowBlockFeature.shouldMeltIceAt(level, pos.immutable())) {
                         changed |= CommonSnowBlockFeature.queueClearIfNeeded(level, pos.immutable(), false);
                         break;
                     }
@@ -117,13 +116,15 @@ public final class SnowChunkMeltService {
         for (BlockPos pos : copy) {
             BlockState state = level.getBlockState(pos);
             if (CommonSnowBlockFeature.SNOW_COMPATIBILITY.isManagedIce(state)) {
-                CommonSnowBlockFeature.queueChange(
-                        pos,
-                        Blocks.WATER.defaultBlockState(),
-                        Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS
-                );
-                tracked.sereneseasonsplus$getIceColumns().remove(pos);
-                changed = true;
+                if (CommonSnowBlockFeature.shouldMeltIceAt(level, pos)) {
+                    CommonSnowBlockFeature.queueChange(
+                            pos,
+                            Blocks.WATER.defaultBlockState(),
+                            Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS
+                    );
+                    tracked.sereneseasonsplus$getIceColumns().remove(pos);
+                    changed = true;
+                }
             } else {
                 tracked.sereneseasonsplus$getIceColumns().remove(pos);
             }

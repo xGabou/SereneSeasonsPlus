@@ -2,28 +2,23 @@ package com.Gabou.sereneseasonsplus.mixin;
 
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.features.logic.SnowChunkWeatherLogic;
-import com.Gabou.sereneseasonsplus.features.logic.SnowLogic;
 import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.levelgen.Heightmap;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-import sereneseasons.api.season.Season;
-import sereneseasons.api.season.SeasonHelper;
-import sereneseasons.season.SeasonHooks;
 
 @Mixin(value = ServerLevel.class)
 public class ServerLevelMixin {
@@ -99,7 +94,7 @@ public class ServerLevelMixin {
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z",
-                    ordinal = 0   // <- snow layer-increase update
+                    ordinal = 0   // ice update
             )
     )
     private boolean ssp$AccumulateColumnUpdate(ServerLevel level, BlockPos pos, BlockState state) {
@@ -140,6 +135,7 @@ public class ServerLevelMixin {
             ),
             ordinal = 0
     )
+
     private boolean interceptShouldFreeze(boolean original) {
         if (!CommonSnowBlockFeature.isSnowFeatureEnabled()) {
             return original;
@@ -208,29 +204,14 @@ public class ServerLevelMixin {
             sereneseasonsplus$shouldSkipSnowCheck = false;
             return;
         }
-        boolean skip = false;
-
-        SnowHistorySavedData sd = SnowHistorySavedData.get();
-        int activeId = sd != null ? sd.currentStormId : 0;
-
-        if (activeId > 0 && chunk instanceof ISnowTrackedChunk tracked) {
-            if (tracked.sereneseasonsplus$getDestroyedStormId() != activeId) {
-                tracked.sereneseasonsplus$getDestroyedColumns().clear();
-                tracked.sereneseasonsplus$setDestroyedStormId(activeId);
-            }
-            long xz = (((long) posSnowCheck.getX()) << 32) ^ (posSnowCheck.getZ() & 0xFFFFFFFFL);
-            skip = tracked.sereneseasonsplus$getDestroyedColumns().contains(xz);
-        }
-
-        sereneseasonsplus$shouldSkipSnowCheck = skip;
+        sereneseasonsplus$shouldSkipSnowCheck = false;
     }
 
-    @ModifyVariable(
+    @Redirect(
             method = "tickChunk",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/block/state/BlockState;is(Lnet/minecraft/world/level/block/Block;)Z",
-                    shift = At.Shift.AFTER
+                    target = "Lnet/minecraft/world/level/block/state/BlockState;is(Lnet/minecraft/world/level/block/Block;)Z"
             ),
             slice = @Slice(
                     from = @At(
@@ -241,11 +222,10 @@ public class ServerLevelMixin {
                             value = "INVOKE",
                             target = "Lnet/minecraft/world/level/biome/Biome;getPrecipitationAt(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/biome/Biome$Precipitation;"
                     )
-            ),
-            ordinal = 0
+            )
     )
-    private boolean skipSnowIf(boolean original) {
-        return !sereneseasonsplus$shouldSkipSnowCheck && original;
+    private boolean sereneseasonsplus$skipSnowBlockCheck(BlockState state, Block block) {
+        return !sereneseasonsplus$shouldSkipSnowCheck && state.is(block);
     }
 
 

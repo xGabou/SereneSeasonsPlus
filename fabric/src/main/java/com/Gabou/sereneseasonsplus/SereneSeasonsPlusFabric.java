@@ -5,10 +5,15 @@ import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.mixin.MinecraftServerMixin;
 import com.Gabou.sereneseasonsplus.util.*;
+import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.GameRules;
@@ -30,7 +35,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         // Register chunk load to cache surface height only (no enqueue)
         ServerChunkEvents.CHUNK_LOAD.register(this::onChunkLoad);
         SereneExtendedConfig.registerReloadListener(this::onConfigReload);
-
+        CommandRegistrationCallback.EVENT.register(this::onRegisterCommand);
 
 
         // Server tick hook
@@ -42,6 +47,13 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
     private void onConfigReload() {
         CommonSnowBlockFeature.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get(), SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get());
         SereneService.reloadConfig();
+    }
+
+    private void onRegisterCommand(CommandDispatcher<CommandSourceStack> dispatcher,
+                                   CommandBuildContext registryAccess,
+                                   Commands.CommandSelection environment
+    ) {
+        DebugCommands.registerTo(dispatcher);
     }
 
     //    private void onChunkLoad(ServerLevel level, LevelChunk chunk) {
@@ -60,7 +72,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
     }
 
     private void onWorldTick(ServerLevel level) {
-        if( level.dimension() != Level.OVERWORLD) return;
+        if (level.dimension() != Level.OVERWORLD) return;
         RealTimeSeasonHelper.sync(level, SereneExtendedConfig.REAL_TIME_CANADIAN_SEASONS.get());
         this.onTick(
                 level,
@@ -70,7 +82,9 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
                 SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(),
                 SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get()
         );
-        CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
+        if (CommonSnowBlockFeature.isSnowFeatureEnabled()) {
+            CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
+        }
 
     }
 

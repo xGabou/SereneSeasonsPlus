@@ -3,12 +3,11 @@ package com.Gabou.sereneseasonsplus.features.logic;
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.features.ServerPrecipitationService;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
@@ -17,7 +16,6 @@ import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
-import org.spongepowered.asm.mixin.injection.Inject;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.season.SeasonHooks;
@@ -82,10 +80,6 @@ public final class SnowChunkWeatherLogic {
                 int maxSnow = CommonSnowBlockFeature.getSnowHeightCap();
                 if (maxSnow > 0 && SeasonHooks.shouldSnowHook(biome, level, blockPos)) {
                     BlockState state = level.getBlockState(blockPos);
-                    if (ServerPrecipitationService.isDestroyedDuringCurrentStorm(chunk, blockPos)) {
-                        return; // abort vanilla-like snow add in this column
-                    }
-
                     if (state.is(Blocks.SNOW)) {
                         int layers = state.getValue(SnowLayerBlock.LAYERS);
                         if (layers < Math.min(maxSnow, 8)) {

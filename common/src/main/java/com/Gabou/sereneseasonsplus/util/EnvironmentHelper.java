@@ -163,6 +163,7 @@ public class EnvironmentHelper {
             SnowHistorySavedData hist = SnowHistorySavedData.get();
             hist.currentStormId = 0;
             hist.snowHistory.clear();
+            CommonSnowBlockFeature.bumpSnowSyncGeneration();
             hist.setDirty();
         }
 

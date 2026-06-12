@@ -74,6 +74,7 @@ public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
         hist.currentStormId = data.stormCount;
         hist.snowHistory.put(hist.currentStormId, rec);
         SnowHistorySavedData.get().snowHistory.put(hist.currentStormId, rec);
+        CommonSnowBlockFeature.bumpSnowSyncGeneration();
 
         hist.setDirty();
         persist(level, data);

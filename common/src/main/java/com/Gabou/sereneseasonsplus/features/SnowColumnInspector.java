@@ -18,7 +18,7 @@ public final class SnowColumnInspector {
 
     @Nullable
     public static BlockPos findPlacementTop(ServerLevel level, int x, int z, SnowBlockCompatibility compatibility) {
-        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
         BlockPos base = new BlockPos(x, y, z);
         var baseState = level.getBlockState(base);
 

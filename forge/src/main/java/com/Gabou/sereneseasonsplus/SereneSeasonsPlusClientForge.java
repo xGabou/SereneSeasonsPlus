@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus;
 
+import com.Gabou.sereneseasonsplus.client.PerformanceWarning;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedScreen;
 import com.Gabou.sereneseasonsplus.util.PerfChecker;
 import net.minecraft.client.Minecraft;

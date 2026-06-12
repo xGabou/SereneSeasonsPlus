@@ -78,6 +78,14 @@ public final class ActiveSnowUpdateService {
             if (CommonSnowBlockFeature.HANDLER.getBlocksToReplace(level, targetPos) <= 0) continue;
 
             BlockState state = level.getBlockState(targetPos);
+            if (CommonSnowBlockFeature.SNOW_COMPATIBILITY.isManagedIce(state)) {
+                if (!CommonSnowBlockFeature.shouldMeltIceAt(level, targetPos)) {
+                    continue;
+                }
+                CommonSnowBlockFeature.queueClearIfNeeded(level, targetPos, false);
+                continue;
+            }
+
             if (!CommonSnowBlockFeature.SNOW_COMPATIBILITY.isManagedSnow(state)) {
                 continue;
             }
@@ -98,7 +106,7 @@ public final class ActiveSnowUpdateService {
         for (int sample = 0; sample < sampleBudget; sample++) {
             int x = playerPos.getX() + random.nextInt(radius * 2 + 1) - radius;
             int z = playerPos.getZ() + random.nextInt(radius * 2 + 1) - radius;
-            int groundY = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+            int groundY = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, x, z);
 
             for (int dy = 4; dy >= -4; dy--) {
                 cursor.set(x, groundY + dy, z);
@@ -107,7 +115,8 @@ public final class ActiveSnowUpdateService {
                 }
 
                 BlockState state = level.getBlockState(cursor);
-                if (!CommonSnowBlockFeature.SNOW_COMPATIBILITY.isManagedSnow(state)) {
+                if (!CommonSnowBlockFeature.SNOW_COMPATIBILITY.isManagedSnow(state)
+                        && !CommonSnowBlockFeature.SNOW_COMPATIBILITY.isManagedIce(state)) {
                     continue;
                 }
                 return cursor.immutable();

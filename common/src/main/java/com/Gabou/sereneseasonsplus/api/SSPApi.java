@@ -4,7 +4,7 @@ import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
 import net.Gabou.gaboulibs.storage.SnowRecord;
 import com.Gabou.sereneseasonsplus.storage.SnowSavedData;
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.Gabou.gaboulibs.util.WorldContext;

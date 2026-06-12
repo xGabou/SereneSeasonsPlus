@@ -2,7 +2,7 @@ package com.Gabou.sereneseasonsplus.features;
 
 import com.Gabou.sereneseasonsplus.features.logic.SnowLogic;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -115,12 +115,8 @@ public final class SnowChunkLoadReconciler {
                 chunkPos.getMiddleBlockPosition(sampleY)
         );
 
-        if (stateService.hasTrackedSnow(tracked)) {
-            if (coldEnough) {
-                CommonSnowBlockFeature.enqueueChunkForSnowApply(chunkPos, currentSeason);
-            } else {
-                CommonSnowBlockFeature.enqueueChunkForSnowMelt(chunkPos, false);
-            }
+        if (stateService.hasTrackedSnow(tracked) && !coldEnough) {
+            CommonSnowBlockFeature.enqueueChunkForSnowMelt(chunkPos, false);
             return;
         }
 

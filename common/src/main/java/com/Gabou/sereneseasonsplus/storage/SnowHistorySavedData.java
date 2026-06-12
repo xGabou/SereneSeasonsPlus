@@ -13,12 +13,14 @@ import java.util.Map;
 public class SnowHistorySavedData extends SavedData {
     private static volatile SnowHistorySavedData INSTANCE;
     public int currentStormId = 0;
+    public int snowSyncGeneration = 0;
     public final Map<Integer, SnowRecord> snowHistory = new HashMap<>();
 
     public static SnowHistorySavedData load(CompoundTag tag) {
         SnowHistorySavedData data = new SnowHistorySavedData();
         if (tag == null) return data;
         data.currentStormId = tag.getInt("CurrentStormId");
+        data.snowSyncGeneration = tag.getInt("SnowSyncGeneration");
         ListTag list = tag.getList("SnowHistory", 10);
         for (int i = 0; i < list.size(); i++) {
             CompoundTag entry = list.getCompound(i);
@@ -32,6 +34,7 @@ public class SnowHistorySavedData extends SavedData {
     @Override
     public CompoundTag save(CompoundTag tag) {
         tag.putInt("CurrentStormId", currentStormId);
+        tag.putInt("SnowSyncGeneration", snowSyncGeneration);
         ListTag list = new ListTag();
         for (Map.Entry<Integer, SnowRecord> e : snowHistory.entrySet()) {
             CompoundTag entry = new CompoundTag();

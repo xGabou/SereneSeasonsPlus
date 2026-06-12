@@ -5,6 +5,7 @@
 
 package com.Gabou.sereneseasonsplus;
 
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
 import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
 import com.Gabou.sereneseasonsplus.features.*;
@@ -13,6 +14,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
@@ -86,6 +88,11 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
         EnvironmentHelper.onServerStarted(event.getServer().getLevel(Level.OVERWORLD));
     }
 
+    @SubscribeEvent
+    public void onRegisterCommands(RegisterCommandsEvent event) {
+        DebugCommands.registerTo(event.getDispatcher());
+    }
+
     /**
      * Client-only setup. Enqueues registration of client UI such as the
      * config screen.
@@ -137,7 +144,9 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
                 SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(),
                 SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get()
         );
-        CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
+        if (CommonSnowBlockFeature.isSnowFeatureEnabled()) {
+            CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
+        }
 
     }
 
@@ -169,35 +178,10 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
     }
 
     /**
-     * When a player breaks a snow block/layer during an active storm, mark the column as destroyed
-     * for this storm so our accumulation logic will not repopulate it until the next storm.
+     * Snow reapplication is driven by per-chunk storm counts, not per-column break tracking.
      */
     @SubscribeEvent
     public void onBlockBreak(BlockEvent.BreakEvent event) {
-        if (!(event.getLevel() instanceof ServerLevel level)) return;
-        if (level.dimension() != Level.OVERWORLD) return;
-
-        BlockPos pos = event.getPos();
-        BlockState state = event.getState();
-        if (!state.is(Blocks.SNOW) && !state.is(Blocks.SNOW_BLOCK)) return;
-
-        com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData sd = com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData.get();
-        int activeId = (sd != null) ? sd.currentStormId : 0;
-        if (activeId <= 0) return; // only track during active storm
-
-        LevelChunk chunk = level.getChunkSource().getChunk(pos.getX() >> 4, pos.getZ() >> 4, false);
-        if (!(chunk instanceof com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk tracked)) return;
-
-        if (tracked.sereneseasonsplus$getDestroyedStormId() != activeId) {
-            tracked.sereneseasonsplus$getDestroyedColumns().clear();
-            tracked.sereneseasonsplus$setDestroyedStormId(activeId);
-        }
-        long xz = (((long) pos.getX()) << 32) ^ (pos.getZ() & 0xffffffffL);
-        tracked.sereneseasonsplus$getDestroyedColumns().add(xz);
-
-        // Remove any tracked snow column entries for this X/Z so sync won't try to re-add this storm
-        tracked.sereneseasonsplus$getSnowColumns().keySet().removeIf(p -> p.getX() == pos.getX() && p.getZ() == pos.getZ());
-        chunk.setUnsaved(true);
     }
 
     private void bootstrapSeasonalTreesFeature() {

@@ -99,7 +99,7 @@ dependencies {
     implementation fg.deobf("curse.maven:embeddium-908741:5681725")
     implementation fg.deobf("curse.maven:chloride-931925:6615986")
     implementation fg.deobf("curse.maven:rubidium-extra-654373:6101745")
-    implementation fg.deobf("curse.maven:gabous-libs-1367332:7512891")
+    implementation fg.deobf("curse.maven:gabous-libs-1367332:8237907")
     runtimeOnly fg.deobf("curse.maven:architectury-api-419699:5137938")
     compileOnly fg.deobf("curse.maven:snow-real-magic-308663:6888541")
     implementation fg.deobf("curse.maven:kiwi-303657:7289940")

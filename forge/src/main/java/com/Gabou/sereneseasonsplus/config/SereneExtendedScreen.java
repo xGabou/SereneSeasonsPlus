@@ -1,5 +1,6 @@
 package com.Gabou.sereneseasonsplus.config;
 
+import com.Gabou.sereneseasonsplus.client.config.SereneExtendedList;
 import net.Gabou.projectatmosphere.ProjectAtmosphere;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;

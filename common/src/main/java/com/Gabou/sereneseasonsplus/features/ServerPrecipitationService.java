@@ -1,6 +1,6 @@
 package com.Gabou.sereneseasonsplus.features;
 
-import com.Gabou.sereneseasonsplus.util.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -14,19 +14,7 @@ public final class ServerPrecipitationService {
     }
 
     public static boolean isDestroyedDuringCurrentStorm(LevelChunk chunk, BlockPos pos) {
-        SnowHistorySavedData savedData = SnowHistorySavedData.get();
-        int activeStormId = savedData != null ? savedData.currentStormId : 0;
-        if (activeStormId <= 0 || !(chunk instanceof ISnowTrackedChunk tracked)) {
-            return false;
-        }
-
-        if (tracked.sereneseasonsplus$getDestroyedStormId() != activeStormId) {
-            tracked.sereneseasonsplus$getDestroyedColumns().clear();
-            tracked.sereneseasonsplus$setDestroyedStormId(activeStormId);
-        }
-
-        long xz = (((long) pos.getX()) << 32) ^ (pos.getZ() & 0xFFFFFFFFL);
-        return tracked.sereneseasonsplus$getDestroyedColumns().contains(xz);
+        return false;
     }
 
     public static boolean canPlaceSnowWithoutReplacingImportant(ServerLevel level, BlockPos pos, BlockState newState) {

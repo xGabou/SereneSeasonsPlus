@@ -16,7 +16,10 @@ public final class VanillaSnowBlockCompatibility implements SnowBlockCompatibili
 
     @Override
     public boolean isManagedIce(BlockState state) {
-        return state.is(Blocks.ICE) || state.is(Blocks.FROSTED_ICE);
+        return state.is(Blocks.ICE)
+                || state.is(Blocks.FROSTED_ICE)
+                || state.is(Blocks.PACKED_ICE)
+                || state.is(Blocks.BLUE_ICE);
     }
 
     @Override
