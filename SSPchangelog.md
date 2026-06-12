@@ -1,27 +1,27 @@
-# Serene Seasons Plus v5.1.0
+# Serene Seasons Plus v5.1.1 -> 1.20.1 & 1.21.1 
+## Added
 
-## Highlights
+- Snow can now land on leaf canopies instead of only appearing underneath trees.
+- Ice is now included in SSP snow processing, including melt handling.
+- Storm application now tracks how many storms a chunk has already received instead of relying on destroyed-column reapply checks.
 
-- Snow updates should now appear much faster when chunks load or seasons change.
-- Snow placement is safer around important blocks.
-- Winter snow can still cover natural ground clutter like grass, tall grass, flowers, ferns, and leaf litter.
-- Grass and flower regrowth is more natural and no longer only brings back dandelions.
+## Changed
+
+- Snow placement now uses the real top surface, including leaves, for column sampling.
+- Snow under leaves is no longer treated as exposed sky for placement and melt logic.
+- Snow and ice melt checks are stricter and now avoid thawing ice during snowy season cold conditions.
+- Chunk snow application now follows the server storm count rather than re-evaluating whether a chunk has the “right” snow amount.
+- Active player-driven melt and chunk melt passes now use the same ice-handling rules.
 
 ## Fixed
 
-- Snow should no longer delete important blocks such as rails, buttons, levers, and carpets.
-- Improved snow replacement behavior so natural plants can be covered by snow without breaking protected blocks.
-- Fixed the old Snow Real Magic compatibility path that could prevent normal snow logic from running correctly.
-- Improved Better Days compatibility messaging so users know when SSP is changing Better Days time speeds.
+- Snow no longer fails to appear on leaf tops.
+- Snow on leaves now melts normally when it should.
+- Ice no longer gets processed as if it were hidden snow under a roof.
+- Winter ice should no longer slowly melt from the old heat-like fallback behavior.
 
-## Improved
+## Removed
 
-- Snow processing is now much more responsive without trying to do all work in one laggy tick.
-- Chunk loading snow sync is faster and should feel closer to instant.
-- Performance handling for snow replacement and melting has been smoothed out.
-- Shared Fabric and NeoForge screens were cleaned up, reducing duplicate code and future maintenance issues.
+- Removed the old destroyed-column reapply behavior from snow placement and precipitation handling.
+- Removed the old “did the player break this exact column” gating from storm reapplication.
 
-## Notes
-
-- Better Days dynamic time compatibility is now clearly exposed as a config option.
-- On newer versions, Better Days' own seasonal time system is preferred when available.
