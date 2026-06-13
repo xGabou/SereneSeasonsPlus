@@ -5,8 +5,8 @@ import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
 import net.Gabou.gaboulibs.storage.SnowRecord;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import net.Gabou.gaboulibs.util.SnowGenerator;
-import net.Gabou.projectatmosphere.manager.ForecastOrchestrator;
-import net.Gabou.projectatmosphere.util.RegionInstanceKey;
+import net.Gabou.projectatmosphere.api.Celsius;
+import net.Gabou.projectatmosphere.api.ForecastSampling;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import sereneseasons.season.SeasonHooks;
@@ -28,11 +28,9 @@ public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
                     ? CommonSnowBlockFeature.calculateBlocksToReplace(temperature)
                     : 0;
         } else {
-            float temperature = ForecastOrchestrator.getCurrentTemperature(RegionInstanceKey.from(playerPos),
-                    level.getDayTime()
-            );
-            return temperature >= 0.5F
-                    ? CommonSnowBlockFeature.calculateBlocksToReplace1(temperature)
+            Celsius temperature = ForecastSampling.isColdEnoughForSnow(level, playerPos);
+            return temperature.isColdEnoughForSnow()
+                    ? CommonSnowBlockFeature.calculateBlocksToReplace1((float)temperature.temperature())
                     : -level.random.nextInt(2, 6);
         }
     }
@@ -42,11 +40,7 @@ public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
         if (!SereneSeasonsPlusForge.isProjectAtmosphereLoaded) {
             return SeasonHooks.coldEnoughToSnowSeasonal(level, pos);
         } else {
-            float temperature = ForecastOrchestrator.getCurrentTemperature(
-                    RegionInstanceKey.from(pos),
-                    level.getDayTime()
-            );
-            return temperature < 0.5F;
+            return ForecastSampling.isColdEnoughForSnow(level, pos).isColdEnoughForSnow();
         }
     }
 

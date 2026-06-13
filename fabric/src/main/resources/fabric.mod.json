@@ -34,7 +34,6 @@
   },
 
   "suggests": {
-    "modmenu": ">=7.0.0",
-    "projectatmosphere": ">=0.9.0.0"
+    "modmenu": ">=7.0.0"
   }
 }
