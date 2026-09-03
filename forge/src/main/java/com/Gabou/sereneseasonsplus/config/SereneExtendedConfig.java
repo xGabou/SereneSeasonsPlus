@@ -17,6 +17,8 @@ public class SereneExtendedConfig {
     public static final ForgeConfigSpec.BooleanValue GRASS_FLOWER_GROWTH_ENABLED;
     public static final ForgeConfigSpec.BooleanValue REAL_TIME_CANADIAN_SEASONS;
     public static final ForgeConfigSpec.BooleanValue ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_BETTER_DAYS_SLEEP_WAKE_TIME_FIX;
+    public static final ForgeConfigSpec.IntValue BETTER_DAYS_SLEEP_WAKE_TIME;
 
 
     public static final int MIN_CORES_FOR_ASYNC = 6;
@@ -64,6 +66,12 @@ public class SereneExtendedConfig {
         ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT = builder
                 .comment("Enable Better Days time-speed compatibility so Serene Seasons Plus can adjust day and night speeds dynamically.")
                 .define("enableBetterDaysDynamicTimeCompat", true);
+        ENABLE_BETTER_DAYS_SLEEP_WAKE_TIME_FIX = builder
+                .comment("When Better Days finishes a sleep cycle, set the wake-up time to betterDaysSleepWakeTime. This does not change Better Days dayStart/nightStart speed boundaries.")
+                .define("enableBetterDaysSleepWakeTimeFix", true);
+        BETTER_DAYS_SLEEP_WAKE_TIME = builder
+                .comment("Minecraft time of day to use after a Better Days sleep cycle. 1000 is 7:00 AM.")
+                .defineInRange("betterDaysSleepWakeTime", 1000, 0, 23999);
 
         CUSTOM_CYCLE_LENGTH = builder
                 .comment("If true, the day and night lengths will be determined by the custom values set below. If false, the day and night lengths will be determined by the season.")
