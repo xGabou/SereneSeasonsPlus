@@ -23,10 +23,13 @@ public class SereneExtendedScreen extends Screen {
     private EditBox dayLengthBox;
 
     private EditBox nightLengthBox;
+    private EditBox betterDaysSleepWakeTimeBox;
 
     private boolean seasonalDaylightCycle;
 
     private boolean betterDaysDynamicTimeCompat;
+    private boolean betterDaysSleepWakeTimeFix;
+    private int betterDaysSleepWakeTime;
 
     private boolean customDayCycle;
 
@@ -64,6 +67,8 @@ public class SereneExtendedScreen extends Screen {
         this.maxSnowHeight = SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get();
         this.seasonalDaylightCycle = SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get();
         this.betterDaysDynamicTimeCompat = SereneExtendedConfig.ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.get();
+        this.betterDaysSleepWakeTimeFix = SereneExtendedConfig.ENABLE_BETTER_DAYS_SLEEP_WAKE_TIME_FIX.get();
+        this.betterDaysSleepWakeTime = SereneExtendedConfig.BETTER_DAYS_SLEEP_WAKE_TIME.get();
         this.customDayCycle = SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get();
         this.customDayLength = SereneExtendedConfig.CUSTOM_DAY_LENGTH.get();
         this.customNightLength = SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get();
@@ -103,6 +108,12 @@ public class SereneExtendedScreen extends Screen {
         }).bounds(0,0,200,20).build();
         this.list.addRow(Component.literal("Better Days Time Compat"), betterDaysCompatBtn);
 
+        var betterDaysWakeTimeFixBtn = Button.builder(toggleLabel("Better Days Wake Time Fix", betterDaysSleepWakeTimeFix), b -> {
+            betterDaysSleepWakeTimeFix = !betterDaysSleepWakeTimeFix;
+            b.setMessage(toggleLabel("Better Days Wake Time Fix", betterDaysSleepWakeTimeFix));
+        }).bounds(0,0,200,20).build();
+        this.list.addRow(Component.literal("Better Days Wake Time Fix"), betterDaysWakeTimeFixBtn);
+
         var grassFlowerBtn = Button.builder(toggleLabel("Grass and Flower Growth", grassFlowerGrowth), b -> {
             grassFlowerGrowth = !grassFlowerGrowth;
             b.setMessage(toggleLabel("Grass and Flower Growth", grassFlowerGrowth));
@@ -137,6 +148,10 @@ public class SereneExtendedScreen extends Screen {
         this.dayLengthBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
         this.dayLengthBox.setValue(Double.toString(customDayLength));
         this.list.addRow(Component.literal("Custom Day Speed"), this.dayLengthBox);
+
+        this.betterDaysSleepWakeTimeBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
+        this.betterDaysSleepWakeTimeBox.setValue(Integer.toString(betterDaysSleepWakeTime));
+        this.list.addRow(Component.literal("Better Days Wake Time"), this.betterDaysSleepWakeTimeBox);
 
 
         this.addRenderableWidget(
@@ -180,6 +195,7 @@ public class SereneExtendedScreen extends Screen {
         int parsedSnowHeight = this.maxSnowHeight;
         double parsed3 = this.customDayLength;
         double parsed4 = this.customNightLength;
+        int parsedWakeTime = this.betterDaysSleepWakeTime;
 
 
         try {
@@ -197,11 +213,23 @@ public class SereneExtendedScreen extends Screen {
         } catch (NumberFormatException ignored) {
             errorMessage = Component.literal("Invalid number for one of the DayCycle Speeds.");
         }
+        try {
+            parsedWakeTime = Integer.parseInt(this.betterDaysSleepWakeTimeBox.getValue());
+            if (parsedWakeTime < 0 || parsedWakeTime > 23999) {
+                throw new NumberFormatException();
+            }
+            errorMessage = null;
+        } catch (NumberFormatException ignored) {
+            errorMessage = Component.literal("Better Days wake time must be between 0 and 23999.");
+        }
+        this.betterDaysSleepWakeTime = parsedWakeTime;
         SereneExtendedConfig.TICK_SNOW_REPLACER.set(parsed2);
         SereneExtendedConfig.SNOWSTORM_ENABLED.set(snowFeatureEnabled);
         SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.set(parsedSnowHeight);
         SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.set(seasonalDaylightCycle);
         SereneExtendedConfig.ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.set(betterDaysDynamicTimeCompat);
+        SereneExtendedConfig.ENABLE_BETTER_DAYS_SLEEP_WAKE_TIME_FIX.set(betterDaysSleepWakeTimeFix);
+        SereneExtendedConfig.BETTER_DAYS_SLEEP_WAKE_TIME.set(parsedWakeTime);
         SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.set(customDayCycle);
         SereneExtendedConfig.CUSTOM_DAY_LENGTH.set(parsed3);
         SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.set(parsed4);
@@ -240,6 +268,8 @@ public class SereneExtendedScreen extends Screen {
         cfg.set("seasonSync.realTimeCanadianSeasons", realTimeCanadianSeasons);
         cfg.set("seasonalDaylightCycle.enableSeasonalDaylightCycle", seasonalDaylightCycle);
         cfg.set("seasonalDaylightCycle.enableBetterDaysDynamicTimeCompat", betterDaysDynamicTimeCompat);
+        cfg.set("seasonalDaylightCycle.enableBetterDaysSleepWakeTimeFix", betterDaysSleepWakeTimeFix);
+        cfg.set("seasonalDaylightCycle.betterDaysSleepWakeTime", betterDaysSleepWakeTime);
         cfg.set("seasonalDaylightCycle.customCycleLength", customDayCycle);
         cfg.set("seasonalDaylightCycle.customDayLength", customDayLength);
         cfg.set("seasonalDaylightCycle.customNightLength", customNightLength);
@@ -276,6 +306,7 @@ public class SereneExtendedScreen extends Screen {
         if (this.maxSnowHeightBox   != null && this.maxSnowHeightBox.keyPressed(key, sc, mods)) return true;
         if (this.nightLengthBox != null && this.nightLengthBox.keyPressed(key, sc, mods)) return true;
         if (this.dayLengthBox   != null && this.dayLengthBox.keyPressed(key, sc, mods)) return true;
+        if (this.betterDaysSleepWakeTimeBox != null && this.betterDaysSleepWakeTimeBox.keyPressed(key, sc, mods)) return true;
 
         return super.keyPressed(key, sc, mods);
     }
@@ -291,6 +322,7 @@ public class SereneExtendedScreen extends Screen {
         if (this.maxSnowHeightBox   != null && this.maxSnowHeightBox.charTyped(c, mods)) return true;
         if (this.nightLengthBox != null && this.nightLengthBox.charTyped(c, mods)) return true;
         if (this.dayLengthBox   != null && this.dayLengthBox.charTyped(c, mods)) return true;
+        if (this.betterDaysSleepWakeTimeBox != null && this.betterDaysSleepWakeTimeBox.charTyped(c, mods)) return true;
 
         return super.charTyped(c, mods);
     }

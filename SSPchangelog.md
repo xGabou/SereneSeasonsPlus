@@ -1,3 +1,9 @@
+# Serene Seasons Plus v5.1.2 -> NeoForge 1.21.1
+
+## Fixed
+
+- Fixed Better Days sleep cycles waking players at an incorrect time. SSP now applies a configurable wake time of 1000 (7:00 AM) after Better Days completes sleep.
+
 # Serene Seasons Plus v5.1.1 -> 1.20.1 & 1.21.1 
 ## Added
 
