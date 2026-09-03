@@ -2,6 +2,10 @@ include("common", "neoforge", "fabric")
 pluginManagement.repositories {
     gradlePluginPortal()
     maven {
+        name = "FirstDark"
+        url = "https://maven.firstdark.dev/releases"
+    }
+    maven {
         name = "Fabric"
         url = "https://maven.fabricmc.net/"
     }
