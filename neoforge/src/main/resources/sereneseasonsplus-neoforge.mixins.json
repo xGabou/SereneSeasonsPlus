@@ -1,0 +1,12 @@
+{
+  "required": false,
+  "package": "com.Gabou.sereneseasonsplus.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "BetterDaysSleepWakeTimeMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8.4"
+}

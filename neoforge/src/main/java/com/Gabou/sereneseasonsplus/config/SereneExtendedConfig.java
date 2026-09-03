@@ -15,6 +15,8 @@ public class SereneExtendedConfig {
     public static final ModConfigSpec.IntValue TICK_SNOW_REPLACER;
     public static final ModConfigSpec.BooleanValue ENABLE_SEASONAL_DAYLIGHT_CYCLE;
     public static final ModConfigSpec.BooleanValue ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT;
+    public static final ModConfigSpec.BooleanValue ENABLE_BETTER_DAYS_SLEEP_WAKE_TIME_FIX;
+    public static final ModConfigSpec.IntValue BETTER_DAYS_SLEEP_WAKE_TIME;
     public static final ModConfigSpec.DoubleValue CUSTOM_DAY_LENGTH;
     public static final ModConfigSpec.DoubleValue CUSTOM_NIGHT_LENGTH;
     public static final ModConfigSpec.BooleanValue CUSTOM_CYCLE_LENGTH;
@@ -63,6 +65,12 @@ public class SereneExtendedConfig {
         ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT = builder
                 .comment("Allow Serene Seasons Plus to update Better Days daySpeed/nightSpeed at runtime using reflection. Disable this if you want Better Days to fully own time speed behavior.")
                 .define("enableBetterDaysDynamicTimeCompat", true);
+        ENABLE_BETTER_DAYS_SLEEP_WAKE_TIME_FIX = builder
+                .comment("When Better Days finishes a sleep cycle, set the wake-up time to betterDaysSleepWakeTime. This does not change Better Days dayStart/nightStart speed boundaries.")
+                .define("enableBetterDaysSleepWakeTimeFix", true);
+        BETTER_DAYS_SLEEP_WAKE_TIME = builder
+                .comment("Minecraft time of day to use after a Better Days sleep cycle. 1000 is 7:00 AM.")
+                .defineInRange("betterDaysSleepWakeTime", 1000, 0, 23999);
 
         CUSTOM_CYCLE_LENGTH = builder
                 .comment("If true, the day and night lengths will be determined by the custom values set below. If false, the day and night lengths will be determined by the season.")
