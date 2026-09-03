@@ -140,7 +140,7 @@ if (curseForgeToken) {
         setLoaders("forge")
         setCurseEnvironment("both")
         getJavaVersions().set([JavaVersion.VERSION_17])
-        setArtifact(file("build/libs/${archivesBaseName}-${version}.jar"))
+        setArtifact(file("build/libs/${archivesBaseName}-${project.version}.jar"))
     }
 } else {
     project.logger.lifecycle("CURSEFORGE_TOKEN not set; CurseForge upload tasks will be disabled.")
