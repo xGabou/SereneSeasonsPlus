@@ -11,6 +11,10 @@ pluginManagement {
             url = "https://maven.minecraftforge.net"
         }
         maven {
+            name = "FirstDark"
+            url = "https://maven.firstdark.dev/releases"
+        }
+        maven {
             name = "Sponge Snapshots"
             url = "https://repo.spongepowered.org/repository/maven-public/"
         }
