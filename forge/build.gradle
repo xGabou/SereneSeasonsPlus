@@ -135,9 +135,10 @@ curseforge {
         id = "1288843"
         changelog = rootProject.file("SSPchangelog.md")
         releaseType = "release" // options: alpha, beta, release
-        addGameVersion "1.20.1"
-        addGameVersion "Forge"
-        mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {
+            addGameVersion "1.20.1"
+            addGameVersion "Forge"
+            addGameVersion "Java 17"
+            mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {
             displayName = "Forge-${version}"
         }
     }
