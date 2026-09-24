@@ -1,7 +1,7 @@
 plugins {
     id "fabric-loom" version "1.16.1"
     id "com.modrinth.minotaur"
-    id 'com.matthewprenger.cursegradle' version '1.4.0' // CurseForge uploader
+    id 'com.hypherionmc.modutils.modpublisher' version '2.1.8'
 }
 
 def fabricUploadJar = tasks.named("remapJar").flatMap { it.archiveFile }
@@ -107,18 +107,24 @@ modrinth {
     }
     uploadFile = fabricUploadJar.get().asFile
 }
-curseforge {
-    apiKey = System.getenv("CURSEFORGE_TOKEN")
-
-    project {
-        id = "1288843"
-        changelog = rootProject.file("SSPchangelog.md")
-        releaseType = "release" // options: alpha, beta, release
-        addGameVersion "1.21.1"
-        addGameVersion "Fabric"
-        mainArtifact(fabricUploadJar.get().asFile) {
-            displayName = "Fabric-${version}"
-        }
+def curseForgeToken = System.getenv("CURSEFORGE_TOKEN")?.trim()
+if (curseForgeToken) {
+    publisher {
+        apiKeys { curseforge curseForgeToken }
+        setCurseID("1288843")
+        setVersionType("release")
+        setChangelog(rootProject.file("SSPchangelog.md"))
+        setDisplayName("Fabric-${project.version}")
+        setGameVersions("1.21.1")
+        setLoaders("fabric")
+        setCurseEnvironment("both")
+        getJavaVersions().set([JavaVersion.VERSION_21])
+        setArtifact(fabricUploadJar.get().asFile)
     }
+} else {
+    project.logger.lifecycle("CURSEFORGE_TOKEN not set; CurseForge upload tasks will be disabled.")
+    tasks.named("publishCurseforge").configure { enabled = false }
 }
+
+tasks.named("publishCurseforge").configure { dependsOn("build") }
 
