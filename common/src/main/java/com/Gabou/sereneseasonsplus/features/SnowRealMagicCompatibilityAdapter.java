@@ -70,7 +70,8 @@ final class SnowRealMagicCompatibilityAdapter {
                                           BlockPos pos,
                                           BlockState state,
                                           int targetLayers,
-                                          boolean allowPlace) {
+                                          boolean allowPlace,
+                                          int flags) {
         if (!isAvailable()) {
             return null;
         }
@@ -79,15 +80,15 @@ final class SnowRealMagicCompatibilityAdapter {
         }
         int maxLayers = isManagedSnow(state) ? getMaxManagedLayers(level, pos, state) : 8;
         int clampedLayers = Mth.clamp(targetLayers, 1, Math.max(1, maxLayers));
-        return new SnowRealMagicLayerMutation(pos.immutable(), clampedLayers, allowPlace, this);
+        return new SnowRealMagicLayerMutation(pos.immutable(), clampedLayers, allowPlace, flags, this);
     }
 
     @Nullable
-    SnowWorldMutation createClearMutation(BlockPos pos, BlockState state, boolean toWater) {
+    SnowWorldMutation createClearMutation(BlockPos pos, BlockState state, boolean toWater, int flags) {
         if (!isManagedSnow(state) || toWater) {
             return null;
         }
-        return new SnowRealMagicClearMutation(pos.immutable(), this);
+        return new SnowRealMagicClearMutation(pos.immutable(), flags, this);
     }
 
     private boolean canContainState(BlockState state) {
@@ -214,6 +215,7 @@ final class SnowRealMagicCompatibilityAdapter {
     private record SnowRealMagicLayerMutation(BlockPos key,
                                               int targetLayers,
                                               boolean allowPlace,
+                                              int flags,
                                               SnowRealMagicCompatibilityAdapter adapter) implements SnowWorldMutation {
         @Override
         public boolean apply(ServerLevel level) {
@@ -232,11 +234,12 @@ final class SnowRealMagicCompatibilityAdapter {
             if (currentLayers == clampedTarget && adapter.isManagedSnow(current)) {
                 return false;
             }
-            return adapter.convert(level, key, current, clampedTarget, Block.UPDATE_CLIENTS);
+            return adapter.convert(level, key, current, clampedTarget, flags);
         }
     }
 
     private record SnowRealMagicClearMutation(BlockPos key,
+                                              int flags,
                                               SnowRealMagicCompatibilityAdapter adapter) implements SnowWorldMutation {
         @Override
         public boolean apply(ServerLevel level) {
@@ -248,7 +251,7 @@ final class SnowRealMagicCompatibilityAdapter {
             BlockState next = layers > 1
                     ? adapter.decreaseLayer(current, level, key)
                     : adapter.getRawState(current, level, key);
-            return level.setBlock(key, next, Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
+            return level.setBlock(key, next, flags);
         }
     }
 }

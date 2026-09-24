@@ -13,13 +13,16 @@ public interface SnowWorldMutation {
         return key();
     }
 
-    static SnowWorldMutation setBlock(BlockPos pos, BlockState state, int flags) {
-        return new SetBlockMutation(pos.immutable(), state, flags);
+    static SnowWorldMutation setBlockIfStateMatches(BlockPos pos, BlockState expectedState, BlockState state, int flags) {
+        return new SetBlockMutation(pos.immutable(), expectedState, state, flags);
     }
 
-    record SetBlockMutation(BlockPos key, BlockState state, int flags) implements SnowWorldMutation {
+    record SetBlockMutation(BlockPos key, BlockState expectedState, BlockState state, int flags) implements SnowWorldMutation {
         @Override
         public boolean apply(ServerLevel level) {
+            if (expectedState != null && !level.getBlockState(key).equals(expectedState)) {
+                return false;
+            }
             return level.setBlock(key, state, flags);
         }
     }

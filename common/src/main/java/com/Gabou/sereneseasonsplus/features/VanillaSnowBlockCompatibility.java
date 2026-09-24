@@ -24,8 +24,7 @@ public final class VanillaSnowBlockCompatibility implements SnowBlockCompatibili
 
     @Override
     public boolean isReplaceableForSnow(BlockState state) {
-        return state.is(SSPTags.Blocks.SNOW_REPLACEABLE)
-                || CommonSnowBlockFeature.isSnowReplaceableGroundCover(state);
+        return state.is(SSPTags.Blocks.SNOW_REPLACEABLE);
     }
 
     @Override

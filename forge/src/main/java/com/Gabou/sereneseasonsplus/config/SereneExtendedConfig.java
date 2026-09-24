@@ -1,7 +1,12 @@
 package com.Gabou.sereneseasonsplus.config;
 
+import com.Gabou.sereneseasonsplus.SereneSeasonPlusCommon;
 import net.minecraftforge.common.ForgeConfigSpec;
+import sereneseasons.api.season.Season;
 
+import java.util.EnumMap;
+import java.util.Locale;
+import java.util.Map;
 
 public class SereneExtendedConfig {
 
@@ -17,6 +22,8 @@ public class SereneExtendedConfig {
     public static final ForgeConfigSpec.BooleanValue GRASS_FLOWER_GROWTH_ENABLED;
     public static final ForgeConfigSpec.BooleanValue REAL_TIME_CANADIAN_SEASONS;
     public static final ForgeConfigSpec.BooleanValue ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT;
+    private static final Map<Season.SubSeason, ForgeConfigSpec.DoubleValue> SEASONAL_DAY_SPEEDS = new EnumMap<>(Season.SubSeason.class);
+    private static final Map<Season.SubSeason, ForgeConfigSpec.DoubleValue> SEASONAL_NIGHT_SPEEDS = new EnumMap<>(Season.SubSeason.class);
 
 
     public static final int MIN_CORES_FOR_ASYNC = 6;
@@ -74,10 +81,31 @@ public class SereneExtendedConfig {
         CUSTOM_NIGHT_LENGTH = builder
                 .comment("Custom night length in ticks. Only used if seasonal daylight cycle is disabled.")
                 .defineInRange("customNightLength", 1, 0.05, 100);
+        builder.push("seasonalSpeeds");
+        for (Season.SubSeason subSeason : Season.SubSeason.values()) {
+            SereneSeasonPlusCommon.TimeSpeeds defaults = SereneSeasonPlusCommon.getDefaultTimeSpeeds(subSeason);
+            String key = subSeason.name().toLowerCase(Locale.ROOT);
+            SEASONAL_DAY_SPEEDS.put(subSeason, builder
+                    .comment("Day speed multiplier for " + key + ". Lower values make days longer; higher values make them shorter.")
+                    .defineInRange(key + "DaySpeed", defaults.daySpeed(), 0.05, 100));
+            SEASONAL_NIGHT_SPEEDS.put(subSeason, builder
+                    .comment("Night speed multiplier for " + key + ". Lower values make nights longer; higher values make them shorter.")
+                    .defineInRange(key + "NightSpeed", defaults.nightSpeed(), 0.05, 100));
+        }
+        builder.pop();
         builder.pop();
         COMMON_SPEC = builder.build();
     }
 
     public static final ForgeConfigSpec COMMON_SPEC;
+
+    public static SereneSeasonPlusCommon.TimeSpeeds getSeasonalTimeSpeeds(Season.SubSeason subSeason) {
+        ForgeConfigSpec.DoubleValue daySpeed = SEASONAL_DAY_SPEEDS.get(subSeason);
+        ForgeConfigSpec.DoubleValue nightSpeed = SEASONAL_NIGHT_SPEEDS.get(subSeason);
+        if (daySpeed == null || nightSpeed == null) {
+            return SereneSeasonPlusCommon.getDefaultTimeSpeeds(subSeason);
+        }
+        return new SereneSeasonPlusCommon.TimeSpeeds(daySpeed.get(), nightSpeed.get());
+    }
 }
 

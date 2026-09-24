@@ -24,14 +24,19 @@ public class ForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandler {
     public int getBlocksToReplace(ServerLevel level, BlockPos playerPos) {
         if (!SereneSeasonsPlusForge.isProjectAtmosphereLoaded) {
             float temperature = SeasonHooks.getBiomeTemperature(level, level.getBiome(playerPos), playerPos);
-            return SeasonHooks.coldEnoughToSnowSeasonal(level, playerPos)
-                    ? CommonSnowBlockFeature.calculateBlocksToReplace(temperature)
-                    : 0;
+            boolean coldEnough = SeasonHooks.coldEnoughToSnowSeasonal(level, playerPos);
+            if (coldEnough) {
+                return EnvironmentHelper.isRainning(level, playerPos) ? -1 : 0;
+            }
+            return CommonSnowBlockFeature.calculateBlocksToReplace(temperature);
         } else {
             Celsius temperature = ForecastSampling.isColdEnoughForSnow(level, playerPos);
-            return temperature.isColdEnoughForSnow()
-                    ? CommonSnowBlockFeature.calculateBlocksToReplace1((float)temperature.temperature())
-                    : -level.random.nextInt(2, 6);
+            if (temperature.isColdEnoughForSnow()) {
+                return EnvironmentHelper.isRainning(level, playerPos)
+                        ? -level.random.nextInt(2, 6)
+                        : 0;
+            }
+            return CommonSnowBlockFeature.calculateBlocksToReplace1((float) temperature.temperature());
         }
     }
 

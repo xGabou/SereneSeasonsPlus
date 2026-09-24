@@ -24,6 +24,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.event.level.BlockEvent;
@@ -54,6 +55,7 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
             EnvironmentHelper.initRainHandler(new ProjectAtmosphereRainHandler());
         }
         context.registerConfig(ModConfig.Type.COMMON, SereneExtendedConfig.COMMON_SPEC);
+        context.getModEventBus().addListener(this::onConfigReload);
         if(!isProjectAtmosphereLoaded) {
             SeasonChangeEvent.register();
         }
@@ -142,7 +144,8 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
                 SereneExtendedConfig.ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.get(),
                 SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(),
                 SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(),
-                SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get()
+                SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get(),
+                SereneExtendedConfig::getSeasonalTimeSpeeds
         );
         if (CommonSnowBlockFeature.isSnowFeatureEnabled()) {
             CommonSnowBlockFeature.handleServerTick(level.getServer(), level);
@@ -150,21 +153,14 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
 
     }
 
-    /**
-     * Placeholder: reserved for config reload tick hook if needed.
-     * Currently unused.
-     *
-     * @param event server tick event
-     */
-    @SubscribeEvent
-    public void onConfigReload(TickEvent.ServerTickEvent event) {
+    private void onConfigReload(ModConfigEvent.Reloading event) {
         CommonSnowBlockFeature.onConfigReload(SereneExtendedConfig.TICK_SNOW_REPLACER.get(), SereneExtendedConfig.SNOWSTORM_ENABLED.get(), SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get());
         SereneService.reloadConfig();
     }
 
 
     /**
-     * Queues chunk processing when chunks load (e.g., as players move),
+     * Reconciles SSP-owned snow when chunks load (e.g., as players move),
      * so snow/ice are cleared or accelerated-melted immediately without rejoining.
      */
     @SubscribeEvent
@@ -173,7 +169,7 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
         var level = chunk.getLevel();
         if (level.isClientSide()) return;
         if (level.dimension() != Level.OVERWORLD) return;
-        // Cache surface height only; no enqueue to avoid dual input
+        // Reconcile before the chunk is sent to clients
         CommonSnowBlockFeature.handleOnChunkLoad(chunk);
     }
 

@@ -1,7 +1,7 @@
 plugins {
     id "net.minecraftforge.gradle" version "[6.0.16,6.2)"
     id "org.spongepowered.mixin" version "0.7.+"
-    id 'com.matthewprenger.cursegradle' version '1.4.0' // CurseForge uploader
+    id 'com.hypherionmc.modutils.modpublisher' version '2.1.8'
     id "com.modrinth.minotaur"
 }
 
@@ -127,18 +127,32 @@ modrinth {
     }
     uploadFile = file("build/libs/${archivesBaseName}-${version}.jar")
 }
-curseforge {
-    apiKey = System.getenv("CURSEFORGE_TOKEN")
-
-    project {
-        id = "1288843"
-        changelog = rootProject.file("SSPchangelog.md")
-        releaseType = "release" // options: alpha, beta, release
-        addGameVersion "1.20.1"
-        addGameVersion "Forge"
-        mainArtifact(file("build/libs/${archivesBaseName}-${version}.jar")) {
-            displayName = "Forge-${version}"
-        }
+def forgeUploadJar = tasks.named("jar", Jar).flatMap { it.archiveFile }
+def curseForgeToken = System.getenv("CURSEFORGE_TOKEN")?.trim()
+if (curseForgeToken) {
+    publisher {
+        apiKeys { curseforge curseForgeToken }
+        setCurseID("1288843")
+        setVersionType("release")
+        setChangelog(rootProject.file("SSPchangelog.md"))
+        setDisplayName("Forge-${project.version}")
+        setGameVersions("1.20.1")
+        setLoaders("forge")
+        setCurseEnvironment("both")
+        getJavaVersions().set([JavaVersion.VERSION_17])
+        setArtifact(forgeUploadJar.get().asFile)
+        setDebug(providers.gradleProperty("publisherDebug").map { it.toBoolean() }.orElse(false).get())
     }
+} else {
+    project.logger.lifecycle("CURSEFORGE_TOKEN not set; CurseForge upload tasks will be disabled.")
+    tasks.named("publishCurseforge").configure { enabled = false }
+}
+
+tasks.named("publishCurseforge").configure { dependsOn("build") }
+tasks.register("curseforge1288843") {
+    group = "publishing"
+    description = "Publishes the Forge release to CurseForge project 1288843."
+    dependsOn("publishCurseforge")
+    enabled = curseForgeToken != null
 }
 

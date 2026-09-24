@@ -1,6 +1,7 @@
 package com.Gabou.sereneseasonsplus.mixin;
 
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
+import com.Gabou.sereneseasonsplus.features.ServerPrecipitationService;
 import com.Gabou.sereneseasonsplus.features.logic.SnowChunkWeatherLogic;
 import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
@@ -265,12 +266,7 @@ public class ServerLevelMixin {
             return false;
         }
 
-        // Let vanilla handle it when not skipping
-        boolean result = level.setBlockAndUpdate(pos, state);
-        if (result) {
-            CommonSnowBlockFeature.accumulateColumnUpdate(level, pos, state);
-        }
-        return result;
+        return ServerPrecipitationService.setBlockAndTrackSnow(level, pos, state);
     }
 
 

@@ -29,6 +29,9 @@ public final class ServerPrecipitationService {
     }
 
     public static boolean setBlockAndTrackSnow(ServerLevel level, BlockPos pos, BlockState state) {
+        if (!canPlaceSnowWithoutReplacingImportant(level, pos, state)) {
+            return false;
+        }
         boolean result = level.setBlockAndUpdate(pos, state);
         if (result) {
             CommonSnowBlockFeature.accumulateColumnUpdate(level, pos, state);
