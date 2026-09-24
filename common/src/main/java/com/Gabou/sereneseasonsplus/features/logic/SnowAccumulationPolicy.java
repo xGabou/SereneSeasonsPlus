@@ -20,7 +20,7 @@ public final class SnowAccumulationPolicy {
 
     public enum Reason {
         NONE,
-        LOAD_RESTORE_TRACKED,
+        SNOW_SYNC_GENERATION_CHANGED,
         STORM_COUNT_CHANGED,
         ACTIVE_STORM_PROGRESS,
         BASELINE_DEFICIT,
@@ -83,16 +83,15 @@ public final class SnowAccumulationPolicy {
                 return new ChunkDecision(Action.APPLY, false, Reason.ACTIVE_STORM_PROGRESS);
             }
 
+            boolean snowSyncRequired = tracked.sereneseasonsplus$getSnowSyncGeneration()
+                    != CommonSnowBlockFeature.getSnowSyncGeneration();
+            if (snowSyncRequired && savedData != null && !savedData.snowHistory.isEmpty()) {
+                return new ChunkDecision(Action.APPLY, false, Reason.SNOW_SYNC_GENERATION_CHANGED);
+            }
+
             int serverStormCount = CommonSnowBlockFeature.HANDLER.getSnowStormsThisWinter(level);
             if (serverStormCount > tracked.sereneseasonsplus$getAppliedStormCount()) {
                 return new ChunkDecision(Action.APPLY, false, Reason.STORM_COUNT_CHANGED);
-            }
-
-            boolean snowSyncRequired = isLoadEvent
-                    && tracked.sereneseasonsplus$getSnowSyncGeneration()
-                    != CommonSnowBlockFeature.getSnowSyncGeneration();
-            if (snowSyncRequired && savedData != null && !savedData.snowHistory.isEmpty()) {
-                return new ChunkDecision(Action.APPLY, false, Reason.LOAD_RESTORE_TRACKED);
             }
 
             return ChunkDecision.none();

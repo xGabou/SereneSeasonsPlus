@@ -14,7 +14,7 @@ public final class SnowLogic {
 
     private SnowLogic() {}
 
-    public static void evaluate(ServerLevel level,
+    public static SnowAccumulationPolicy.ChunkDecision evaluate(ServerLevel level,
                                 Season.SubSeason currentSeason,
                                 ISeasonState seasonState,
                                 ISnowTrackedChunk tracked,
@@ -35,9 +35,14 @@ public final class SnowLogic {
         );
 
         if (decision.action() == SnowAccumulationPolicy.Action.APPLY) {
-            CommonSnowBlockFeature.enqueueChunkForSnowApply(chunkPos, currentSeason);
+            CommonSnowBlockFeature.enqueueChunkForSnowApply(
+                    chunkPos,
+                    currentSeason,
+                    decision.reason() == SnowAccumulationPolicy.Reason.SNOW_SYNC_GENERATION_CHANGED
+            );
         } else if (decision.action() == SnowAccumulationPolicy.Action.MELT) {
             CommonSnowBlockFeature.enqueueChunkForSnowMelt(chunkPos, decision.fullClear());
         }
+        return decision;
     }
 }

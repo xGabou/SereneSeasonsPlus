@@ -166,6 +166,9 @@ public final class SnowChunkMeltService {
             }
             changed = true;
         }
+        if (changed) {
+            CommonSnowBlockFeature.syncSnowyGroundState(level, pos, mutationFlags);
+        }
         return changed;
     }
 
