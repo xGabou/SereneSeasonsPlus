@@ -1,12 +1,14 @@
 package com.Gabou.sereneseasonsplus;
 
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
+import com.Gabou.sereneseasonsplus.config.ConfigResetManager;
 import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
 import com.Gabou.sereneseasonsplus.mixin.MinecraftServerMixin;
 import com.Gabou.sereneseasonsplus.util.*;
 import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
@@ -25,6 +27,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
 
     @Override
     public void onInitialize() {
+        ConfigResetManager.prepare(FabricLoader.getInstance().getConfigDir(), "sereneseasonsplus.json");
         LOGGER.info("Initializing Serene Seasons Plus (Fabric)");
         // Server lifecycle hooks
         ServerLifecycleEvents.SERVER_STARTED.register(this::onServerStarted);
@@ -78,6 +81,8 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
                 level,
                 SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(),
                 SereneExtendedConfig.ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.get(),
+                SereneExtendedConfig.KEEP_FULL_DAY_NIGHT_CYCLE_AT_FIXED_LENGTH.get(),
+                SereneExtendedConfig.FULL_DAY_NIGHT_CYCLE_LENGTH_IN_REAL_MINUTES.get(),
                 SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(),
                 SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(),
                 SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get()

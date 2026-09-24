@@ -13,6 +13,9 @@ import sereneseasons.init.ModTags;
 public class SereneSeasonPlusCommon {
     protected int ticker = 0;
     protected Season.SubSeason lastSubSeason = null;
+    private double lastAppliedDaySpeed = Double.NaN;
+    private double lastAppliedNightSpeed = Double.NaN;
+    private String lastTimeMode = "";
     public static final String MODID = "sereneseasonsplus";
     protected static final Logger LOGGER = LoggerFactory.getLogger(MODID);
 
@@ -84,6 +87,8 @@ public class SereneSeasonPlusCommon {
     protected void onTick(Level level,
                           boolean ENABLE_SEASONAL_DAYLIGHT_CYCLE,
                           boolean ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT,
+                          boolean KEEP_FULL_DAY_NIGHT_CYCLE_AT_FIXED_LENGTH,
+                          double FULL_DAY_NIGHT_CYCLE_LENGTH_IN_REAL_MINUTES,
                           boolean CUSTOM_CYCLE_LENGTH,
                           double CUSTOM_DAY_LENGTH,
                           double CUSTOM_NIGHT_LENGTH) {
@@ -91,21 +96,47 @@ public class SereneSeasonPlusCommon {
             this.ticker = 0;
             if (EnvironmentHelper.shouldRunMod()) {
                 Season.SubSeason currentSubSeason = EnvironmentHelper.getCurrentSeason();
-                if (currentSubSeason != this.lastSubSeason) {
-                    this.lastSubSeason = currentSubSeason;
-                    if (!ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT) {
-                        LOGGER.info("{} is active, but Better Days dynamic time compatibility is disabled.", currentSubSeason);
-                    } else if (ENABLE_SEASONAL_DAYLIGHT_CYCLE) {
-                        double daySpeed = this.getDaySpeedForSeason(currentSubSeason);
-                        double nightSpeed = this.getNightSpeedForSeason(currentSubSeason);
-                        ConfigHacks.setTimeSpeeds(daySpeed, nightSpeed);
-                        LogInfo(currentSubSeason, daySpeed, nightSpeed);
-                    } else if (CUSTOM_CYCLE_LENGTH) {
-                        ConfigHacks.setTimeSpeeds(CUSTOM_DAY_LENGTH, CUSTOM_NIGHT_LENGTH);
-                        LogInfo(currentSubSeason, CUSTOM_DAY_LENGTH, CUSTOM_NIGHT_LENGTH);
+                if (currentSubSeason == null) {
+                    return;
+                }
+                if (!ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT) {
+                    return;
+                }
+
+                String mode;
+                double daySpeed;
+                double nightSpeed;
+                if (ENABLE_SEASONAL_DAYLIGHT_CYCLE) {
+                    mode = "seasonal";
+                    double seasonalDaySpeed = this.getDaySpeedForSeason(currentSubSeason);
+                    double seasonalNightSpeed = this.getNightSpeedForSeason(currentSubSeason);
+                    if (KEEP_FULL_DAY_NIGHT_CYCLE_AT_FIXED_LENGTH) {
+                        ConfigHacks.TimeSpeeds normalized = ConfigHacks.normalizeToCycleMinutes(
+                                seasonalDaySpeed, seasonalNightSpeed, FULL_DAY_NIGHT_CYCLE_LENGTH_IN_REAL_MINUTES);
+                        daySpeed = normalized.daySpeed();
+                        nightSpeed = normalized.nightSpeed();
                     } else {
-                        LOGGER.info(currentSubSeason + " is active, but both seasonal and custom daylight cycle are disabled.");
+                        daySpeed = seasonalDaySpeed;
+                        nightSpeed = seasonalNightSpeed;
                     }
+                } else if (CUSTOM_CYCLE_LENGTH) {
+                    mode = "custom";
+                    daySpeed = CUSTOM_DAY_LENGTH;
+                    nightSpeed = CUSTOM_NIGHT_LENGTH;
+                } else {
+                    return;
+                }
+
+                if (currentSubSeason != this.lastSubSeason
+                        || !mode.equals(this.lastTimeMode)
+                        || Double.compare(daySpeed, this.lastAppliedDaySpeed) != 0
+                        || Double.compare(nightSpeed, this.lastAppliedNightSpeed) != 0) {
+                    ConfigHacks.setTimeSpeeds(daySpeed, nightSpeed);
+                    LogInfo(currentSubSeason, daySpeed, nightSpeed);
+                    this.lastSubSeason = currentSubSeason;
+                    this.lastTimeMode = mode;
+                    this.lastAppliedDaySpeed = daySpeed;
+                    this.lastAppliedNightSpeed = nightSpeed;
                 }
             }
         }

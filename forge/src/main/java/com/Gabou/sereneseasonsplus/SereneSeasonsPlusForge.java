@@ -7,6 +7,7 @@ package com.Gabou.sereneseasonsplus;
 
 import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
 import com.Gabou.sereneseasonsplus.config.SereneExtendedConfig;
+import com.Gabou.sereneseasonsplus.config.ConfigResetManager;
 import com.Gabou.sereneseasonsplus.event.SeasonChangeEvent;
 import com.Gabou.sereneseasonsplus.features.*;
 import com.Gabou.sereneseasonsplus.util.*;
@@ -26,6 +27,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Blocks;
@@ -46,6 +48,7 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
      * @param context Forge mod loading context used to hook lifecycle events
      */
     public SereneSeasonsPlusForge(FMLJavaModLoadingContext context) {
+        ConfigResetManager.prepare(FMLPaths.CONFIGDIR.get(), "sereneseasonsplus-common.toml");
         isProjectAtmosphereLoaded = ModList.get().isLoaded("projectatmosphere");
         MinecraftForge.EVENT_BUS.register(this);
         CommonSnowBlockFeature.HANDLER = new ForgeSnowEnvironmentHandler();
@@ -140,6 +143,8 @@ public class SereneSeasonsPlusForge extends SereneSeasonPlusCommon{
                 level,
                 SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get(),
                 SereneExtendedConfig.ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.get(),
+                SereneExtendedConfig.KEEP_FULL_DAY_NIGHT_CYCLE_AT_FIXED_LENGTH.get(),
+                SereneExtendedConfig.FULL_DAY_NIGHT_CYCLE_LENGTH_IN_REAL_MINUTES.get(),
                 SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get(),
                 SereneExtendedConfig.CUSTOM_DAY_LENGTH.get(),
                 SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get()
