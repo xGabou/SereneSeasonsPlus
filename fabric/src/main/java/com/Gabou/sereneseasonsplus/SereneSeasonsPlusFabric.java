@@ -38,7 +38,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         ServerLifecycleEvents.SERVER_STOPPING.register(this::onServerStopping);
         EnvironmentHelper.init(new FabricEnvironmentHelper());
         SeasonChangeEvent.register();
-        // Register chunk load to cache surface height only (no enqueue)
+        // Reconcile SSP-owned snow while each chunk is loading
         ServerChunkEvents.CHUNK_LOAD.register(this::onChunkLoad);
         SereneExtendedConfig.registerReloadListener(this::onConfigReload);
         PlayerBlockBreakEvents.AFTER.register(this::onBlockBreak);
@@ -117,7 +117,7 @@ public class SereneSeasonsPlusFabric extends SereneSeasonPlusCommon implements M
         if (!(chunkAccess instanceof net.minecraft.world.level.chunk.LevelChunk chunk)) return;
         if (level.isClientSide()) return;
         if (level.dimension() != Level.OVERWORLD) return;
-        // Cache surface height only; no enqueue to avoid dual input
+        // Reconcile before the chunk is sent to clients
         CommonSnowBlockFeature.handleOnChunkLoad(chunk);
     }
 

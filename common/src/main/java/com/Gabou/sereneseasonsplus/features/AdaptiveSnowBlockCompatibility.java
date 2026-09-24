@@ -64,13 +64,23 @@ public final class AdaptiveSnowBlockCompatibility implements SnowBlockCompatibil
                                                            BlockState state,
                                                            int targetLayers,
                                                            boolean allowPlace) {
+        return createLayerMutation(level, pos, state, targetLayers, allowPlace, net.minecraft.world.level.block.Block.UPDATE_CLIENTS);
+    }
+
+    @Override
+    public @Nullable SnowWorldMutation createLayerMutation(ServerLevel level,
+                                                           BlockPos pos,
+                                                           BlockState state,
+                                                           int targetLayers,
+                                                           boolean allowPlace,
+                                                           int flags) {
         if (snowRealMagic.canManagePlacementState(state)) {
-            SnowWorldMutation mutation = snowRealMagic.createLayerMutation(level, pos, state, targetLayers, allowPlace);
+            SnowWorldMutation mutation = snowRealMagic.createLayerMutation(level, pos, state, targetLayers, allowPlace, flags);
             if (mutation != null) {
                 return mutation;
             }
         }
-        return vanilla.createLayerMutation(level, pos, state, targetLayers, allowPlace);
+        return vanilla.createLayerMutation(level, pos, state, targetLayers, allowPlace, flags);
     }
 
     @Override
@@ -78,12 +88,28 @@ public final class AdaptiveSnowBlockCompatibility implements SnowBlockCompatibil
                                                            BlockPos pos,
                                                            BlockState state,
                                                            boolean toWater) {
+        return createClearMutation(
+                level,
+                pos,
+                state,
+                toWater,
+                net.minecraft.world.level.block.Block.UPDATE_CLIENTS
+                        | net.minecraft.world.level.block.Block.UPDATE_SUPPRESS_DROPS
+        );
+    }
+
+    @Override
+    public @Nullable SnowWorldMutation createClearMutation(ServerLevel level,
+                                                           BlockPos pos,
+                                                           BlockState state,
+                                                           boolean toWater,
+                                                           int flags) {
         if (snowRealMagic.isManagedSnow(state)) {
-            SnowWorldMutation mutation = snowRealMagic.createClearMutation(pos, state, toWater);
+            SnowWorldMutation mutation = snowRealMagic.createClearMutation(pos, state, toWater, flags);
             if (mutation != null) {
                 return mutation;
             }
         }
-        return vanilla.createClearMutation(level, pos, state, toWater);
+        return vanilla.createClearMutation(level, pos, state, toWater, flags);
     }
 }

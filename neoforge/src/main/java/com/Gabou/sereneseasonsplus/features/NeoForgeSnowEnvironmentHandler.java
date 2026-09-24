@@ -26,9 +26,15 @@ public class NeoForgeSnowEnvironmentHandler extends DefaultSnowEnvironmentHandle
     public int getBlocksToReplace(ServerLevel level, BlockPos playerPos) {
 //        if (!SereneSeasonsPlusNeoForge.isProjectAtmosphereLoaded) {
             float temperature = SeasonHooks.getBiomeTemperature(level, level.getBiome(playerPos), playerPos, level.getSeaLevel());
-            return SeasonHooks.coldEnoughToSnowSeasonal(level, playerPos,level.getSeaLevel())
-                    ? CommonSnowBlockFeature.calculateBlocksToReplace(temperature)
-                    : 0;
+            boolean coldEnough = SeasonHooks.coldEnoughToSnowSeasonal(
+                    level,
+                    playerPos,
+                    level.getSeaLevel()
+            );
+            if (coldEnough) {
+                return EnvironmentHelper.isRainning(level, playerPos) ? -1 : 0;
+            }
+            return CommonSnowBlockFeature.calculateBlocksToReplace(temperature);
 //        } else {
 //            float temperature = ForecastOrchestrator.getCurrentTemperature(
 //                    new BiomeInstanceKey(level.getBiome(playerPos).unwrapKey().get().identifier(), playerPos),

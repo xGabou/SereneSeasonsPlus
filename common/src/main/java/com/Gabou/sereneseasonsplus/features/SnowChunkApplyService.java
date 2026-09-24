@@ -25,10 +25,6 @@ public final class SnowChunkApplyService {
         if (!(chunk instanceof ISnowTrackedChunk tracked)) return false;
 
         int cap = level.getGameRules().get(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT);
-        if (cap > 0 && isChunkAtOrAboveSnowCap(level, chunk, cap)) {
-            return false;
-        }
-
         int baseline = historyQueryService.computeGlobalMinSum(level);
         if (baseline <= 0) return false;
 
@@ -118,11 +114,61 @@ public final class SnowChunkApplyService {
 
         if (savedData.currentStormId > 0) {
             SnowRecord activeRecord = savedData.snowHistory.get(savedData.currentStormId);
-            return activeRecord != null && applySnowPattern(level, chunk, activeRecord, level.random);
+            return activeRecord != null && applySnowPattern(
+                    level,
+                    chunk,
+                    activeRecord,
+                    createChunkRandom(level, chunk, savedData.currentStormId),
+                    false,
+                    false,
+                    CommonSnowBlockFeature.LIVE_MELT_MUTATION_FLAGS
+            );
         }
 
         SnowRecord combined = historyQueryService.aggregateFinishedStormSums(level);
-        return combined != null && applyCombinedFinishedPattern(level, chunk, combined, level.random);
+        return combined != null && applyCombinedFinishedPattern(
+                level,
+                chunk,
+                combined,
+                createChunkRandom(level, chunk, CommonSnowBlockFeature.getSnowSyncGeneration()),
+                false,
+                CommonSnowBlockFeature.LIVE_MELT_MUTATION_FLAGS
+        );
+    }
+
+    /**
+     * Applies the complete persisted storm state directly during chunk load.
+     * The seed is chunk-local and stable, so unloading and reloading a chunk does
+     * not reshuffle its snow pattern or create unnecessary block writes.
+     */
+    public boolean applySnowForCurrentStormCountImmediately(ServerLevel level, LevelChunk chunk) {
+        SnowHistorySavedData savedData = SnowHistorySavedData.get();
+        if (savedData == null) {
+            return false;
+        }
+
+        if (savedData.currentStormId > 0) {
+            SnowRecord activeRecord = savedData.snowHistory.get(savedData.currentStormId);
+            return activeRecord != null && applySnowPattern(
+                    level,
+                    chunk,
+                    activeRecord,
+                    createChunkRandom(level, chunk, savedData.currentStormId),
+                    false,
+                    true,
+                    CommonSnowBlockFeature.CHUNK_LOAD_MUTATION_FLAGS
+            );
+        }
+
+        SnowRecord combined = historyQueryService.aggregateFinishedStormSums(level);
+        return combined != null && applyCombinedFinishedPattern(
+                level,
+                chunk,
+                combined,
+                createChunkRandom(level, chunk, CommonSnowBlockFeature.getSnowSyncGeneration()),
+                false,
+                CommonSnowBlockFeature.CHUNK_LOAD_MUTATION_FLAGS
+        );
     }
 
     public boolean hasApplicableStormRecord(ServerLevel level) {
@@ -148,13 +194,27 @@ public final class SnowChunkApplyService {
     }
 
     public boolean applySnowPattern(ServerLevel level, LevelChunk chunk, SnowRecord record, RandomSource random) {
+        return applySnowPattern(
+                level,
+                chunk,
+                record,
+                random,
+                true,
+                false,
+                CommonSnowBlockFeature.CHUNK_LOAD_MUTATION_FLAGS
+        );
+    }
+
+    private boolean applySnowPattern(ServerLevel level,
+                                     LevelChunk chunk,
+                                     SnowRecord record,
+                                     RandomSource random,
+                                     boolean queueMutations,
+                                     boolean catchUp,
+                                     int immediateFlags) {
         if (!(chunk instanceof ISnowTrackedChunk tracked)) return false;
 
         int cap = level.getGameRules().get(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT);
-        if (cap > 0 && isChunkAtOrAboveSnowCap(level, chunk, cap)) {
-            return false;
-        }
-
         ChunkPos chunkPos = chunk.getPos();
         int baseX = chunkPos.getMinBlockX();
         int baseZ = chunkPos.getMinBlockZ();
@@ -165,7 +225,15 @@ public final class SnowChunkApplyService {
 
         float progress = 1.0f;
         int currentTick = CommonSnowBlockFeature.getTickCounter();
-        if (!CommonSnowBlockFeature.FAST_PILING_MODE) {
+        if (catchUp || CommonSnowBlockFeature.FAST_PILING_MODE) {
+            SnowHistorySavedData savedData = SnowHistorySavedData.get();
+            int activeId = savedData != null ? savedData.currentStormId : 0;
+            if (activeId > 0) {
+                tracked.sereneseasonsplus$setStormIdApplied(activeId);
+                tracked.sereneseasonsplus$setStormProgress(1f);
+                tracked.sereneseasonsplus$setLastProgressTick(currentTick);
+            }
+        } else if (!CommonSnowBlockFeature.FAST_PILING_MODE) {
             SnowHistorySavedData savedData = SnowHistorySavedData.get();
             int activeId = savedData != null ? savedData.currentStormId : 0;
             if (activeId > 0) {
@@ -236,7 +304,8 @@ public final class SnowChunkApplyService {
                     if (freeSpace > 0 && need > 0) {
                         int add = Math.min(freeSpace, need);
                         int targetLayers = currentLayers + add;
-                        if (CommonSnowBlockFeature.placeOrQueueLayers(level, cursor, targetLayers, true, true)) {
+                        if (CommonSnowBlockFeature.placeOrQueueLayers(
+                                level, cursor, targetLayers, true, queueMutations, immediateFlags)) {
                             stateService.setTrackedLayers(tracked, cursor.immutable(), targetLayers);
                             any = true;
                         }
@@ -248,7 +317,8 @@ public final class SnowChunkApplyService {
                 }
 
                 while (need >= 8 && cursor.getY() < level.getMaxY()) {
-                    if (CommonSnowBlockFeature.placeOrQueueLayers(level, cursor, 8, true, true)) {
+                    if (CommonSnowBlockFeature.placeOrQueueLayers(
+                            level, cursor, 8, true, queueMutations, immediateFlags)) {
                         stateService.setTrackedLayers(tracked, cursor.immutable(), 8);
                         any = true;
                     }
@@ -257,7 +327,8 @@ public final class SnowChunkApplyService {
                 }
 
                 if (need > 0 && cursor.getY() < level.getMaxY()) {
-                    if (CommonSnowBlockFeature.placeOrQueueLayers(level, cursor, need, true, true)) {
+                    if (CommonSnowBlockFeature.placeOrQueueLayers(
+                            level, cursor, need, true, queueMutations, immediateFlags)) {
                         stateService.setTrackedLayers(tracked, cursor.immutable(), need);
                         any = true;
                     }
@@ -269,13 +340,25 @@ public final class SnowChunkApplyService {
     }
 
     public boolean applyCombinedFinishedPattern(ServerLevel level, LevelChunk chunk, SnowRecord combined, RandomSource random) {
+        return applyCombinedFinishedPattern(
+                level,
+                chunk,
+                combined,
+                random,
+                true,
+                CommonSnowBlockFeature.CHUNK_LOAD_MUTATION_FLAGS
+        );
+    }
+
+    private boolean applyCombinedFinishedPattern(ServerLevel level,
+                                                 LevelChunk chunk,
+                                                 SnowRecord combined,
+                                                 RandomSource random,
+                                                 boolean queueMutations,
+                                                 int immediateFlags) {
         if (!(chunk instanceof ISnowTrackedChunk tracked)) return false;
 
         int cap = level.getGameRules().get(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT);
-        if (cap > 0 && isChunkAtOrAboveSnowCap(level, chunk, cap)) {
-            return false;
-        }
-
         ChunkPos chunkPos = chunk.getPos();
         int baseX = chunkPos.getMinBlockX();
         int baseZ = chunkPos.getMinBlockZ();
@@ -325,7 +408,8 @@ public final class SnowChunkApplyService {
                     if (freeSpace > 0 && need > 0) {
                         int add = Math.min(freeSpace, need);
                         int targetLayers = currentLayers + add;
-                        if (CommonSnowBlockFeature.placeOrQueueLayers(level, cursor, targetLayers, true, true)) {
+                        if (CommonSnowBlockFeature.placeOrQueueLayers(
+                                level, cursor, targetLayers, true, queueMutations, immediateFlags)) {
                             stateService.setTrackedLayers(tracked, cursor.immutable(), targetLayers);
                             any = true;
                         }
@@ -337,7 +421,8 @@ public final class SnowChunkApplyService {
                 }
 
                 while (need >= 8 && cursor.getY() < level.getMaxY()) {
-                    if (CommonSnowBlockFeature.placeOrQueueLayers(level, cursor, 8, true, true)) {
+                    if (CommonSnowBlockFeature.placeOrQueueLayers(
+                            level, cursor, 8, true, queueMutations, immediateFlags)) {
                         stateService.setTrackedLayers(tracked, cursor.immutable(), 8);
                         any = true;
                     }
@@ -346,7 +431,8 @@ public final class SnowChunkApplyService {
                 }
 
                 if (need > 0 && cursor.getY() < level.getMaxY()) {
-                    if (CommonSnowBlockFeature.placeOrQueueLayers(level, cursor, need, true, true)) {
+                    if (CommonSnowBlockFeature.placeOrQueueLayers(
+                            level, cursor, need, true, queueMutations, immediateFlags)) {
                         stateService.setTrackedLayers(tracked, cursor.immutable(), need);
                         any = true;
                     }
@@ -354,6 +440,14 @@ public final class SnowChunkApplyService {
             }
         }
         return any;
+    }
+
+    private RandomSource createChunkRandom(ServerLevel level, LevelChunk chunk, int historyKey) {
+        ChunkPos pos = chunk.getPos();
+        long seed = level.getSeed()
+                ^ ChunkPos.asLong(pos.x, pos.z)
+                ^ (-7046029254386353131L * (long) historyKey);
+        return RandomSource.create(seed);
     }
 
     public boolean isChunkAtOrAboveSnowCap(ServerLevel level, LevelChunk chunk, int capLayers) {

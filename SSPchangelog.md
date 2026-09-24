@@ -8,6 +8,8 @@
 
 ## Fixed
 
+- Newly loaded chunks now add or melt their SSP-owned snow before the player sees the chunk, eliminating the delayed terrain pop-in after teleports.
+- Chunk-load snow patterns are deterministic, so reloading a chunk no longer reshuffles its storm coverage.
 - Snow placement now treats the `sereneseasonsplus:snow_replaceable` block tag as the single authority for replacing non-air blocks.
 - Snow can no longer overwrite protected blocks through vanilla precipitation redirects or delayed world-mutation queues.
 - Delayed snow changes now verify that the block still matches the state seen when the change was queued, protecting rails and other blocks placed in the meantime.

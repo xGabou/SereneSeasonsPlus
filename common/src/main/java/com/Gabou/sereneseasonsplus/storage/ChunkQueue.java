@@ -77,11 +77,17 @@ public final class ChunkQueue {
         return entry;
     }
 
-    public static void enqueueApply(ChunkPos chunkPos, Season.SubSeason subSeason) {
+    public static boolean enqueueApply(ChunkPos chunkPos, Season.SubSeason subSeason) {
+        return enqueueApply(chunkPos, subSeason, false);
+    }
+
+    public static boolean enqueueApply(ChunkPos chunkPos, Season.SubSeason subSeason, boolean bypassCooldown) {
         Entry entry = new Entry(chunkPos, TaskType.APPLY_SNOW, subSeason, false, 0);
-        if (trySchedule(entry)) {
+        if (trySchedule(entry, bypassCooldown)) {
             TASKS_NEXT_TICK.add(entry);
+            return true;
         }
+        return false;
     }
 
     public static void enqueueMelt(ChunkPos chunkPos, boolean fullClear) {

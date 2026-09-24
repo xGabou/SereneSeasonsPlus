@@ -30,13 +30,30 @@ public interface SnowBlockCompatibility {
                                                   BlockState state,
                                                   int targetLayers,
                                                   boolean allowPlace) {
+        return createLayerMutation(
+                level,
+                pos,
+                state,
+                targetLayers,
+                allowPlace,
+                net.minecraft.world.level.block.Block.UPDATE_CLIENTS
+        );
+    }
+
+    @Nullable
+    default SnowWorldMutation createLayerMutation(ServerLevel level,
+                                                  BlockPos pos,
+                                                  BlockState state,
+                                                  int targetLayers,
+                                                  boolean allowPlace,
+                                                  int flags) {
         if (isManagedSnow(state)) {
             if (allowPlace && !CommonSnowBlockFeature.canReceiveSnowAt(level, pos)) {
                 return null;
             }
             BlockState newState = createManagedSnow(targetLayers);
             return SnowWorldMutation.setBlockIfStateMatches(
-                    pos, state, newState, net.minecraft.world.level.block.Block.UPDATE_CLIENTS);
+                    pos, state, newState, flags);
         }
         if (allowPlace && (state.isAir() || isReplaceableForSnow(state))) {
             if (!canPlaceManagedSnow(level, pos, state)) {
@@ -44,17 +61,33 @@ public interface SnowBlockCompatibility {
             }
             BlockState snow = createManagedSnow(targetLayers);
             return SnowWorldMutation.setBlockIfStateMatches(
-                    pos, state, snow, net.minecraft.world.level.block.Block.UPDATE_CLIENTS);
+                    pos, state, snow, flags);
         }
         return null;
     }
 
     @Nullable
     default SnowWorldMutation createClearMutation(ServerLevel level, BlockPos pos, BlockState state, boolean toWater) {
+        return createClearMutation(
+                level,
+                pos,
+                state,
+                toWater,
+                net.minecraft.world.level.block.Block.UPDATE_CLIENTS
+                        | net.minecraft.world.level.block.Block.UPDATE_SUPPRESS_DROPS
+        );
+    }
+
+    @Nullable
+    default SnowWorldMutation createClearMutation(ServerLevel level,
+                                                  BlockPos pos,
+                                                  BlockState state,
+                                                  boolean toWater,
+                                                  int flags) {
         BlockState target;
         if (isManagedIce(state)) {
             target = net.minecraft.world.level.block.Blocks.WATER.defaultBlockState();
-        } else if (isManagedSnow(state) || isReplaceableForSnow(state)) {
+        } else if (isManagedSnow(state)) {
             target = toWater
                     ? net.minecraft.world.level.block.Blocks.WATER.defaultBlockState()
                     : net.minecraft.world.level.block.Blocks.AIR.defaultBlockState();
@@ -68,7 +101,7 @@ public interface SnowBlockCompatibility {
                 pos,
                 state,
                 target,
-                net.minecraft.world.level.block.Block.UPDATE_CLIENTS | net.minecraft.world.level.block.Block.UPDATE_SUPPRESS_DROPS
+                flags
         );
     }
 

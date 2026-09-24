@@ -70,7 +70,7 @@ dependencies {
     implementation "curse.maven:betterdays-895618:7443510"
     runtimeOnly "me.djtheredstoner:DevAuth-neoforge:1.2.1"
     compileOnly "curse.maven:project-atmosphere-1258344:7070436"
-    implementation "curse.maven:spark-361579:7315224"
+    implementation "curse.maven:spark-361579:7815766"
     implementation "curse.maven:architectury-api-419699:7339257"
     implementation "curse.maven:gaboulibs-1367332:7495339"
     compileOnly "curse.maven:snow-real-magic-308663:7472610"

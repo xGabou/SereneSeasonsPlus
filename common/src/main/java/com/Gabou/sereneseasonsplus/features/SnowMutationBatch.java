@@ -111,6 +111,11 @@ public final class SnowMutationBatch {
             SnowWorldMutation mutation = entry.getValue();
             if (mutation.apply(level)) {
                 BlockPos trackingPos = mutation.trackingPos();
+                CommonSnowBlockFeature.syncSnowyGroundState(
+                        level,
+                        trackingPos,
+                        CommonSnowBlockFeature.LIVE_MELT_MUTATION_FLAGS
+                );
                 accumulateColumnUpdate(level, trackingPos, level.getBlockState(trackingPos), compatibility);
             }
             long chunkKey = ChunkPos.asLong(mutation.key().getX() >> 4, mutation.key().getZ() >> 4);

@@ -22,20 +22,38 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 @Mixin(SerializableChunkData.class)
 public abstract class ChunkSerializerSnowMixin {
     private static final String SSP = "SereneSeasonsPlus";
+    @Unique
+    private static final Map<SerializableChunkData, CompoundTag> SS_PLUS_DATA =
+            Collections.synchronizedMap(new IdentityHashMap<>());
 
-    // Save
+    @Inject(method = "copyOf", at = @At("RETURN"))
+    private static void ssp$captureChunk(ServerLevel level,
+                                         ChunkAccess chunk,
+                                         CallbackInfoReturnable<SerializableChunkData> cir) {
+        SerializableChunkData serialized = cir.getReturnValue();
+        if (serialized != null && chunk instanceof ISnowTrackedChunk tracked) {
+            SS_PLUS_DATA.put(serialized, ssp$serialize(tracked));
+        }
+    }
+
     @Inject(method = "write", at = @At("RETURN"), cancellable = false)
     private void ssp$write(CallbackInfoReturnable<CompoundTag> cir) {
         CompoundTag root = cir.getReturnValue();
-        if (!(this instanceof ISnowTrackedChunk tracked)) return;
+        CompoundTag tag = SS_PLUS_DATA.remove((SerializableChunkData) (Object) this);
+        if (tag != null) {
+            root.put(SSP, tag);
+        }
+    }
 
+    @Unique
+    private static CompoundTag ssp$serialize(ISnowTrackedChunk tracked) {
         CompoundTag tag = new CompoundTag();
         tag.putInt("LastWinterId", tracked.sereneseasonsplus$getLastWinterId());
         tag.putInt("SurfaceHeight", tracked.sereneseasonsplus$getSurfaceHeight());
@@ -75,18 +93,14 @@ public abstract class ChunkSerializerSnowMixin {
         }
         tag.put("DestroyedColumns", destroyedList);
 
-        // Add all of it under your namespace
-        root.put("SereneSeasonsPlus", tag);
+        return tag;
     }
-
-    @Unique
-    private static final Map<ChunkPos, CompoundTag> SS_PLUS_CACHE = new HashMap<>();
 
     @Inject(method = "parse", at = @At("RETURN"))
     private static void ssp$cacheTag(LevelHeightAccessor level, PalettedContainerFactory access, CompoundTag nbt, CallbackInfoReturnable<SerializableChunkData> cir) {
-        if (nbt.contains("SereneSeasonsPlus")) {
-            ChunkPos pos = new ChunkPos(nbt.getInt("xPos").get(), nbt.getInt("zPos").get());
-            SS_PLUS_CACHE.put(pos, nbt.getCompound("SereneSeasonsPlus").get().copy());
+        SerializableChunkData serialized = cir.getReturnValue();
+        if (serialized != null && nbt.contains(SSP)) {
+            SS_PLUS_DATA.put(serialized, nbt.getCompound(SSP).get().copy());
         }
     }
 
@@ -95,7 +109,7 @@ public abstract class ChunkSerializerSnowMixin {
     private void ssp$restore(ServerLevel level, PoiManager poi, RegionStorageInfo info, ChunkPos chunkPos, CallbackInfoReturnable<ProtoChunk> cir) {
         ProtoChunk chunk = cir.getReturnValue();
         if (!(chunk instanceof ISnowTrackedChunk tracked)) return;
-        CompoundTag tag = SS_PLUS_CACHE.remove(chunkPos);
+        CompoundTag tag = SS_PLUS_DATA.remove((SerializableChunkData) (Object) this);
         if (tag == null || tag.isEmpty()) return;
 
         // Base fields

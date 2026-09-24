@@ -13,7 +13,6 @@ import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 public final class SnowChunkMeltService {
@@ -29,20 +28,22 @@ public final class SnowChunkMeltService {
             return false;
         }
 
+        if (fullClear) {
+            return clearTrackedSnowImmediately(
+                    level,
+                    chunk,
+                    tracked,
+                    CommonSnowBlockFeature.LIVE_MELT_MUTATION_FLAGS
+            );
+        }
+
         boolean changed = false;
         Map<BlockPos, Integer> columns = stateService.getSnowColumns(tracked);
         if (columns == null) {
             columns = Collections.emptyMap();
         }
 
-        if (fullClear && !columns.isEmpty()) {
-            for (BlockPos pos : new ArrayList<>(columns.keySet())) {
-                changed |= CommonSnowBlockFeature.queueClearIfNeeded(level, pos, false);
-                stateService.removeTrackedColumn(tracked, pos);
-            }
-        }
-
-        if (!columns.isEmpty() && !fullClear) {
+        if (!columns.isEmpty()) {
             Map<Long, BlockPos> topByColumn = stateService.getTopTrackedSnowByColumn(tracked);
             BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
             for (BlockPos top : topByColumn.values()) {
@@ -80,6 +81,94 @@ public final class SnowChunkMeltService {
 
         changed |= clearCoveredMeltablesNearSurface(level, chunk);
         changed |= meltTrackedIce(level, tracked);
+        return changed;
+    }
+
+    /**
+     * Clears only positions owned by SSP's persisted chunk index. This avoids a
+     * 16x16 surface scan and, during the chunk-load callback, makes the first
+     * chunk packet already contain the melted state.
+     */
+    public boolean meltSnowInChunkImmediately(ServerLevel level, LevelChunk chunk) {
+        if (!(chunk instanceof ISnowTrackedChunk tracked)) {
+            return false;
+        }
+
+        return clearTrackedSnowImmediately(
+                level,
+                chunk,
+                tracked,
+                CommonSnowBlockFeature.CHUNK_LOAD_MUTATION_FLAGS
+        );
+    }
+
+    private boolean clearTrackedSnowImmediately(ServerLevel level,
+                                                LevelChunk chunk,
+                                                ISnowTrackedChunk tracked,
+                                                int mutationFlags) {
+        boolean changed = false;
+        boolean metadataChanged = false;
+        Map<BlockPos, Integer> columns = stateService.getSnowColumns(tracked);
+        if (columns != null && !columns.isEmpty()) {
+            for (BlockPos pos : new ArrayList<>(columns.keySet())) {
+                changed |= clearManagedSnowCompletely(level, pos, mutationFlags);
+                if (!CommonSnowBlockFeature.SNOW_COMPATIBILITY.isManagedSnow(level.getBlockState(pos))) {
+                    stateService.removeTrackedColumn(tracked, pos);
+                    metadataChanged = true;
+                }
+            }
+        }
+
+        for (BlockPos pos : new java.util.HashSet<>(tracked.sereneseasonsplus$getIceColumns())) {
+            BlockState state = level.getBlockState(pos);
+            if (CommonSnowBlockFeature.SNOW_COMPATIBILITY.isManagedIce(state)) {
+                SnowWorldMutation mutation = CommonSnowBlockFeature.SNOW_COMPATIBILITY.createClearMutation(
+                        level,
+                        pos,
+                        state,
+                        true,
+                        mutationFlags
+                );
+                changed |= mutation != null && mutation.apply(level);
+            }
+            if (!CommonSnowBlockFeature.SNOW_COMPATIBILITY.isManagedIce(level.getBlockState(pos))) {
+                tracked.sereneseasonsplus$getIceColumns().remove(pos);
+                metadataChanged = true;
+            }
+        }
+
+        if (tracked.sereneseasonsplus$getAppliedStormCount() != 0) {
+            tracked.sereneseasonsplus$setAppliedStormCount(0);
+            metadataChanged = true;
+        }
+        if (changed || metadataChanged) {
+            chunk.markUnsaved();
+        }
+        return changed;
+    }
+
+    private boolean clearManagedSnowCompletely(ServerLevel level, BlockPos pos, int mutationFlags) {
+        boolean changed = false;
+        for (int layer = 0; layer < 8; layer++) {
+            BlockState state = level.getBlockState(pos);
+            if (!CommonSnowBlockFeature.SNOW_COMPATIBILITY.isManagedSnow(state)) {
+                break;
+            }
+            SnowWorldMutation mutation = CommonSnowBlockFeature.SNOW_COMPATIBILITY.createClearMutation(
+                    level,
+                    pos,
+                    state,
+                    false,
+                    mutationFlags
+            );
+            if (mutation == null || !mutation.apply(level)) {
+                break;
+            }
+            changed = true;
+        }
+        if (changed) {
+            CommonSnowBlockFeature.syncSnowyGroundState(level, pos, mutationFlags);
+        }
         return changed;
     }
 

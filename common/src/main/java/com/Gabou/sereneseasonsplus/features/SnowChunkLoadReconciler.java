@@ -1,8 +1,8 @@
 package com.Gabou.sereneseasonsplus.features;
 
-import com.Gabou.sereneseasonsplus.features.logic.SnowLogic;
-import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import com.Gabou.sereneseasonsplus.access.ISnowTrackedChunk;
+import com.Gabou.sereneseasonsplus.features.logic.SnowAccumulationPolicy;
+import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -10,95 +10,29 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
+/**
+ * Reconciles a chunk while its load callback is still running. Keeping this work
+ * chunk-local makes the chunk packet contain the correct snow state without a
+ * render-distance scan or a multi-tick visible catch-up.
+ */
 public final class SnowChunkLoadReconciler {
     private final SnowStateService stateService;
-    private final Queue<ChunkPos> pendingLoads = new ConcurrentLinkedQueue<>();
-    private final Set<Long> queuedChunkKeys = ConcurrentHashMap.newKeySet();
 
     public SnowChunkLoadReconciler(SnowStateService stateService) {
         this.stateService = stateService;
     }
 
-    public void enqueue(LevelChunk chunk) {
-        ChunkPos chunkPos = chunk.getPos();
-        long key = ChunkPos.asLong(chunkPos.x, chunkPos.z);
-        if (queuedChunkKeys.add(key)) {
-            pendingLoads.add(chunkPos);
-        }
-    }
-
-    public void clear() {
-        pendingLoads.clear();
-        queuedChunkKeys.clear();
-    }
-
-    public boolean hasPendingLoads() {
-        return !pendingLoads.isEmpty();
-    }
-
-    public int process(ServerLevel level, SnowBlockCompatibility compatibility, int minChunks, int maxChunks, long deadlineNanos) {
-        ChunkPos chunkPos;
-        int processed = 0;
-        while ((chunkPos = pendingLoads.poll()) != null) {
-            queuedChunkKeys.remove(ChunkPos.asLong(chunkPos.x, chunkPos.z));
-            if (processed >= minChunks && (processed >= maxChunks || System.nanoTime() >= deadlineNanos)) {
-                requeue(chunkPos);
-                break;
-            }
-
-            if (!level.hasChunk(chunkPos.x, chunkPos.z)) {
-                continue;
-            }
-
-            LevelChunk chunk = level.getChunkSource().getChunk(chunkPos.x, chunkPos.z, false);
-            if (!(chunk instanceof ISnowTrackedChunk tracked)) {
-                continue;
-            }
-
-            initializeChunkMetadata(level, chunk, tracked, compatibility);
-            scheduleInitialReconciliation(level, chunk, tracked);
-            processed++;
-        }
-        return processed;
-    }
-
-    private void requeue(ChunkPos chunkPos) {
-        long key = ChunkPos.asLong(chunkPos.x, chunkPos.z);
-        if (queuedChunkKeys.add(key)) {
-            pendingLoads.add(chunkPos);
-        }
-    }
-
-    private void initializeChunkMetadata(ServerLevel level,
-                                         LevelChunk chunk,
-                                         ISnowTrackedChunk tracked,
-                                         SnowBlockCompatibility compatibility) {
-        if (tracked.sereneseasonsplus$getSurfaceHeight() == -1) {
-            int surfaceHeight = level.getHeight(
-                    Heightmap.Types.WORLD_SURFACE,
-                    chunk.getPos().getMiddleBlockX(),
-                    chunk.getPos().getMiddleBlockZ()
-            );
-            tracked.sereneseasonsplus$setSurfaceHeight(surfaceHeight);
+    public boolean reconcile(ServerLevel level, LevelChunk chunk) {
+        if (!(chunk instanceof ISnowTrackedChunk tracked)) {
+            return false;
         }
 
-        if (tracked.sereneseasonsplus$getAvailableSnowColumns() == -1) {
-            tracked.sereneseasonsplus$setAvailableSnowColumns(
-                    SnowColumnInspector.countAvailableColumns(level, chunk, compatibility)
-            );
-        }
-    }
+        initializeChunkMetadata(level, chunk, tracked);
 
-    private void scheduleInitialReconciliation(ServerLevel level, LevelChunk chunk, ISnowTrackedChunk tracked) {
         Season.SubSeason currentSeason = EnvironmentHelper.getCurrentSeason();
         var seasonState = SeasonHelper.getSeasonState(level);
         if (currentSeason == null || seasonState == null) {
-            return;
+            return false;
         }
 
         ChunkPos chunkPos = chunk.getPos();
@@ -108,19 +42,54 @@ public final class SnowChunkLoadReconciler {
                 chunkPos.getMiddleBlockPosition(sampleY)
         );
 
-        if (stateService.hasTrackedSnow(tracked) && !coldEnough) {
-            CommonSnowBlockFeature.enqueueChunkForSnowMelt(chunkPos, false);
-            return;
+        // Local temperature wins over the broad seasonal policy. A warm chunk
+        // must not be sent with stale SSP-owned snow still in it.
+        if (!coldEnough && (stateService.hasTrackedSnow(tracked)
+                || !tracked.sereneseasonsplus$getIceColumns().isEmpty())) {
+            return CommonSnowBlockFeature.meltSnowInChunkImmediately(level, chunk);
         }
 
-        SnowLogic.evaluate(
+        SnowAccumulationPolicy.ChunkDecision decision = CommonSnowBlockFeature.SNOW_ACCUMULATION_POLICY.evaluateChunk(
                 level,
                 currentSeason,
-                seasonState,
                 tracked,
                 chunkPos,
                 true,
-                tracked.sereneseasonsplus$getSurfaceHeight()
+                tracked.sereneseasonsplus$getSurfaceHeight(),
+                coldEnough
         );
+
+        if (decision.action() == SnowAccumulationPolicy.Action.MELT) {
+            return CommonSnowBlockFeature.meltSnowInChunkImmediately(level, chunk);
+        }
+        if (decision.action() != SnowAccumulationPolicy.Action.APPLY) {
+            return false;
+        }
+
+        boolean changed = CommonSnowBlockFeature.applySnowForCurrentStormCountImmediately(level, chunk);
+        boolean snowStatePresent = stateService.hasTrackedSnow(tracked);
+        if (CommonSnowBlockFeature.hasApplicableStormRecord(level) && (changed || snowStatePresent)) {
+            tracked.sereneseasonsplus$setAppliedStormCount(
+                    CommonSnowBlockFeature.HANDLER.getSnowStormsThisWinter(level)
+            );
+            CommonSnowBlockFeature.markSnowSyncSatisfied(tracked);
+            chunk.markUnsaved();
+        }
+        return changed;
+    }
+
+    private void initializeChunkMetadata(ServerLevel level, LevelChunk chunk, ISnowTrackedChunk tracked) {
+        if (tracked.sereneseasonsplus$getSurfaceHeight() == -1) {
+            int surfaceHeight = level.getHeight(
+                    Heightmap.Types.WORLD_SURFACE,
+                    chunk.getPos().getMiddleBlockX(),
+                    chunk.getPos().getMiddleBlockZ()
+            );
+            tracked.sereneseasonsplus$setSurfaceHeight(surfaceHeight);
+            chunk.markUnsaved();
+        }
+
+        // AvailableSnowColumns is legacy metadata and has no consumers. Do not
+        // spend another full 16x16 surface pass computing it during chunk load.
     }
 }
