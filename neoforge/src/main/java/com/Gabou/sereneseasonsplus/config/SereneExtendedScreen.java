@@ -1,11 +1,11 @@
 package com.Gabou.sereneseasonsplus.config;
 
-import com.Gabou.sereneseasonsplus.SereneSeasonsPlusNeoForge;
 import com.Gabou.sereneseasonsplus.client.config.SereneExtendedList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -13,6 +13,12 @@ import net.minecraft.network.chat.Component;
  * Simple in-game configuration screen.
  */
 public class SereneExtendedScreen extends Screen {
+    private static final int MAX_PANEL_WIDTH = 440;
+    private static final int PANEL_MARGIN = 16;
+    private static final int PANEL_TOP = 28;
+    private static final int PANEL_BOTTOM_MARGIN = 20;
+    private static final int FOOTER_HEIGHT = 40;
+
     private final Screen parent;
     private boolean snowFeatureEnabled;
     private int tickSnowReplacerThreshold;
@@ -23,30 +29,33 @@ public class SereneExtendedScreen extends Screen {
     private EditBox dayLengthBox;
 
     private EditBox nightLengthBox;
-    private EditBox betterDaysSleepWakeTimeBox;
+    private EditBox fullDayNightCycleLengthBox;
 
     private boolean seasonalDaylightCycle;
 
     private boolean betterDaysDynamicTimeCompat;
-    private boolean betterDaysSleepWakeTimeFix;
-    private int betterDaysSleepWakeTime;
+    private boolean keepFullDayNightCycleAtFixedLength;
 
     private boolean customDayCycle;
 
     private double customDayLength;
 
     private double customNightLength;
+    private double fullDayNightCycleLengthInRealMinutes;
 
     private boolean grassFlowerGrowth;
     private boolean realTimeCanadianSeasons;
 
-    private Component replacerLabel = Component.literal("Common Feature Threshold:");
+    private Component replacerLabel = Component.literal("Snow Replacement Interval (ticks):");
     private Component pillerLabel = Component.literal("");
-    private Component snowHeightLabel = Component.literal("Max Snow Height (layers):");
-    private Component nightLabel = Component.literal("Custom Night Speed:");
-    private Component dayLabel = Component.literal("Custom Day Speed:");
+    private Component snowHeightLabel = Component.literal("Maximum Snow Layers per Column:");
+    private Component nightLabel = Component.literal("Custom Night Speed Multiplier:");
+    private Component dayLabel = Component.literal("Custom Day Speed Multiplier:");
 
     private SereneExtendedList list;
+    private Button seasonalCycleButton;
+    private Button customCycleButton;
+    private Component errorMessage;
     /**
      * Creates the configuration screen.
      *
@@ -67,8 +76,8 @@ public class SereneExtendedScreen extends Screen {
         this.maxSnowHeight = SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.get();
         this.seasonalDaylightCycle = SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.get();
         this.betterDaysDynamicTimeCompat = SereneExtendedConfig.ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.get();
-        this.betterDaysSleepWakeTimeFix = SereneExtendedConfig.ENABLE_BETTER_DAYS_SLEEP_WAKE_TIME_FIX.get();
-        this.betterDaysSleepWakeTime = SereneExtendedConfig.BETTER_DAYS_SLEEP_WAKE_TIME.get();
+        this.keepFullDayNightCycleAtFixedLength = SereneExtendedConfig.KEEP_FULL_DAY_NIGHT_CYCLE_AT_FIXED_LENGTH.get();
+        this.fullDayNightCycleLengthInRealMinutes = SereneExtendedConfig.FULL_DAY_NIGHT_CYCLE_LENGTH_IN_REAL_MINUTES.get();
         this.customDayCycle = SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.get();
         this.customDayLength = SereneExtendedConfig.CUSTOM_DAY_LENGTH.get();
         this.customNightLength = SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.get();
@@ -76,89 +85,106 @@ public class SereneExtendedScreen extends Screen {
         this.realTimeCanadianSeasons = SereneExtendedConfig.REAL_TIME_CANADIAN_SEASONS.get();
 
 
-        int panelW = 420;
+        int panelW = Math.min(MAX_PANEL_WIDTH, Math.max(280, this.width - PANEL_MARGIN * 2));
         int panelX = (this.width - panelW) / 2;
-        int top = 40;
-        int bottom = this.height - 40;
+        int top = PANEL_TOP;
+        int bottom = this.height - PANEL_BOTTOM_MARGIN;
+        int listTop = top + 24;
+        int listHeight = Math.max(40, bottom - listTop - FOOTER_HEIGHT);
 
-        this.list = new SereneExtendedList(this.minecraft, panelW, this.height, top + 20, 24);
-        try {
-            this.list.getClass().getMethod("setX", int.class).invoke(this.list, panelX);
-        } catch (Throwable t) {
-
-        }
+        this.list = new SereneExtendedList(this.minecraft, panelW - 16, listHeight, listTop, 24);
+        this.list.setX(panelX + 8);
         this.addRenderableWidget(this.list);
 
-        var snowFeatureBtn = Button.builder(toggleLabel("Snow Features", snowFeatureEnabled), b -> {
+        var snowFeatureBtn = Button.builder(toggleLabel(snowFeatureEnabled), b -> {
             snowFeatureEnabled = !snowFeatureEnabled;
-            b.setMessage(toggleLabel("Snow Features", snowFeatureEnabled));
+            b.setMessage(toggleLabel(snowFeatureEnabled));
         }).bounds(0,0,200,20).build();
-        this.list.addRow(Component.literal("Snow Features"), snowFeatureBtn);
+        snowFeatureBtn.setTooltip(Tooltip.create(Component.literal("Allows the mod to place, replace, and accumulate snow during supported seasonal weather.")));
+        this.list.addRow(Component.literal("Seasonal Snow Accumulation"), snowFeatureBtn);
 
-        var seasonBtn = Button.builder(toggleLabel("Seasonal Daylight Cycle", seasonalDaylightCycle), b -> {
+        this.seasonalCycleButton = Button.builder(toggleLabel(seasonalDaylightCycle), b -> {
             seasonalDaylightCycle = !seasonalDaylightCycle;
-            customDayCycle = false;
-            b.setMessage(toggleLabel("Seasonal Daylight Cycle", seasonalDaylightCycle));
+            if (seasonalDaylightCycle) {
+                customDayCycle = false;
+                this.customCycleButton.setMessage(toggleLabel(false));
+            }
+            b.setMessage(toggleLabel(seasonalDaylightCycle));
         }).bounds(0,0,200,20).build();
-        this.list.addRow(Component.literal("Seasonal Daylight Cycle"), seasonBtn);
+        this.seasonalCycleButton.setTooltip(Tooltip.create(Component.literal("Changes daylight and nighttime proportions using the current in-game sub-season.")));
+        this.list.addRow(Component.literal("Season-Based Day/Night Lengths"), this.seasonalCycleButton);
 
-        var betterDaysCompatBtn = Button.builder(toggleLabel("Better Days Time Compat", betterDaysDynamicTimeCompat), b -> {
+        var betterDaysCompatBtn = Button.builder(toggleLabel(betterDaysDynamicTimeCompat), b -> {
             betterDaysDynamicTimeCompat = !betterDaysDynamicTimeCompat;
-            b.setMessage(toggleLabel("Better Days Time Compat", betterDaysDynamicTimeCompat));
+            b.setMessage(toggleLabel(betterDaysDynamicTimeCompat));
         }).bounds(0,0,200,20).build();
-        this.list.addRow(Component.literal("Better Days Time Compat"), betterDaysCompatBtn);
+        betterDaysCompatBtn.setTooltip(Tooltip.create(Component.literal("Allows Serene Seasons Plus to control Better Days day and night speed values.")));
+        this.list.addRow(Component.literal("Seasonal Better Days Time Control"), betterDaysCompatBtn);
 
-        var betterDaysWakeTimeFixBtn = Button.builder(toggleLabel("Better Days Wake Time Fix", betterDaysSleepWakeTimeFix), b -> {
-            betterDaysSleepWakeTimeFix = !betterDaysSleepWakeTimeFix;
-            b.setMessage(toggleLabel("Better Days Wake Time Fix", betterDaysSleepWakeTimeFix));
+        var fixedCycleBtn = Button.builder(toggleLabel(keepFullDayNightCycleAtFixedLength), b -> {
+            keepFullDayNightCycleAtFixedLength = !keepFullDayNightCycleAtFixedLength;
+            b.setMessage(toggleLabel(keepFullDayNightCycleAtFixedLength));
         }).bounds(0,0,200,20).build();
-        this.list.addRow(Component.literal("Better Days Wake Time Fix"), betterDaysWakeTimeFixBtn);
+        fixedCycleBtn.setTooltip(Tooltip.create(Component.literal("Keeps one complete day and night at the configured elapsed duration while seasons change the daylight/night split. This does not sync to the computer clock.")));
+        this.list.addRow(Component.literal("Fixed Full Day/Night Cycle Length"), fixedCycleBtn);
 
-        var grassFlowerBtn = Button.builder(toggleLabel("Grass and Flower Growth", grassFlowerGrowth), b -> {
+        var grassFlowerBtn = Button.builder(toggleLabel(grassFlowerGrowth), b -> {
             grassFlowerGrowth = !grassFlowerGrowth;
-            b.setMessage(toggleLabel("Grass and Flower Growth", grassFlowerGrowth));
+            b.setMessage(toggleLabel(grassFlowerGrowth));
         }).bounds(0,0,200,20).build();
-        this.list.addRow(Component.literal("Grass and Flower Growth"), grassFlowerBtn);
+        grassFlowerBtn.setTooltip(Tooltip.create(Component.literal("Allows extra grass and flower growth during warm seasons.")));
+        this.list.addRow(Component.literal("Seasonal Grass/Flower Growth"), grassFlowerBtn);
 
-        var customBtn = Button.builder(toggleLabel("Custom Daylight Cycle", customDayCycle), b -> {
+        this.customCycleButton = Button.builder(toggleLabel(customDayCycle), b -> {
             customDayCycle = !customDayCycle;
-            seasonalDaylightCycle = false;
-            b.setMessage(toggleLabel("Custom Daylight Cycle", customDayCycle));
+            if (customDayCycle) {
+                seasonalDaylightCycle = false;
+                this.seasonalCycleButton.setMessage(toggleLabel(false));
+            }
+            b.setMessage(toggleLabel(customDayCycle));
         }).bounds(0,0,200,20).build();
-        this.list.addRow(Component.literal("Custom Daylight Cycle"), customBtn);
+        this.customCycleButton.setTooltip(Tooltip.create(Component.literal("Uses the custom day and night speed multipliers when seasonal day/night changes are disabled.")));
+        this.list.addRow(Component.literal("Custom Day/Night Speed Multipliers"), this.customCycleButton);
 
-        var realTimeBtn = Button.builder(toggleLabel("Real-time Canadian Seasons", realTimeCanadianSeasons), b -> {
+        var realTimeBtn = Button.builder(toggleLabel(realTimeCanadianSeasons), b -> {
             realTimeCanadianSeasons = !realTimeCanadianSeasons;
-            b.setMessage(toggleLabel("Real-time Canadian Seasons", realTimeCanadianSeasons));
+            b.setMessage(toggleLabel(realTimeCanadianSeasons));
         }).bounds(0,0,200,20).build();
-        this.list.addRow(Component.literal("Calendar Synced Seasons"), realTimeBtn);
+        realTimeBtn.setTooltip(Tooltip.create(Component.literal("Synchronizes seasons with the current date in the America/Toronto time zone. Leave off for normal in-game progression.")));
+        this.list.addRow(Component.literal("Eastern Canada Calendar Sync"), realTimeBtn);
 
         this.maxReplacerBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
         this.maxReplacerBox.setValue(Integer.toString(tickSnowReplacerThreshold));
-        this.list.addRow(Component.literal("Common Feature Threshold"), this.maxReplacerBox);
+        this.maxReplacerBox.setTooltip(Tooltip.create(Component.literal("Minecraft ticks between snow replacement and accumulation scans. Lower values update more frequently but use more processing.")));
+        this.list.addRow(Component.literal("Snow Replacement Interval (ticks)"), this.maxReplacerBox);
 
         this.maxSnowHeightBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
         this.maxSnowHeightBox.setValue(Integer.toString(this.maxSnowHeight));
-        this.list.addRow(Component.literal("Max Snow Height (layers)"), this.maxSnowHeightBox);
+        this.maxSnowHeightBox.setTooltip(Tooltip.create(Component.literal("Maximum snow layers in one vertical column. Eight layers equal one full snow block.")));
+        this.list.addRow(Component.literal("Maximum Snow Layers per Column"), this.maxSnowHeightBox);
+
+        this.fullDayNightCycleLengthBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
+        this.fullDayNightCycleLengthBox.setValue(Double.toString(fullDayNightCycleLengthInRealMinutes));
+        this.fullDayNightCycleLengthBox.setTooltip(Tooltip.create(Component.literal("Elapsed real-world minutes for one complete day and night in fixed-length mode. Use 1440 for 24 hours.")));
+        this.list.addRow(Component.literal("Full Cycle Length (Real Minutes)"), this.fullDayNightCycleLengthBox);
 
         this.nightLengthBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
         this.nightLengthBox.setValue(Double.toString(customNightLength));
-        this.list.addRow(Component.literal("Custom Night Speed"), this.nightLengthBox);
+        this.nightLengthBox.setTooltip(Tooltip.create(Component.literal("Better Days nighttime speed multiplier. Below 1 makes nights longer; above 1 makes them shorter.")));
+        this.list.addRow(Component.literal("Custom Night Speed Multiplier"), this.nightLengthBox);
 
         this.dayLengthBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
         this.dayLengthBox.setValue(Double.toString(customDayLength));
-        this.list.addRow(Component.literal("Custom Day Speed"), this.dayLengthBox);
-
-        this.betterDaysSleepWakeTimeBox = new EditBox(this.font, 0, 0, 200, 20, Component.empty());
-        this.betterDaysSleepWakeTimeBox.setValue(Integer.toString(betterDaysSleepWakeTime));
-        this.list.addRow(Component.literal("Better Days Wake Time"), this.betterDaysSleepWakeTimeBox);
+        this.dayLengthBox.setTooltip(Tooltip.create(Component.literal("Better Days daytime speed multiplier. Below 1 makes days longer; above 1 makes them shorter.")));
+        this.list.addRow(Component.literal("Custom Day Speed Multiplier"), this.dayLengthBox);
 
 
         this.addRenderableWidget(
                 Button.builder(Component.translatable("gui.done"), b -> {
-                    saveChanges();
-                    this.minecraft.setScreen(parent);
-                }).bounds(panelX + (panelW - 200) / 2, bottom - 30, 200, 20).build()
+                    if (saveChanges()) {
+                        this.minecraft.setScreen(parent);
+                    }
+                }).bounds(panelX + (panelW - 200) / 2, bottom - 28, 200, 20).build()
         );
     }
 
@@ -168,68 +194,63 @@ public class SereneExtendedScreen extends Screen {
      * Draws background, panel chrome, and delegates to list/widgets.
      */
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(g, mouseX, mouseY, partialTick);
-
-        int panelW = 480;
-        int panelX = (this.width - panelW) / 2;
-        int top = 40;
-        int bottom = this.height - 40;
-        g.fill(panelX - 4, top - 4, panelX + panelW + 4, bottom, 0xAA000000);
-        g.drawString(this.font, "Serene Seasons Plus", panelX + 6, top - 14, 0xFFFFFF, false);
         super.render(g, mouseX, mouseY, partialTick);
+        if (this.errorMessage != null) {
+            g.drawCenteredString(this.font, this.errorMessage, this.width / 2, this.height - 47, 0xFFFF5555);
+        }
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        super.renderBackground(g, mouseX, mouseY, partialTick);
+        int panelW = Math.min(MAX_PANEL_WIDTH, Math.max(280, this.width - PANEL_MARGIN * 2));
+        int panelX = (this.width - panelW) / 2;
+        int bottom = this.height - PANEL_BOTTOM_MARGIN;
+        g.fill(panelX, PANEL_TOP, panelX + panelW, bottom, 0xCC101010);
+        g.drawCenteredString(this.font, this.title, this.width / 2, PANEL_TOP + 8, 0xFFFFFF);
     }
 
     /**
      * Formats a toggle label with ON/OFF state.
      */
-    private Component toggleLabel(String name, boolean enabled) {
-        return Component.literal(name + ": " + (enabled ? "ON" : "OFF"));
+    private Component toggleLabel(boolean enabled) {
+        return Component.literal(enabled ? "ON" : "OFF");
     }
 
     /**
      * Validates inputs and writes changes to config, then persists them.
      */
-    private void saveChanges() {
-        Component errorMessage;
+    private boolean saveChanges() {
         int parsed2 = this.tickSnowReplacerThreshold;
         int parsedSnowHeight = this.maxSnowHeight;
         double parsed3 = this.customDayLength;
         double parsed4 = this.customNightLength;
-        int parsedWakeTime = this.betterDaysSleepWakeTime;
+        double parsedFullDayNightCycleMinutes = this.fullDayNightCycleLengthInRealMinutes;
 
 
         try {
             parsed2 = Integer.parseInt(this.maxReplacerBox.getValue());
             parsedSnowHeight = Integer.parseInt(this.maxSnowHeightBox.getValue());
-            errorMessage = null;
         } catch (NumberFormatException ignored) {
-            errorMessage = Component.literal("Invalid number for a Snow setting.");
+            this.errorMessage = Component.literal("Snow settings must be whole numbers.");
+            return false;
         }
 
         try {
             parsed3 = Double.parseDouble(this.dayLengthBox.getValue());
             parsed4 = Double.parseDouble(this.nightLengthBox.getValue());
-            errorMessage = null;
+            parsedFullDayNightCycleMinutes = Double.parseDouble(this.fullDayNightCycleLengthBox.getValue());
         } catch (NumberFormatException ignored) {
-            errorMessage = Component.literal("Invalid number for one of the DayCycle Speeds.");
+            this.errorMessage = Component.literal("Day and night speeds must be numbers.");
+            return false;
         }
-        try {
-            parsedWakeTime = Integer.parseInt(this.betterDaysSleepWakeTimeBox.getValue());
-            if (parsedWakeTime < 0 || parsedWakeTime > 23999) {
-                throw new NumberFormatException();
-            }
-            errorMessage = null;
-        } catch (NumberFormatException ignored) {
-            errorMessage = Component.literal("Better Days wake time must be between 0 and 23999.");
-        }
-        this.betterDaysSleepWakeTime = parsedWakeTime;
         SereneExtendedConfig.TICK_SNOW_REPLACER.set(parsed2);
         SereneExtendedConfig.SNOWSTORM_ENABLED.set(snowFeatureEnabled);
         SereneExtendedConfig.MAX_SNOW_ACCUMULATION_LAYERS.set(parsedSnowHeight);
         SereneExtendedConfig.ENABLE_SEASONAL_DAYLIGHT_CYCLE.set(seasonalDaylightCycle);
         SereneExtendedConfig.ENABLE_BETTER_DAYS_DYNAMIC_TIME_COMPAT.set(betterDaysDynamicTimeCompat);
-        SereneExtendedConfig.ENABLE_BETTER_DAYS_SLEEP_WAKE_TIME_FIX.set(betterDaysSleepWakeTimeFix);
-        SereneExtendedConfig.BETTER_DAYS_SLEEP_WAKE_TIME.set(parsedWakeTime);
+        SereneExtendedConfig.KEEP_FULL_DAY_NIGHT_CYCLE_AT_FIXED_LENGTH.set(keepFullDayNightCycleAtFixedLength);
+        SereneExtendedConfig.FULL_DAY_NIGHT_CYCLE_LENGTH_IN_REAL_MINUTES.set(parsedFullDayNightCycleMinutes);
         SereneExtendedConfig.CUSTOM_CYCLE_LENGTH.set(customDayCycle);
         SereneExtendedConfig.CUSTOM_DAY_LENGTH.set(parsed3);
         SereneExtendedConfig.CUSTOM_NIGHT_LENGTH.set(parsed4);
@@ -238,44 +259,13 @@ public class SereneExtendedScreen extends Screen {
 
 
         try {
-            saveToFile();
-            errorMessage = null;
-        } catch (Exception e) {
-            errorMessage = Component.literal("Failed to save config: " + e.getMessage());
+            SereneExtendedConfig.COMMON_SPEC.save();
+            this.errorMessage = null;
+            return true;
+        } catch (RuntimeException exception) {
+            this.errorMessage = Component.literal("Failed to save config: " + exception.getMessage());
+            return false;
         }
-    }
-
-    /**
-     * Persists current settings to the TOML config using NightConfig.
-     */
-    private void saveToFile() {
-        var path = net.neoforged.fml.loading.FMLPaths.CONFIGDIR
-                .get()
-                .resolve(SereneSeasonsPlusNeoForge.MODID + "-common.toml");
-
-        // Build & load config file safely
-        var cfg = com.electronwill.nightconfig.core.file.CommentedFileConfig.builder(path)
-                .sync()
-                .autosave()
-                .preserveInsertionOrder()
-                .build();
-        cfg.load();
-
-        // Update only known keys
-        cfg.set("snowstorm.enabled", snowFeatureEnabled);
-        cfg.set("snowStorms.maxSnowAccumulationLayers", maxSnowHeight);
-        cfg.set("snowPillerAndReplacer.tickSnowReplacer", tickSnowReplacerThreshold);
-        cfg.set("seasonSync.realTimeCanadianSeasons", realTimeCanadianSeasons);
-        cfg.set("seasonalDaylightCycle.enableSeasonalDaylightCycle", seasonalDaylightCycle);
-        cfg.set("seasonalDaylightCycle.enableBetterDaysDynamicTimeCompat", betterDaysDynamicTimeCompat);
-        cfg.set("seasonalDaylightCycle.enableBetterDaysSleepWakeTimeFix", betterDaysSleepWakeTimeFix);
-        cfg.set("seasonalDaylightCycle.betterDaysSleepWakeTime", betterDaysSleepWakeTime);
-        cfg.set("seasonalDaylightCycle.customCycleLength", customDayCycle);
-        cfg.set("seasonalDaylightCycle.customDayLength", customDayLength);
-        cfg.set("seasonalDaylightCycle.customNightLength", customNightLength);
-
-        cfg.save();
-        cfg.close();
     }
 
 
@@ -304,9 +294,9 @@ public class SereneExtendedScreen extends Screen {
 
         if (this.maxReplacerBox != null && this.maxReplacerBox.keyPressed(key, sc, mods)) return true;
         if (this.maxSnowHeightBox   != null && this.maxSnowHeightBox.keyPressed(key, sc, mods)) return true;
+        if (this.fullDayNightCycleLengthBox != null && this.fullDayNightCycleLengthBox.keyPressed(key, sc, mods)) return true;
         if (this.nightLengthBox != null && this.nightLengthBox.keyPressed(key, sc, mods)) return true;
         if (this.dayLengthBox   != null && this.dayLengthBox.keyPressed(key, sc, mods)) return true;
-        if (this.betterDaysSleepWakeTimeBox != null && this.betterDaysSleepWakeTimeBox.keyPressed(key, sc, mods)) return true;
 
         return super.keyPressed(key, sc, mods);
     }
@@ -320,9 +310,9 @@ public class SereneExtendedScreen extends Screen {
 
         if (this.maxReplacerBox != null && this.maxReplacerBox.charTyped(c, mods)) return true;
         if (this.maxSnowHeightBox   != null && this.maxSnowHeightBox.charTyped(c, mods)) return true;
+        if (this.fullDayNightCycleLengthBox != null && this.fullDayNightCycleLengthBox.charTyped(c, mods)) return true;
         if (this.nightLengthBox != null && this.nightLengthBox.charTyped(c, mods)) return true;
         if (this.dayLengthBox   != null && this.dayLengthBox.charTyped(c, mods)) return true;
-        if (this.betterDaysSleepWakeTimeBox != null && this.betterDaysSleepWakeTimeBox.charTyped(c, mods)) return true;
 
         return super.charTyped(c, mods);
     }

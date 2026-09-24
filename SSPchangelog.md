@@ -1,3 +1,15 @@
+# Serene Seasons Plus v5.2.1 -> Fabric & NeoForge 1.21.1
+
+## Added
+
+- Day/night cycles can now be configured beyond seven real-time hours, including a full 24-hour cycle, without synchronizing the world to the computer clock.
+
+## Changed
+
+- Renamed config categories, settings, and in-game labels so their purpose and units are clear.
+- Added a plain-language description for every config setting and hover descriptions throughout the in-game config screen.
+- On the first launch after updating, the old config is preserved as a backup, a fresh config is generated, and a one-time warning explains the reset.
+
 # Serene Seasons Plus v5.1.2 -> NeoForge 1.21.1
 
 ## Fixed
