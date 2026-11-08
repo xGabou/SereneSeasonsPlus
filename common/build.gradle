@@ -26,3 +26,17 @@ dependencies {
     compileOnly "curse.maven:gabous-libs-1367332:8237907"
     compileOnly "curse.maven:dynamictrees-252818:7502488"
 }
+
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mockito:mockito-core:5.14.2'
+}
+
+tasks.named('test', Test) {
+    useJUnit()
+    workingDir layout.buildDirectory.dir('test-runtime')
+    doFirst { workingDir.mkdirs() }
+    // Shared code references compile-only mod APIs during class loading.
+    classpath += sourceSets.main.compileClasspath.filter { !it.name.contains("snow-real-magic") }
+}

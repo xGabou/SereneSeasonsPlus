@@ -5,6 +5,8 @@ plugins {
     id "com.modrinth.minotaur"
 }
 
+def releaseUploadJar = tasks.named("jar").flatMap { it.archiveFile }
+
 base.archivesName.set("Forge-Version-${mod_id}")
 
 mixin {
@@ -126,7 +128,7 @@ modrinth {
         required.project "N8aGZtvj"
         optional.project "qIWoLcKJ"
     }
-    uploadFile = file("build/libs/${archivesBaseName}-${version}.jar")
+    uploadFile = releaseUploadJar.get().asFile
 }
 def curseForgeToken = System.getenv("CURSEFORGE_TOKEN")?.trim()
 if (curseForgeToken) {
@@ -140,7 +142,7 @@ if (curseForgeToken) {
         setLoaders("forge")
         setCurseEnvironment("both")
         getJavaVersions().set([JavaVersion.VERSION_17])
-        setArtifact(file("build/libs/${archivesBaseName}-${project.version}.jar"))
+        setArtifact(releaseUploadJar.get().asFile)
     }
 } else {
     project.logger.lifecycle("CURSEFORGE_TOKEN not set; CurseForge upload tasks will be disabled.")

@@ -1,3 +1,11 @@
+# Serene Seasons Plus v2.2.4.0 -> Forge & Fabric 1.20.1
+
+## Fixed
+
+- Snow now respects the snow replacement tag when falling, preserving redstone, rails, heads, and other blocks outside the tag. Tagged vegetation is still replaced as intended.
+- Delayed snow placement and melting no longer overwrite blocks changed after the operation was queued, and stale snow tracking no longer clears unrelated blocks.
+- Seasonal tall grass and tall flowers now grow both halves and require clear space above.
+
 # Serene Seasons Plus v5.1.4 -> Forge/Fabric 1.20.1
 
 ## Added
