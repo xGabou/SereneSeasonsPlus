@@ -1,6 +1,7 @@
 package com.Gabou.sereneseasonsplus.mixin;
 
 import net.minecraft.core.BlockPos;
+import com.Gabou.sereneseasonsplus.tags.SSPTags;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
@@ -30,7 +31,9 @@ public abstract class SeasonHooksMixin {
             return;
         }
 
+        var target = levelReader.getBlockState(pos);
         boolean customLogic =
+                (target.isAir() || target.is(Blocks.SNOW) || target.is(SSPTags.Blocks.SNOW_REPLACEABLE)) &&
                 !SeasonHooks.warmEnoughToRainSeasonal(levelReader, pos)
                         && pos.getY() >= levelReader.getMinBuildHeight()
                         && pos.getY() < levelReader.getMaxBuildHeight()

@@ -13,6 +13,8 @@ import net.minecraft.world.level.block.SpreadingSnowyDirtBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+import net.minecraft.world.level.block.DoublePlantBlock;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -42,7 +44,7 @@ public abstract class SpreadingSnowyDirtBlockMixin {
             if (random.nextBoolean()) {
                 level.setBlock(above, Blocks.SHORT_GRASS.defaultBlockState(), 3);
             } else {
-                level.setBlock(above, Blocks.TALL_GRASS.defaultBlockState(), 3);
+                sereneseasonsplus$placeVegetation(level, above, Blocks.TALL_GRASS.defaultBlockState());
             }
         } else {
             // 20% chance: grow a random flower
@@ -55,7 +57,7 @@ public abstract class SpreadingSnowyDirtBlockMixin {
                 if (!flowers.isEmpty()) {
                     Holder<Block> randomFlower = flowers.get(random.nextInt(flowers.size()));
                     Block flowerBlock = randomFlower.value();
-                    level.setBlock(above, flowerBlock.defaultBlockState(), 3);
+                    sereneseasonsplus$placeVegetation(level, above, flowerBlock.defaultBlockState());
                     return;
                 }
             }
@@ -64,4 +66,16 @@ public abstract class SpreadingSnowyDirtBlockMixin {
             level.setBlock(above, Blocks.DANDELION.defaultBlockState(), 3);
         }
     }
+
+    @Unique
+    private static void sereneseasonsplus$placeVegetation(ServerLevel level, BlockPos pos, BlockState plant) {
+        if (!plant.canSurvive(level, pos)) return;
+        if (plant.getBlock() instanceof DoublePlantBlock) {
+            if (pos.above().getY() >= level.getMaxBuildHeight() || !level.isEmptyBlock(pos.above())) return;
+            DoublePlantBlock.placeAt(level, plant, pos, Block.UPDATE_ALL);
+        } else {
+            level.setBlock(pos, plant, Block.UPDATE_ALL);
+        }
+    }
+
 }

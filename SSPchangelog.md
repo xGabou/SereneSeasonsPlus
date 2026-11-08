@@ -1,3 +1,12 @@
+# Serene Seasons Plus v2.2.4.0 -> NeoForge & Fabric 1.21.1
+
+## Fixed
+
+- Snow now respects the snow replacement tag when falling, preserving redstone, rails, heads, and other blocks outside the tag. Tagged vegetation is still replaced as intended.
+- Delayed snow placement and melting no longer overwrite blocks changed after the operation was queued, and stale snow tracking no longer clears unrelated blocks.
+- Seasonal tall grass and tall flowers now grow both halves and require clear space above.
+- Fixed block tag resource paths and the short grass block ID for Minecraft 1.21.1.
+
 # Serene Seasons Plus v5.2.1 -> Fabric & NeoForge 1.21.1
 
 ## Added

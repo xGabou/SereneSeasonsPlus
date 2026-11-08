@@ -2,6 +2,7 @@ package com.Gabou.sereneseasonsplus.mixin;
 
 import com.Gabou.sereneseasonsplus.SereneSeasonPlusCommon;
 import com.Gabou.sereneseasonsplus.features.CommonSnowBlockFeature;
+import com.Gabou.sereneseasonsplus.features.ServerPrecipitationService;
 import com.Gabou.sereneseasonsplus.features.logic.SnowChunkWeatherLogic;
 import com.Gabou.sereneseasonsplus.storage.SnowHistorySavedData;
 import com.Gabou.sereneseasonsplus.util.EnvironmentHelper;
@@ -105,10 +106,7 @@ public class ServerLevelMixin {
             )
     )
     private boolean ssp$AccumulateColumnUpdate(ServerLevel level, BlockPos pos, BlockState state) {
-        boolean result = level.setBlockAndUpdate(pos, state);
-        if (result) {
-            CommonSnowBlockFeature.accumulateColumnUpdate(level, pos, state);
-        }
+        boolean result = ServerPrecipitationService.setBlockAndTrackSnow(level, pos, state);
         return result;
     }
 
@@ -253,7 +251,7 @@ public class ServerLevelMixin {
             BlockState state
     ) {
         if (!CommonSnowBlockFeature.isSnowFeatureEnabled()) {
-            return level.setBlockAndUpdate(pos, state);
+            return ServerPrecipitationService.setBlockAndTrackSnow(level, pos, state);
         }
         if (sereneseasonsplus$shouldSkipSnowCheck) {
             // Skip ONLY the fresh snow placement in the `else` branch
@@ -261,10 +259,7 @@ public class ServerLevelMixin {
         }
 
         // Let vanilla handle it when not skipping
-        boolean result = level.setBlockAndUpdate(pos, state);
-        if (result) {
-            CommonSnowBlockFeature.accumulateColumnUpdate(level, pos, state);
-        }
+        boolean result = ServerPrecipitationService.setBlockAndTrackSnow(level, pos, state);
         return result;
     }
 
